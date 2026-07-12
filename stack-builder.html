@@ -536,119 +536,6 @@
     .search-input { min-height: 48px; }
     .clear-btn { min-height: 48px; background: var(--burgundy); }
 
-    .stack-details {
-      width: min(1180px, calc(100% - 12px));
-      margin: 0 auto 18px;
-      border: 1px solid rgba(93, 92, 90, .72);
-      border-radius: var(--radius-md);
-      background: rgba(17, 17, 18, .76);
-      box-shadow: var(--shadow-md);
-      overflow: hidden;
-    }
-
-    .stack-details > summary {
-      min-height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px 16px;
-      color: var(--cream);
-      cursor: pointer;
-      font-family: var(--font-condensed);
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      list-style: none;
-    }
-
-    .stack-details > summary::-webkit-details-marker { display: none; }
-
-    .stack-details > summary::after {
-      content: "Open";
-      padding: 6px 10px;
-      border: 1px solid rgba(93, 92, 90, .86);
-      border-radius: 999px;
-      background: rgba(40, 40, 40, .84);
-      color: var(--cloud);
-      font-family: var(--font-body);
-      font-size: 12px;
-      letter-spacing: 0;
-      text-transform: none;
-    }
-
-    .stack-details[open] > summary::after { content: "Close"; }
-
-    .stack-details-body {
-      padding: 0 14px 16px;
-      border-top: 1px solid rgba(93, 92, 90, .62);
-    }
-
-    .summary-grid {
-      margin: 14px 0;
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .summary-card {
-      min-height: 84px;
-      padding: 12px;
-      border: 1px solid rgba(93, 92, 90, .72);
-      border-radius: var(--radius-md);
-      background: rgba(40, 40, 40, .54);
-      text-align: center;
-    }
-
-    .summary-value {
-      font-size: 24px;
-      font-weight: 900;
-      line-height: 1;
-    }
-
-    .summary-label {
-      margin-top: 8px;
-      color: var(--cloud);
-      font-family: var(--font-condensed);
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
-
-    .toolbar {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(150px, 1fr));
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .toolbar .select { min-height: 46px; }
-
-    .layer-tabs {
-      margin-top: 14px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .layer-tab {
-      min-height: 40px;
-      padding: 9px 12px;
-      border: 1px solid rgba(93, 92, 90, .86);
-      border-radius: 999px;
-      background: rgba(40, 40, 40, .84);
-      color: var(--cloud);
-      font-weight: 800;
-    }
-
-    .layer-tab.active {
-      border-color: var(--cooper-red);
-      background: var(--cooper-red);
-      color: var(--cream);
-    }
-
     .results-count {
       width: min(1180px, calc(100% - 12px));
       margin: 0 auto 12px;
@@ -752,6 +639,9 @@
     .field-statement-box {
       margin: 0 0 16px;
       padding: 16px;
+      height: auto;
+      max-height: none;
+      overflow: visible;
       border: 1px solid rgba(242, 239, 235, .10);
       border-radius: var(--radius-md);
       background: rgba(0, 0, 0, .20);
@@ -769,15 +659,20 @@
     }
 
     .field-statement {
+      display: block;
       margin: 0;
       color: var(--cream);
       font-size: 16px;
       font-weight: 700;
       line-height: 1.58;
-      overflow: visible;
-      max-height: none;
+      height: auto;
+      max-height: none !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
       white-space: normal;
       overflow-wrap: anywhere;
+      -webkit-line-clamp: unset !important;
+      -webkit-box-orient: initial !important;
     }
 
     .proof-row {
@@ -797,37 +692,6 @@
       text-transform: uppercase;
     }
 
-    .card-details {
-      margin-top: auto;
-      border-top: 1px solid rgba(93, 92, 90, .74);
-    }
-
-    .card-details summary {
-      min-height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 0;
-      color: var(--cloud);
-      cursor: pointer;
-      font-family: var(--font-bold);
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      list-style: none;
-    }
-
-    .card-details summary::-webkit-details-marker { display: none; }
-    .card-details summary::after { content: "Open"; opacity: .75; }
-    .card-details[open] summary::after { content: "Close"; }
-
-    .card-details-body {
-      display: grid;
-      gap: 14px;
-      padding-bottom: 6px;
-    }
 
     .mini-chip {
       min-height: 28px;
@@ -842,14 +706,7 @@
       font-weight: 800;
     }
 
-    .card-section {
-      display: grid;
-      gap: 5px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(93, 92, 90, .68);
-    }
 
-    .card-section + .card-section { margin-top: 12px; }
 
     .card-label {
       color: var(--cloud);
@@ -1191,15 +1048,7 @@
       text-transform: uppercase;
     }
 
-    .comparison-note {
-      margin: 14px 0 0;
-      padding: 12px 14px;
-      border-left: 3px solid var(--cooper-red);
-      background: rgba(159, 28, 31, .08);
-      color: rgba(242, 239, 235, .68);
-      font-size: 12px;
-      line-height: 1.5;
-    }
+
 
     .proof-links {
       display: flex;
@@ -1208,35 +1057,6 @@
       justify-content: flex-end;
     }
 
-    .source-detail-block {
-      padding: 12px 0;
-      border-top: 1px solid rgba(93, 92, 90, .62);
-    }
-
-    .source-detail-block:first-child {
-      border-top: 0;
-      padding-top: 0;
-    }
-
-    .source-detail-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .source-detail-heading strong {
-      font-size: 13px;
-    }
-
-    .suppressed-list {
-      margin: 8px 0 0;
-      padding-left: 18px;
-      color: rgba(242, 239, 235, .68);
-      font-size: 12px;
-      line-height: 1.5;
-    }
 
     @media (max-width: 980px) {
       .topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1271,7 +1091,7 @@
 
     @media (max-width: 760px) {
       .shell { width: min(100% - 18px, 1680px); }
-      .topbar, .status-panel, .builder-panel, .stack-hero, .quick-actions, .field-search-row, .stack-details, .results-count, .cards, .empty-state, .error-banner, .footer-note {
+      .topbar, .status-panel, .builder-panel, .stack-hero, .quick-actions, .field-search-row, .results-count, .cards, .empty-state, .error-banner, .footer-note {
         width: 100%;
       }
 
@@ -1282,7 +1102,7 @@
 
       .topbar-left, .topbar-right { width: 100%; }
       .nav-link, .export-btn, .ghost-btn { flex: 1; }
-      .selector-grid, .feed-grid, .summary-grid, .toolbar, .cards, .field-search-row { grid-template-columns: 1fr; }
+      .selector-grid, .feed-grid, .cards, .field-search-row { grid-template-columns: 1fr; }
       .toolbar .clear-btn { grid-column: auto; }
       .scope-note, .builder-message { text-align: left; }
       .build-btn { width: 100%; }
@@ -1291,7 +1111,7 @@
 
     @media print {
       body { background: #fff; color: #111; }
-      .brand-header, .topbar, .status-panel, .builder-panel, .toolbar, .layer-tabs, .footer-note { display: none !important; }
+      .brand-header, .topbar, .status-panel, .builder-panel, .layer-tabs, .footer-note { display: none !important; }
       .results { display: block !important; }
       .stack-hero, .summary-card, .requirement-card {
         color: #111;
@@ -1460,30 +1280,7 @@
         <section id="cards" class="cards" aria-label="Governing project requirement cards"></section>
       </section>
 
-      <details class="stack-details">
-        <summary>Stack Details / Deep Dive</summary>
-        <div class="stack-details-body">
-          <section class="summary-grid" aria-label="Project stack source totals">
-            <div class="summary-card"><div id="summaryTotal" class="summary-value">0</div><div class="summary-label">Source Requirements Reviewed</div></div>
-            <div class="summary-card"><div id="summaryCooper" class="summary-value">0</div><div class="summary-label">Cooper Baseline</div></div>
-            <div class="summary-card"><div id="summaryState" class="summary-value">0</div><div class="summary-label">State Layer</div></div>
-            <div class="summary-card"><div id="summaryGc" class="summary-value">0</div><div class="summary-label">GC Layer</div></div>
-            <div class="summary-card"><div id="summaryOwner" class="summary-value">0</div><div class="summary-label">Owner Layer</div></div>
-            <div class="summary-card"><div id="summaryCritical" class="summary-value">0</div><div class="summary-label">Governing Field Cards</div></div>
-          </section>
 
-          <section class="toolbar" aria-label="Advanced generated stack filters">
-            <select id="priorityFilter" class="select" aria-label="Filter by priority"><option value="">All Priorities</option></select>
-            <select id="groupFilter" class="select" aria-label="Filter by dashboard group"><option value="">All Groups</option></select>
-            <select id="actionFilter" class="select" aria-label="Filter by required action"><option value="">All Action Types</option></select>
-          </section>
-
-          <div id="layerTabs" class="layer-tabs" aria-label="Requirement source layers"></div>
-          <p class="comparison-note">
-            Comparison engine note: high-confidence threshold conflicts, prohibitions, exact duplicates, and the fall-protection trigger + plan combination are compressed automatically. Uncertain or independent requirements remain separate instead of being guessed together.
-          </p>
-        </div>
-      </details>
     </section>
 
     <p class="footer-note">
@@ -1563,7 +1360,6 @@
       failed: {},
       generatedRows: [],
       governingCards: [],
-      activeLayer: "all",
       activeTopic: "",
       quickFilter: "all",
       currentSelection: null
@@ -1594,16 +1390,6 @@
       backToTopicsButton: document.getElementById("backToTopicsButton"),
       activeTopicTitle: document.getElementById("activeTopicTitle"),
       activeTopicCount: document.getElementById("activeTopicCount"),
-      summaryTotal: document.getElementById("summaryTotal"),
-      summaryCooper: document.getElementById("summaryCooper"),
-      summaryState: document.getElementById("summaryState"),
-      summaryGc: document.getElementById("summaryGc"),
-      summaryOwner: document.getElementById("summaryOwner"),
-      summaryCritical: document.getElementById("summaryCritical"),
-      priorityFilter: document.getElementById("priorityFilter"),
-      groupFilter: document.getElementById("groupFilter"),
-      actionFilter: document.getElementById("actionFilter"),
-      layerTabs: document.getElementById("layerTabs"),
       quickFilterButtons: Array.from(document.querySelectorAll(".quick-filter-btn")),
       resultsCount: document.getElementById("resultsCount"),
       emptyState: document.getElementById("emptyState"),
@@ -2097,11 +1883,24 @@
       };
     }
 
+    function cleanSentence(value) {
+      return String(value || "")
+        .trim()
+        .replace(/\s+/g, " ")
+        .replace(/\.{2,}$/, ".");
+    }
+
+    function ensureSentencePunctuation(value) {
+      const text = cleanSentence(value);
+      if (!text) return "";
+      return /[.!?]$/.test(text) ? text : `${text}.`;
+    }
+
     function genericRowStatement(row) {
       const org = sourceOrganization(row) || "The selected source";
-      const requirement = String(row.requirement || row.action || row.topic || "this requirement applies").trim().replace(/\s+/g, " ");
+      const requirement = cleanSentence(row.requirement || row.action || row.topic || "this requirement applies");
       const lowerRequirement = requirement.charAt(0).toLowerCase() + requirement.slice(1);
-      return `${org} requires ${lowerRequirement}.`;
+      return `${org} requires ${ensureSentencePunctuation(lowerRequirement)}`;
     }
 
     function fallTriggerStatement(rows, feet) {
@@ -2129,8 +1928,8 @@
       const orgs = rows.map(sourceOrganization);
       const subject = humanList(orgs);
       const verb = pluralVerb(orgs, "requires", "require");
-      const requirement = String(rows[0]?.requirement || rows[0]?.action || rows[0]?.topic || "this requirement").trim().replace(/\s+/g, " ");
-      return `${subject} ${verb} ${requirement.charAt(0).toLowerCase() + requirement.slice(1)}.`;
+      const requirement = cleanSentence(rows[0]?.requirement || rows[0]?.action || rows[0]?.topic || "this requirement");
+      return `${subject} ${verb} ${ensureSentencePunctuation(requirement.charAt(0).toLowerCase() + requirement.slice(1))}`;
     }
 
     function compareGroup(key, rows) {
@@ -2258,18 +2057,12 @@
 
       state.governingCards = buildGoverningCards(state.generatedRows);
       state.currentSelection = selection;
-      state.activeLayer = "all";
       state.activeTopic = "";
       state.quickFilter = "all";
 
       els.resultSearch.value = "";
-      els.priorityFilter.value = "";
-      els.groupFilter.value = "";
-      els.actionFilter.value = "";
 
       renderStackHeader();
-      buildResultFilters();
-      renderLayerTabs();
       renderResults();
 
       els.results.classList.add("show");
@@ -2297,57 +2090,6 @@
       ];
       els.stackSelection.innerHTML = chips.map((label) => `<span class="selection-chip">${escapeHtml(label)}</span>`).join("");
 
-      const counts = {
-        total: state.generatedRows.length,
-        cooper: state.generatedRows.filter((row) => row.sourceType === "cooper").length,
-        state: state.generatedRows.filter((row) => row.sourceType === "state").length,
-        gc: state.generatedRows.filter((row) => row.sourceType === "gc").length,
-        owner: state.generatedRows.filter((row) => row.sourceType === "owner").length,
-        governing: state.governingCards.length
-      };
-
-      els.summaryTotal.textContent = counts.total.toLocaleString();
-      els.summaryCooper.textContent = counts.cooper.toLocaleString();
-      els.summaryState.textContent = counts.state.toLocaleString();
-      els.summaryGc.textContent = counts.gc.toLocaleString();
-      els.summaryOwner.textContent = counts.owner.toLocaleString();
-      els.summaryCritical.textContent = counts.governing.toLocaleString();
-    }
-
-    function setSelectOptions(select, values, allLabel) {
-      select.innerHTML = `<option value="">${escapeHtml(allLabel)}</option>` + uniqueSorted(values).map((value) => (
-        `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
-      )).join("");
-    }
-
-    function buildResultFilters() {
-      setSelectOptions(els.priorityFilter, state.governingCards.map((card) => card.priority), "All Priorities");
-      setSelectOptions(els.groupFilter, state.generatedRows.map((row) => row.dashboardGroup || row.category), "All Groups");
-      setSelectOptions(els.actionFilter, state.governingCards.flatMap((card) => card.actionTypes), "All Action Types");
-    }
-
-    function layerLabel(layer) {
-      return { all: "All Layers", cooper: "Cooper Steel", state: "State OSHA", gc: "General Contractor", owner: "Owner" }[layer] || layer;
-    }
-
-    function cardHasLayer(card, layer) {
-      return layer === "all" || card.allRows.some((row) => row.sourceType === layer);
-    }
-
-    function renderLayerTabs() {
-      const layers = ["all", "cooper", "state", "gc", "owner"];
-      els.layerTabs.innerHTML = layers.map((layer) => {
-        const count = state.governingCards.filter((card) => cardHasLayer(card, layer)).length;
-        return `<button class="layer-tab ${state.activeLayer === layer ? "active" : ""}" type="button" data-layer="${layer}">${escapeHtml(layerLabel(layer))} · ${count}</button>`;
-      }).join("");
-
-      els.layerTabs.querySelectorAll(".layer-tab").forEach((button) => {
-        button.addEventListener("click", () => {
-          state.activeLayer = button.dataset.layer || "all";
-          renderLayerTabs();
-          renderResults();
-        });
-      });
     }
 
     function cardSearchText(card) {
@@ -2377,14 +2119,7 @@
 
     function advancedCardMatches(card) {
       const term = els.resultSearch.value.trim().toLowerCase();
-      const priority = els.priorityFilter.value;
-      const group = els.groupFilter.value;
-      const actionType = els.actionFilter.value;
-      if (!cardHasLayer(card, state.activeLayer)) return false;
       if (!quickFilterMatches(card)) return false;
-      if (priority && card.priority !== priority) return false;
-      if (group && !card.allRows.some((row) => (row.dashboardGroup || row.category) === group)) return false;
-      if (actionType && !card.actionTypes.includes(actionType)) return false;
       if (term && !cardSearchText(card).includes(term)) return false;
       return true;
     }
@@ -2462,34 +2197,11 @@
       });
     }
 
-    function sourceDetailMarkup(row) {
-      const org = sourceOrganization(row) || layerLabel(row.sourceType);
-      return `
-        <div class="source-detail-block">
-          <div class="source-detail-heading">
-            <strong>${escapeHtml(org)} · ${escapeHtml(row.id || "Requirement")}</strong>
-            ${sourceButtonMarkup(row)}
-          </div>
-          ${row.requirement ? `<div class="card-section"><span class="card-label">Requirement</span><p class="card-text">${escapeHtml(row.requirement)}</p></div>` : ""}
-          ${row.action ? `<div class="card-section"><span class="card-label">Required Field Action</span><p class="card-text">${escapeHtml(row.action)}</p></div>` : ""}
-          ${row.trigger ? `<div class="card-section"><span class="card-label">Applies / Trigger</span><p class="card-text">${escapeHtml(row.trigger)}</p></div>` : ""}
-          <div class="card-section"><span class="card-label">Source Reference</span><div class="source-ref">${escapeHtml(row.sourceReference || row.citation || "Source reference not listed")}</div></div>
-        </div>`;
-    }
-
     function cardMarkup(card) {
       const topic = topicDefinition(card.fieldTopic);
       const sourceRows = uniqueSourceRows(card.contributingRows);
       const orgs = uniqueSorted(sourceRows.map(sourceOrganization));
       const proofLinks = sourceRows.map(sourceButtonMarkup).join("");
-      const deepDiveSources = card.contributingRows.map(sourceDetailMarkup).join("");
-      const suppressed = card.weakerRows.length ? `
-        <div class="card-section">
-          <span class="card-label">Compared but Not Shown as Governing</span>
-          <ul class="suppressed-list">
-            ${card.weakerRows.map((row) => `<li>${escapeHtml(sourceOrganization(row))} · ${escapeHtml(row.id || "Requirement")} — a stricter or prohibitive high-confidence match governs this comparison.</li>`).join("")}
-          </ul>
-        </div>` : "";
 
       return `
         <article class="requirement-card">
@@ -2515,14 +2227,6 @@
             ${orgs.map((org) => `<span class="mini-chip">${escapeHtml(org)}</span>`).join("")}
             ${card.actionTypes.slice(0, 2).map((type) => `<span class="mini-chip">${escapeHtml(type)}</span>`).join("")}
           </div>
-
-          <details class="card-details">
-            <summary>Source Details / Deep Dive</summary>
-            <div class="card-details-body">
-              ${deepDiveSources}
-              ${suppressed}
-            </div>
-          </details>
         </article>`;
     }
 
@@ -2587,12 +2291,7 @@
 
     function clearResultFilters() {
       els.resultSearch.value = "";
-      els.priorityFilter.value = "";
-      els.groupFilter.value = "";
-      els.actionFilter.value = "";
-      state.activeLayer = "all";
       state.quickFilter = "all";
-      renderLayerTabs();
       renderResults();
       els.resultSearch.focus();
     }
@@ -2600,9 +2299,6 @@
     function bindEvents() {
       els.buildStackButton.addEventListener("click", buildStack);
       els.resultSearch.addEventListener("input", renderResults);
-      els.priorityFilter.addEventListener("change", renderResults);
-      els.groupFilter.addEventListener("change", renderResults);
-      els.actionFilter.addEventListener("change", renderResults);
       els.clearResultFilters.addEventListener("click", clearResultFilters);
       els.backToTopicsButton.addEventListener("click", () => {
         state.activeTopic = "";
