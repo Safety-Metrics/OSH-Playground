@@ -1,0 +1,1694 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111112">
+  <title>Cooper Steel Project Requirement Stack Builder</title>
+  <link rel="icon" href="data:;base64,=">
+
+  <style>
+    :root {
+      --cream: #f2efeb;
+      --cloud: #cfcdca;
+      --muted: #9f9d9a;
+      --cooper-red: #9f1c1f;
+      --burgundy: #680c19;
+      --onyx: #111112;
+      --charcoal: #282828;
+      --steel-gray: #5d5c5a;
+      --success: #2f8f62;
+      --warning: #ab7416;
+      --info: #3b6f96;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --shadow-lg: 0 18px 40px rgba(0, 0, 0, .45);
+      --shadow-md: 0 10px 28px rgba(0, 0, 0, .28);
+      --font-display: Impact, "Arial Narrow", sans-serif;
+      --font-body: Arial, Helvetica, sans-serif;
+      --font-condensed: "Arial Narrow", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      background:
+        radial-gradient(1200px 650px at 20% 0%, rgba(159, 28, 31, .33), transparent 60%),
+        radial-gradient(900px 520px at 85% 20%, rgba(104, 12, 25, .38), transparent 65%),
+        linear-gradient(180deg, #0c0c0d 0%, #141414 100%);
+      color: var(--cream);
+    }
+
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    a { color: inherit; }
+
+    .shell {
+      width: min(1680px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 0 0 80px;
+    }
+
+    .brand-header {
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px 4px;
+    }
+
+    .brand-logo {
+      display: block;
+      width: auto;
+      height: clamp(105px, 10vw, 170px);
+      filter:
+        drop-shadow(0 2px 3px rgba(255, 255, 255, .22))
+        drop-shadow(0 0 22px rgba(159, 28, 31, .55))
+        drop-shadow(0 0 44px rgba(159, 28, 31, .24))
+        drop-shadow(0 16px 34px rgba(0, 0, 0, .45));
+    }
+
+    .topbar {
+      width: min(1180px, calc(100% - 12px));
+      margin: 8px auto 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-md);
+      background: rgba(17, 17, 18, .82);
+      box-shadow: var(--shadow-md);
+    }
+
+    .topbar-left, .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-link, .export-btn, .ghost-btn, .build-btn, .clear-btn {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border: 1px solid rgba(93, 92, 90, .9);
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--cream);
+      font-weight: 800;
+      background: rgba(40, 40, 40, .9);
+      transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
+    }
+
+    .nav-link:hover, .export-btn:hover, .ghost-btn:hover, .clear-btn:hover {
+      background: rgba(93, 92, 90, .78);
+      transform: translateY(-1px);
+    }
+
+    .nav-link.primary, .build-btn {
+      background: linear-gradient(135deg, var(--cooper-red), var(--burgundy));
+      border-color: rgba(242, 239, 235, .18);
+    }
+
+    .nav-link.primary:hover, .build-btn:hover {
+      background: linear-gradient(135deg, #b3262a, #7a1020);
+      transform: translateY(-1px);
+    }
+
+    .lab-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(159, 28, 31, .7);
+      background: rgba(159, 28, 31, .18);
+      color: var(--cream);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      max-width: 1180px;
+      margin: 0 auto 24px;
+      padding: 18px 22px 8px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before, .eyebrow::after {
+      width: 34px;
+      height: 2px;
+      content: "";
+      background: var(--cooper-red);
+    }
+
+    .hero h1 {
+      max-width: 1050px;
+      margin: 0 auto;
+      font-family: var(--font-display);
+      font-size: clamp(48px, 7vw, 94px);
+      line-height: .92;
+      letter-spacing: -.02em;
+      text-transform: uppercase;
+    }
+
+    .hero p {
+      max-width: 900px;
+      margin: 18px auto 0;
+      color: rgba(242, 239, 235, .76);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .status-panel {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 20px;
+      padding: 14px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-md);
+      background: rgba(17, 17, 18, .84);
+      box-shadow: var(--shadow-md);
+    }
+
+    .status-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .status-head h2 {
+      margin: 0;
+      font-family: var(--font-condensed);
+      font-size: 15px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .status-head span {
+      color: var(--cloud);
+      font-size: 13px;
+    }
+
+    .feed-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .feed-card {
+      min-height: 76px;
+      padding: 12px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: 12px;
+      background: rgba(40, 40, 40, .76);
+    }
+
+    .feed-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .feed-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--warning);
+      box-shadow: 0 0 12px rgba(171, 116, 22, .5);
+    }
+
+    .feed-card.ready .feed-dot {
+      background: var(--success);
+      box-shadow: 0 0 12px rgba(47, 143, 98, .5);
+    }
+
+    .feed-card.error .feed-dot {
+      background: var(--cooper-red);
+      box-shadow: 0 0 12px rgba(159, 28, 31, .6);
+    }
+
+    .feed-value {
+      margin-top: 8px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .builder-panel {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 24px;
+      overflow: hidden;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(700px 300px at 5% 0%, rgba(159, 28, 31, .24), transparent 62%),
+        linear-gradient(145deg, rgba(40, 40, 40, .96), rgba(17, 17, 18, .96) 62%, rgba(104, 12, 25, .56));
+      box-shadow: var(--shadow-lg);
+    }
+
+    .panel-head {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(93, 92, 90, .72);
+      background: rgba(40, 40, 40, .62);
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-family: var(--font-condensed);
+      font-size: 18px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .panel-head p {
+      margin: 7px 0 0;
+      color: rgba(242, 239, 235, .68);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .builder-body { padding: 20px; }
+
+    .selector-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field label, .section-label {
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .select, .search-input {
+      width: 100%;
+      min-height: 52px;
+      padding: 12px 14px;
+      border: 1px solid rgba(93, 92, 90, .9);
+      border-radius: 14px;
+      outline: none;
+      color: var(--cream);
+      background: rgba(40, 40, 40, .92);
+    }
+
+    .select:focus, .search-input:focus { border-color: var(--cooper-red); }
+
+    .baseline-box {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid rgba(159, 28, 31, .72);
+      border-radius: 14px;
+      background: rgba(159, 28, 31, .17);
+      font-weight: 850;
+    }
+
+    .baseline-check {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--cooper-red);
+      font-weight: 900;
+    }
+
+    .scope-section {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(93, 92, 90, .64);
+    }
+
+    .scope-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .scope-note {
+      max-width: 680px;
+      color: rgba(242, 239, 235, .6);
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    .scope-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .scope-chip input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .scope-chip span {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 12px;
+      border: 1px solid rgba(93, 92, 90, .86);
+      border-radius: 999px;
+      background: rgba(40, 40, 40, .84);
+      color: var(--cloud);
+      font-size: 13px;
+      font-weight: 800;
+      transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+
+    .scope-chip:hover span { transform: translateY(-1px); }
+
+    .scope-chip input:checked + span {
+      border-color: var(--cooper-red);
+      background: rgba(159, 28, 31, .5);
+      color: var(--cream);
+    }
+
+    .builder-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .build-btn {
+      min-height: 56px;
+      padding: 12px 20px;
+      border-radius: 14px;
+      color: var(--cream);
+      font-family: var(--font-condensed);
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .builder-message {
+      color: rgba(242, 239, 235, .62);
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: right;
+    }
+
+    .results { display: none; }
+    .results.show { display: block; }
+
+    .stack-hero {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 18px;
+      padding: 22px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(700px 280px at 10% 0%, rgba(159, 28, 31, .26), transparent 62%),
+        linear-gradient(145deg, rgba(40, 40, 40, .96), rgba(17, 17, 18, .96) 62%, rgba(104, 12, 25, .64));
+      box-shadow: var(--shadow-lg);
+    }
+
+    .stack-kicker {
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .stack-hero h2 {
+      margin: 7px 0 0;
+      font-family: var(--font-display);
+      font-size: clamp(42px, 6vw, 76px);
+      line-height: .92;
+      text-transform: uppercase;
+    }
+
+    .stack-selection {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .selection-chip {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border: 1px solid rgba(93, 92, 90, .8);
+      border-radius: 999px;
+      background: rgba(40, 40, 40, .74);
+      color: var(--cloud);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .summary-grid {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 18px;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .summary-card {
+      min-height: 100px;
+      padding: 14px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-md);
+      background: rgba(17, 17, 18, .84);
+      box-shadow: var(--shadow-md);
+      text-align: center;
+    }
+
+    .summary-value {
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .summary-label {
+      margin-top: 9px;
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .toolbar {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 18px;
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(150px, 190px)) auto;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-md);
+      background: rgba(17, 17, 18, .84);
+      box-shadow: var(--shadow-md);
+    }
+
+    .search-input { min-height: 48px; }
+    .toolbar .select { min-height: 48px; }
+    .clear-btn { min-height: 48px; background: var(--burgundy); }
+
+    .layer-tabs {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 18px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .layer-tab {
+      min-height: 40px;
+      padding: 9px 12px;
+      border: 1px solid rgba(93, 92, 90, .86);
+      border-radius: 999px;
+      background: rgba(40, 40, 40, .84);
+      color: var(--cloud);
+      font-weight: 800;
+    }
+
+    .layer-tab.active {
+      border-color: var(--cooper-red);
+      background: var(--cooper-red);
+      color: var(--cream);
+    }
+
+    .results-count {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 12px;
+      color: rgba(242, 239, 235, .62);
+      font-size: 13px;
+    }
+
+    .cards {
+      width: min(1680px, calc(100% - 12px));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .requirement-card {
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      padding: 22px;
+      border: 1px solid rgba(93, 92, 90, .74);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(650px 260px at 8% 0%, rgba(159, 28, 31, .22), transparent 62%),
+        linear-gradient(145deg, rgba(40, 40, 40, .96), rgba(17, 17, 18, .96) 56%, rgba(104, 12, 25, .64));
+      box-shadow: var(--shadow-lg);
+    }
+
+    .requirement-card::before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      content: "";
+      background: var(--cooper-red);
+    }
+
+    .requirement-card.layer-state::before { background: var(--info); }
+    .requirement-card.layer-gc::before { background: var(--warning); }
+    .requirement-card.layer-owner::before { background: #7e4c99; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .card-id {
+      color: rgba(207, 205, 202, .82);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .priority-badge, .layer-badge {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 9px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .priority-critical { background: rgba(159, 28, 31, .9); }
+    .priority-high { background: rgba(159, 28, 31, .58); }
+    .priority-medium { background: rgba(171, 116, 22, .58); }
+    .priority-low { background: rgba(47, 143, 98, .58); }
+    .priority-state { background: rgba(59, 111, 150, .72); }
+
+    .card-title {
+      margin: 0 0 10px;
+      font-size: 19px;
+      line-height: 1.2;
+    }
+
+    .card-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    .mini-chip {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid rgba(93, 92, 90, .76);
+      border-radius: 999px;
+      background: rgba(40, 40, 40, .72);
+      color: var(--cloud);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .card-section {
+      display: grid;
+      gap: 5px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(93, 92, 90, .68);
+    }
+
+    .card-section + .card-section { margin-top: 12px; }
+
+    .card-label {
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .card-text {
+      margin: 0;
+      color: rgba(242, 239, 235, .92);
+      font-size: 13px;
+      line-height: 1.48;
+    }
+
+    .card-footer {
+      display: grid;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 16px;
+    }
+
+    .source-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(93, 92, 90, .68);
+    }
+
+    .source-ref {
+      color: var(--cream);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .source-link {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 11px;
+      border: 1px solid rgba(93, 92, 90, .9);
+      border-radius: 11px;
+      background: var(--burgundy);
+      color: var(--cream);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .source-link:hover { background: var(--cooper-red); }
+
+    .empty-state {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto;
+      display: none;
+      padding: 26px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-md);
+      background: rgba(17, 17, 18, .84);
+      color: var(--cloud);
+      text-align: center;
+    }
+
+    .empty-state.show { display: block; }
+
+    .error-banner {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 18px;
+      display: none;
+      padding: 16px;
+      border: 1px solid var(--cooper-red);
+      border-radius: var(--radius-md);
+      background: rgba(104, 12, 25, .92);
+      color: var(--cream);
+      line-height: 1.5;
+    }
+
+    .error-banner.show { display: block; }
+
+    .footer-note {
+      width: min(1180px, calc(100% - 12px));
+      margin: 26px auto 0;
+      color: rgba(242, 239, 235, .52);
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    @media (max-width: 1280px) {
+      .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .toolbar { grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(150px, 1fr)); }
+      .toolbar .clear-btn { grid-column: 3; }
+    }
+
+    @media (max-width: 1080px) {
+      .selector-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 18px, 1680px); }
+      .topbar, .status-panel, .builder-panel, .stack-hero, .summary-grid, .toolbar, .layer-tabs, .results-count, .cards, .empty-state, .error-banner, .footer-note {
+        width: 100%;
+      }
+
+      .topbar, .status-head, .scope-head, .builder-actions, .source-row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .topbar-left, .topbar-right { width: 100%; }
+      .nav-link, .export-btn, .ghost-btn { flex: 1; }
+      .selector-grid, .feed-grid, .summary-grid, .toolbar, .cards { grid-template-columns: 1fr; }
+      .toolbar .clear-btn { grid-column: auto; }
+      .scope-note, .builder-message { text-align: left; }
+      .build-btn { width: 100%; }
+      .requirement-card { min-height: 340px; }
+    }
+
+    @media print {
+      body { background: #fff; color: #111; }
+      .brand-header, .topbar, .status-panel, .builder-panel, .toolbar, .layer-tabs, .footer-note { display: none !important; }
+      .results { display: block !important; }
+      .stack-hero, .summary-card, .requirement-card {
+        color: #111;
+        background: #fff;
+        border: 1px solid #bbb;
+        box-shadow: none;
+      }
+      .stack-hero h2, .summary-value, .card-title, .card-text, .source-ref { color: #111; }
+      .stack-kicker, .summary-label, .card-label, .card-id, .mini-chip { color: #444; }
+      .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .requirement-card { break-inside: avoid; min-height: 0; }
+      .source-link { color: #111; background: #fff; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+    <header class="brand-header">
+      <img src="coopersteel-logo.png" alt="Cooper Steel" class="brand-logo">
+    </header>
+
+    <nav class="topbar" aria-label="Project requirement stack navigation">
+      <div class="topbar-left">
+        <a class="nav-link" href="index.html">← Field Requirements Dashboard</a>
+        <span class="lab-badge">Playground Lab</span>
+      </div>
+      <div class="topbar-right">
+        <button id="printStackButton" class="export-btn" type="button" disabled>Export PDF / Print</button>
+        <button id="exportCsvButton" class="export-btn" type="button" disabled>Export Excel CSV</button>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="eyebrow">Cooper Steel Requirements Intelligence</div>
+      <h1>Project Requirement Stack Builder</h1>
+      <p>
+        Select the project environment and work scope. This prototype assembles Cooper Steel baseline requirements,
+        state-specific OSHA differences, general contractor extras, and owner extras into one project-specific requirement stack.
+      </p>
+    </section>
+
+    <section class="status-panel" aria-label="Data feed status">
+      <div class="status-head">
+        <h2>Live Requirement Feeds</h2>
+        <span id="overallStatus">Loading four source layers...</span>
+      </div>
+      <div class="feed-grid">
+        <div id="feedCooper" class="feed-card">
+          <div class="feed-label"><span class="feed-dot"></span>Cooper Steel</div>
+          <div class="feed-value">Loading...</div>
+        </div>
+        <div id="feedOsha" class="feed-card">
+          <div class="feed-label"><span class="feed-dot"></span>State OSHA</div>
+          <div class="feed-value">Loading...</div>
+        </div>
+        <div id="feedGc" class="feed-card">
+          <div class="feed-label"><span class="feed-dot"></span>General Contractors</div>
+          <div class="feed-value">Loading...</div>
+        </div>
+        <div id="feedOwner" class="feed-card">
+          <div class="feed-label"><span class="feed-dot"></span>Owners</div>
+          <div class="feed-value">Loading...</div>
+        </div>
+      </div>
+    </section>
+
+    <div id="errorBanner" class="error-banner" role="alert"></div>
+
+    <section class="builder-panel" aria-label="Project stack builder controls">
+      <div class="panel-head">
+        <h2>Build the Project Environment</h2>
+        <p>Cooper Steel is always the baseline. State, GC, owner, and scope are added as governing layers above it.</p>
+      </div>
+
+      <div class="builder-body">
+        <div class="selector-grid">
+          <div class="field">
+            <label for="stateSelect">State</label>
+            <select id="stateSelect" class="select" disabled>
+              <option value="">Loading states...</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Cooper Steel Baseline</label>
+            <div class="baseline-box"><span class="baseline-check">✓</span>Always Included</div>
+          </div>
+
+          <div class="field">
+            <label for="gcSelect">General Contractor</label>
+            <select id="gcSelect" class="select" disabled>
+              <option value="">Loading contractors...</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="ownerSelect">Owner</label>
+            <select id="ownerSelect" class="select" disabled>
+              <option value="">Loading owners...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="scope-section">
+          <div class="scope-head">
+            <div class="section-label">Scope of Work</div>
+            <div class="scope-note">
+              V1 records the selected work scope in the generated project profile but does not remove requirements yet.
+              That is intentionally conservative so no governing requirement is falsely omitted before the Smart Applicability Engine is built.
+            </div>
+          </div>
+          <div id="scopeGrid" class="scope-grid"></div>
+        </div>
+
+        <div class="builder-actions">
+          <button id="buildStackButton" class="build-btn" type="button" disabled>Build Project Requirement Stack</button>
+          <div id="builderMessage" class="builder-message">Waiting for all four requirement feeds.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="results" class="results" aria-live="polite">
+      <section class="stack-hero">
+        <div class="stack-kicker">Generated Project Requirement Stack</div>
+        <h2 id="stackTitle">Project Requirements</h2>
+        <div id="stackSelection" class="stack-selection"></div>
+      </section>
+
+      <section class="summary-grid" aria-label="Project stack totals">
+        <div class="summary-card"><div id="summaryTotal" class="summary-value">0</div><div class="summary-label">Total Requirements</div></div>
+        <div class="summary-card"><div id="summaryCooper" class="summary-value">0</div><div class="summary-label">Cooper Baseline</div></div>
+        <div class="summary-card"><div id="summaryState" class="summary-value">0</div><div class="summary-label">State Differences</div></div>
+        <div class="summary-card"><div id="summaryGc" class="summary-value">0</div><div class="summary-label">GC Extras</div></div>
+        <div class="summary-card"><div id="summaryOwner" class="summary-value">0</div><div class="summary-label">Owner Extras</div></div>
+        <div class="summary-card"><div id="summaryCritical" class="summary-value">0</div><div class="summary-label">Critical</div></div>
+      </section>
+
+      <section class="toolbar" aria-label="Generated stack filters">
+        <input id="resultSearch" class="search-input" type="search" placeholder="Search the generated stack, e.g. fall protection, lift plan, LOTO">
+        <select id="priorityFilter" class="select" aria-label="Filter by priority"><option value="">All Priorities</option></select>
+        <select id="groupFilter" class="select" aria-label="Filter by dashboard group"><option value="">All Groups</option></select>
+        <select id="actionFilter" class="select" aria-label="Filter by required action"><option value="">All Action Types</option></select>
+        <button id="clearResultFilters" class="clear-btn" type="button">Clear Filters</button>
+      </section>
+
+      <div id="layerTabs" class="layer-tabs" aria-label="Requirement source layers"></div>
+      <div id="resultsCount" class="results-count"></div>
+      <div id="emptyState" class="empty-state">No generated requirements match the current filters.</div>
+      <section id="cards" class="cards" aria-label="Generated project requirement cards"></section>
+    </section>
+
+    <p class="footer-note">
+      Playground prototype. Source buttons use stored source URLs, hosted PDF filename mappings, and the first page number found in the source reference. Operational guidance generated from later comparison or conflict features must remain clearly distinguishable from legal authority and source requirements.
+    </p>
+  </div>
+
+  <script>
+    "use strict";
+
+    const CONFIG = Object.freeze({
+      csv: {
+        osha: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8SxjBcpMRRNWaSO74ZmuI1vgrtKoj4Ktly45QpRHK1QLKFp492sLX79rfEGxLEXnq9CfvVklyw1MH/pub?gid=0&single=true&output=csv",
+        cooper: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8SxjBcpMRRNWaSO74ZmuI1vgrtKoj4Ktly45QpRHK1QLKFp492sLX79rfEGxLEXnq9CfvVklyw1MH/pub?gid=651566723&single=true&output=csv",
+        gc: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8SxjBcpMRRNWaSO74ZmuI1vgrtKoj4Ktly45QpRHK1QLKFp492sLX79rfEGxLEXnq9CfvVklyw1MH/pub?gid=608450026&single=true&output=csv",
+        owner: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR8SxjBcpMRRNWaSO74ZmuI1vgrtKoj4Ktly45QpRHK1QLKFp492sLX79rfEGxLEXnq9CfvVklyw1MH/pub?gid=1090818101&single=true&output=csv"
+      },
+      pdf: {
+        cooper: {
+          "Cooper Steel": "Cooper_Steel_Field_Health_and_Safety_Manual_2025.pdf.pdf"
+        },
+        gc: {
+          "Whiting-Turner": "Whiting-Turner_Trade_Partner_Safety_Manual_2026.pdf",
+          "Conlan": "Conlan_EHS_Program_Safety_Manual.pdf",
+          "Clayco": "Clayco_Safety_Health_Code_Book_2026.pdf",
+          "EE Reed": "EE_Reed _EHS_Manual_2026.pdf",
+          "Gray Construction": "Gray_Construction_Safety_Manual_2024.pdf",
+          "Gilbane Mortenson": "Gilbane_Mortenson_EHS_2026.pdf",
+          "Gilbane | Mortenson": "Gilbane_Mortenson_EHS_2026.pdf"
+        },
+        owner: {
+          "Amazon": "Amazon_Global_Minimum_Requirements_2026_v3_0.pdf",
+          "Stack": "Stack_EHS_Guidelines_2026_v7_3.pdf",
+          "AECOM": "AECOM_Tishman_SHE_Program_2025.pdf.pdf",
+          "AECOM Tishman": "AECOM_Tishman_SHE_Program_2025.pdf.pdf",
+          "AECOM-Tishman": "AECOM_Tishman_SHE_Program_2025.pdf.pdf",
+          "AECOM Tishman Construction": "AECOM_Tishman_SHE_Program_2025.pdf.pdf"
+        }
+      },
+      scopes: [
+        { id: "steel-erection", label: "Structural Steel Erection", keywords: ["steel erection", "structural steel", "erection", "connector", "column", "beam", "joist", "deck", "bolting", "bolt-up", "bridging", "anchor rod", "stability", "bracing"] },
+        { id: "decking", label: "Decking", keywords: ["decking", "deck", "metal deck", "deck bundle", "deck opening", "controlled decking zone", "cdz"] },
+        { id: "joists", label: "Joists", keywords: ["joist", "bridging", "sji"] },
+        { id: "rigging", label: "Rigging", keywords: ["rigging", "rigger", "sling", "shackle", "hook", "below-the-hook", "signal person", "tag line"] },
+        { id: "crane", label: "Crane Operations", keywords: ["crane", "hoist", "lifting", "lift plan", "critical lift", "multiple lift", "operator"] },
+        { id: "bolt-up", label: "Bolt-Up", keywords: ["bolt", "bolting", "bolt-up", "connector", "connection"] },
+        { id: "welding", label: "Welding / Hot Work", keywords: ["weld", "welding", "hot work", "cutting", "burning", "torch", "fire watch"] },
+        { id: "mewp", label: "MEWP", keywords: ["mewp", "mobile elevated work platform", "aerial lift", "boom lift", "scissor lift"] },
+        { id: "telehandler", label: "Telehandler", keywords: ["telehandler", "rough terrain forklift", "forklift", "powered industrial truck"] },
+        { id: "misc-metals", label: "Miscellaneous Metals", keywords: ["miscellaneous metals", "misc metals", "stairs", "rail", "guardrail", "grating", "ladder"] },
+        { id: "fall-protection", label: "Fall Protection", keywords: ["fall protection", "fall arrest", "harness", "lanyard", "lifeline", "guardrail", "opening", "hole"] },
+        { id: "electrical-loto", label: "Electrical / LOTO", keywords: ["electrical", "loto", "lockout", "tagout", "energized", "energy control"] }
+      ],
+      priorityRank: { critical: 0, high: 1, medium: 2, low: 3, "state difference": 4, "": 5 }
+    });
+
+    const state = {
+      data: { cooper: [], osha: [], gc: [], owner: [] },
+      loaded: { cooper: false, osha: false, gc: false, owner: false },
+      failed: {},
+      generatedRows: [],
+      activeLayer: "all",
+      currentSelection: null
+    };
+
+    const els = {
+      overallStatus: document.getElementById("overallStatus"),
+      errorBanner: document.getElementById("errorBanner"),
+      feedCooper: document.getElementById("feedCooper"),
+      feedOsha: document.getElementById("feedOsha"),
+      feedGc: document.getElementById("feedGc"),
+      feedOwner: document.getElementById("feedOwner"),
+      stateSelect: document.getElementById("stateSelect"),
+      gcSelect: document.getElementById("gcSelect"),
+      ownerSelect: document.getElementById("ownerSelect"),
+      scopeGrid: document.getElementById("scopeGrid"),
+      buildStackButton: document.getElementById("buildStackButton"),
+      builderMessage: document.getElementById("builderMessage"),
+      results: document.getElementById("results"),
+      stackTitle: document.getElementById("stackTitle"),
+      stackSelection: document.getElementById("stackSelection"),
+      summaryTotal: document.getElementById("summaryTotal"),
+      summaryCooper: document.getElementById("summaryCooper"),
+      summaryState: document.getElementById("summaryState"),
+      summaryGc: document.getElementById("summaryGc"),
+      summaryOwner: document.getElementById("summaryOwner"),
+      summaryCritical: document.getElementById("summaryCritical"),
+      resultSearch: document.getElementById("resultSearch"),
+      priorityFilter: document.getElementById("priorityFilter"),
+      groupFilter: document.getElementById("groupFilter"),
+      actionFilter: document.getElementById("actionFilter"),
+      clearResultFilters: document.getElementById("clearResultFilters"),
+      layerTabs: document.getElementById("layerTabs"),
+      resultsCount: document.getElementById("resultsCount"),
+      emptyState: document.getElementById("emptyState"),
+      cards: document.getElementById("cards"),
+      printStackButton: document.getElementById("printStackButton"),
+      exportCsvButton: document.getElementById("exportCsvButton")
+    };
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            field += '"';
+            i += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+          continue;
+        }
+
+        if (char === "," && !inQuotes) {
+          row.push(field);
+          field = "";
+          continue;
+        }
+
+        if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && next === "\n") i += 1;
+          row.push(field);
+          if (row.some((value) => String(value).trim() !== "")) rows.push(row);
+          row = [];
+          field = "";
+          continue;
+        }
+
+        field += char;
+      }
+
+      row.push(field);
+      if (row.some((value) => String(value).trim() !== "")) rows.push(row);
+      return rows;
+    }
+
+    function normalizeHeader(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function firstAvailableCell(cells, headerMap, aliases) {
+      for (const alias of aliases) {
+        const index = headerMap.get(normalizeHeader(alias));
+        if (index !== undefined) return String(cells[index] || "").trim();
+      }
+      return "";
+    }
+
+    function uniqueSorted(values) {
+      return [...new Set(values.filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
+    }
+
+    function sourceKey(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9]+/g, "");
+    }
+
+    function isUrl(value) {
+      return /^https?:\/\//i.test(String(value || "").trim());
+    }
+
+    function isPdfLink(value) {
+      return /\.pdf(?:$|#|\?)/i.test(String(value || "").trim());
+    }
+
+    function sourcePageNumber(sourceReference) {
+      const value = String(sourceReference || "");
+      const pdfMatch = value.match(/\bPDF\s*p(?:age)?\.?\s*(\d+)\b/i);
+      if (pdfMatch) return pdfMatch[1];
+      const match = value.match(/\b(?:p{1,2}\.?|pages?)\s*(\d+)\b/i);
+      return match ? match[1] : "";
+    }
+
+    function addPageToPdfLink(link, page) {
+      const cleanLink = String(link || "").trim();
+      if (!cleanLink || !page || !isPdfLink(cleanLink) || /#page=/i.test(cleanLink)) return cleanLink;
+      const withoutHash = cleanLink.split("#")[0];
+      return `${withoutHash}#page=${page}`;
+    }
+
+    function mappedPdf(sourceType, organization) {
+      const map = CONFIG.pdf[sourceType] || {};
+      const exact = String(map[organization] || "").trim();
+      if (exact) return exact;
+
+      const key = sourceKey(organization);
+      const match = Object.entries(map).find(([label]) => {
+        const labelKey = sourceKey(label);
+        return labelKey === key || key.includes(labelKey) || labelKey.includes(key);
+      });
+      return match ? String(match[1] || "").trim() : "";
+    }
+
+    function resolveSourceLink(row) {
+      const page = sourcePageNumber(row.sourceReference || row.citation);
+      const candidates = [
+        row.sourceUrl,
+        row.source,
+        mappedPdf(row.sourceType, row.organization),
+        row.sourcePdf
+      ].map((value) => String(value || "").trim()).filter(Boolean);
+
+      const direct = candidates.find((value) => isUrl(value) || isPdfLink(value));
+      return direct ? addPageToPdfLink(direct, page) : "";
+    }
+
+    function normalizePriority(value, sourceType) {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (["critical", "high", "medium", "low"].includes(normalized)) {
+        return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+      }
+      return sourceType === "state" ? "State Difference" : String(value || "").trim();
+    }
+
+    function priorityRank(value) {
+      return CONFIG.priorityRank[String(value || "").trim().toLowerCase()] ?? 99;
+    }
+
+    function idNumber(id) {
+      const match = String(id || "").match(/(\d+)(?!.*\d)/);
+      return match ? Number(match[1]) : 999999;
+    }
+
+    function rowSearchText(row) {
+      return [
+        row.organization, row.state, row.id, row.category, row.topic, row.requirement,
+        row.action, row.trigger, row.sourceReference, row.status, row.tags, row.dashboardGroup
+      ].join(" ").toLowerCase();
+    }
+
+    function standardRowsFromCsv(text, sourceType) {
+      const parsed = parseCsv(text);
+      if (!parsed.length) return [];
+
+      const headers = parsed[0].map((header) => String(header || "").trim());
+      const headerMap = new Map(headers.map((header, index) => [normalizeHeader(header), index]));
+      const organizationAliases = sourceType === "cooper"
+        ? ["Organization", "GC / Owner", "Company"]
+        : sourceType === "gc"
+          ? ["GC / Owner", "GC", "General Contractor", "Organization"]
+          : ["Owner", "GC / Owner", "Organization", "GC"];
+
+      const requirementAliases = sourceType === "cooper"
+        ? ["Requirement", "Extra Requirement"]
+        : ["Extra Requirement", "Requirement"];
+
+      const requiredAliasGroups = [
+        organizationAliases,
+        ["Category"],
+        ["Requirement / Topic", "Topic", "Requirement Topic"],
+        requirementAliases,
+        ["Required Field Action", "Field Action", "Dashboard Action"],
+        ["Priority"],
+        ["Source Reference", "Source"]
+      ];
+      const missing = requiredAliasGroups
+        .filter((aliases) => !aliases.some((alias) => headerMap.has(normalizeHeader(alias))))
+        .map((aliases) => aliases[0]);
+      if (missing.length) {
+        throw new Error(`${sourceType} requirements CSV is missing: ${missing.join(", ")}`);
+      }
+
+      return parsed.slice(1).map((cells, index) => {
+        const organization = firstAvailableCell(cells, headerMap, organizationAliases)
+          || (sourceType === "cooper" ? "Cooper Steel" : "");
+
+        const row = {
+          sourceType,
+          organization,
+          state: "",
+          id: firstAvailableCell(cells, headerMap, ["Requirement ID", "ID"]) || `${sourceType.toUpperCase()}-${String(index + 1).padStart(3, "0")}`,
+          category: firstAvailableCell(cells, headerMap, ["Category"]),
+          topic: firstAvailableCell(cells, headerMap, ["Requirement / Topic", "Topic", "Requirement Topic"]),
+          requirement: firstAvailableCell(cells, headerMap, requirementAliases),
+          action: firstAvailableCell(cells, headerMap, ["Required Field Action", "Field Action", "Dashboard Action"]),
+          priority: firstAvailableCell(cells, headerMap, ["Priority"]),
+          trigger: firstAvailableCell(cells, headerMap, ["Applies / Trigger", "Trigger", "Applies"]),
+          sourceReference: firstAvailableCell(cells, headerMap, ["Source Reference", "Source"]),
+          sourceUrl: firstAvailableCell(cells, headerMap, ["Source URL", "Source Link", "PDF URL", "URL"]),
+          sourcePdf: firstAvailableCell(cells, headerMap, ["Source PDF", "PDF Filename", "PDF File", "Manual PDF", "Manual File", "Hosted PDF", "PDF"]),
+          dashboardGroup: firstAvailableCell(cells, headerMap, ["Dashboard Group", "Group", "Card Group", "Requirement Group"]),
+          status: firstAvailableCell(cells, headerMap, ["Status"]),
+          tags: firstAvailableCell(cells, headerMap, ["Tags"]),
+          source: "",
+          citation: ""
+        };
+        row.priority = normalizePriority(row.priority, sourceType);
+        return row;
+      }).filter((row) => row.organization || row.topic || row.requirement)
+        .filter((row) => String(row.status || "").trim().toLowerCase() !== "exclude");
+    }
+
+    function oshaRowsFromCsv(text) {
+      const parsed = parseCsv(text);
+      if (!parsed.length) return [];
+      const headers = parsed[0].map((header) => String(header || "").trim());
+      const headerMap = new Map(headers.map((header, index) => [normalizeHeader(header), index]));
+
+      return parsed.slice(1).map((cells, index) => {
+        const stateName = firstAvailableCell(cells, headerMap, ["State"]);
+        const requirement = firstAvailableCell(cells, headerMap, ["Steel-Erection-Related More Stringent Requirement", "Requirement", "More Stringent Requirement"]);
+        const citation = firstAvailableCell(cells, headerMap, ["Citation"]);
+        const source = firstAvailableCell(cells, headerMap, ["Source"]);
+        return {
+          sourceType: "state",
+          organization: stateName ? `${stateName} OSHA` : "State OSHA",
+          state: stateName,
+          id: `STATE-${String(index + 1).padStart(3, "0")}`,
+          category: "State OSHA Difference",
+          topic: "More Stringent Steel-Erection Requirement",
+          requirement,
+          action: "Review and apply the state-specific requirement when it governs the selected project work.",
+          priority: "State Difference",
+          trigger: stateName ? `Project located in ${stateName}.` : "State-specific applicability.",
+          sourceReference: citation,
+          sourceUrl: isUrl(source) ? source : "",
+          sourcePdf: "",
+          dashboardGroup: "State OSHA / Regulatory Difference",
+          status: "",
+          tags: "state OSHA steel erection more stringent",
+          source,
+          citation
+        };
+      }).filter((row) => row.state || row.requirement || row.citation || row.source);
+    }
+
+    function setFeedStatus(key, status, text) {
+      const elementMap = { cooper: els.feedCooper, osha: els.feedOsha, gc: els.feedGc, owner: els.feedOwner };
+      const card = elementMap[key];
+      if (!card) return;
+      card.classList.remove("ready", "error");
+      if (status === "ready") card.classList.add("ready");
+      if (status === "error") card.classList.add("error");
+      const value = card.querySelector(".feed-value");
+      if (value) value.textContent = text;
+    }
+
+    async function fetchText(url) {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.text();
+    }
+
+    async function loadFeed(key) {
+      try {
+        const text = await fetchText(CONFIG.csv[key]);
+        const rows = key === "osha" ? oshaRowsFromCsv(text) : standardRowsFromCsv(text, key);
+        state.data[key] = rows;
+        state.loaded[key] = true;
+        setFeedStatus(key, "ready", `${rows.length.toLocaleString()} requirements loaded`);
+      } catch (error) {
+        console.error(`Failed to load ${key} feed`, error);
+        state.failed[key] = error;
+        setFeedStatus(key, "error", "Feed failed to load");
+      }
+    }
+
+    function renderScopeChips() {
+      els.scopeGrid.innerHTML = CONFIG.scopes.map((scope) => `
+        <label class="scope-chip">
+          <input type="checkbox" value="${escapeHtml(scope.id)}" ${scope.id === "steel-erection" ? "checked" : ""}>
+          <span>${escapeHtml(scope.label)}</span>
+        </label>
+      `).join("");
+    }
+
+    function populateSelect(select, values, emptyLabel, preferredValue) {
+      const cleanValues = uniqueSorted(values);
+      select.innerHTML = `<option value="">${escapeHtml(emptyLabel)}</option>` + cleanValues.map((value) => (
+        `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+      )).join("");
+      if (preferredValue && cleanValues.includes(preferredValue)) select.value = preferredValue;
+      select.disabled = false;
+    }
+
+    function allFeedsFinished() {
+      return ["cooper", "osha", "gc", "owner"].every((key) => state.loaded[key] || state.failed[key]);
+    }
+
+    function usableFeedCount() {
+      return ["cooper", "osha", "gc", "owner"].filter((key) => state.loaded[key]).length;
+    }
+
+    function updateReadyState() {
+      if (!allFeedsFinished()) return;
+
+      const failedKeys = Object.keys(state.failed);
+      const usable = usableFeedCount();
+      els.overallStatus.textContent = failedKeys.length
+        ? `${usable} of 4 source layers ready. ${failedKeys.length} feed${failedKeys.length === 1 ? "" : "s"} failed.`
+        : "All four source layers ready.";
+
+      if (failedKeys.length) {
+        els.errorBanner.textContent = `One or more live feeds failed to load: ${failedKeys.join(", ")}. The stack builder can still use any successfully loaded layers, but results will be incomplete until the failed feed is restored.`;
+        els.errorBanner.classList.add("show");
+      }
+
+      populateSelect(els.stateSelect, state.data.osha.map((row) => row.state), "No state layer", "Virginia");
+      populateSelect(els.gcSelect, state.data.gc.map((row) => row.organization), "No GC layer", "Whiting-Turner");
+      populateSelect(els.ownerSelect, state.data.owner.map((row) => row.organization), "No owner layer", "Amazon");
+
+      els.buildStackButton.disabled = !state.loaded.cooper;
+      els.builderMessage.textContent = state.loaded.cooper
+        ? "Ready. Build the first unified project-specific requirement stack."
+        : "Cooper Steel baseline did not load, so the stack cannot be generated safely.";
+    }
+
+    function selectedScopeIds() {
+      return [...els.scopeGrid.querySelectorAll('input[type="checkbox"]:checked')].map((input) => input.value);
+    }
+
+    function scopeMatches(row, scopeIds) {
+      if (!scopeIds.length) return true;
+      const selectedScopes = CONFIG.scopes.filter((scope) => scopeIds.includes(scope.id));
+      const haystack = rowSearchText(row);
+      return selectedScopes.some((scope) => scope.keywords.some((keyword) => haystack.includes(keyword)));
+    }
+
+    function classifyAction(row) {
+      const text = `${row.topic} ${row.requirement} ${row.action} ${row.trigger} ${row.tags}`.toLowerCase();
+      const rules = [
+        ["Pre-Mobilization", ["pre-mobil", "before mobil", "prior to mobil", "before arrival", "prior to arrival"]],
+        ["Submit / Document", ["submit", "submission", "document", "documentation", "record", "provide to", "upload"]],
+        ["Plan Required", ["plan", "sssp", "ssep", "erection plan", "lift plan", "rescue plan", "emergency plan"]],
+        ["Permit Required", ["permit", "hot work permit", "energized work permit"]],
+        ["Training / Qualification", ["train", "training", "qualified", "competent person", "certification", "certified"]],
+        ["Inspection", ["inspect", "inspection", "audit"]],
+        ["Daily / Shift", ["daily", "each shift", "per shift", "before each shift"]],
+        ["Per Lift / Task", ["per lift", "each lift", "before lifting", "pre-task", "jha", "aha", "ptp"]],
+        ["Incident / Emergency", ["incident", "injury", "near miss", "emergency", "rescue", "first aid"]]
+      ];
+      const matched = rules.find(([, keywords]) => keywords.some((keyword) => text.includes(keyword)));
+      return matched ? matched[0] : "Field Requirement";
+    }
+
+    function buildStack() {
+      if (!state.loaded.cooper) return;
+
+      const selection = {
+        state: els.stateSelect.value,
+        gc: els.gcSelect.value,
+        owner: els.ownerSelect.value,
+        scopes: selectedScopeIds()
+      };
+
+      const rows = [];
+      rows.push(...state.data.cooper.map((row) => ({ ...row, sourceType: "cooper" })));
+      if (selection.state) rows.push(...state.data.osha.filter((row) => row.state === selection.state));
+      if (selection.gc) rows.push(...state.data.gc.filter((row) => row.organization === selection.gc));
+      if (selection.owner) rows.push(...state.data.owner.filter((row) => row.organization === selection.owner));
+
+      state.generatedRows = rows
+        .map((row) => ({
+          ...row,
+          actionType: classifyAction(row),
+          scopeRelevant: scopeMatches(row, selection.scopes)
+        }));
+      state.currentSelection = selection;
+      state.activeLayer = "all";
+
+      els.resultSearch.value = "";
+      els.priorityFilter.value = "";
+      els.groupFilter.value = "";
+      els.actionFilter.value = "";
+
+      renderStackHeader();
+      buildResultFilters();
+      renderLayerTabs();
+      renderResults();
+
+      els.results.classList.add("show");
+      els.printStackButton.disabled = false;
+      els.exportCsvButton.disabled = false;
+      els.results.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function scopeLabels(ids) {
+      return CONFIG.scopes.filter((scope) => ids.includes(scope.id)).map((scope) => scope.label);
+    }
+
+    function renderStackHeader() {
+      const selection = state.currentSelection;
+      if (!selection) return;
+
+      const titleParts = [selection.state, selection.gc, selection.owner].filter(Boolean);
+      els.stackTitle.textContent = titleParts.length ? titleParts.join(" / ") : "Cooper Steel Baseline Stack";
+
+      const chips = [
+        "Cooper Steel Baseline",
+        selection.state || "No State Layer",
+        selection.gc || "No GC Layer",
+        selection.owner || "No Owner Layer",
+        ...(scopeLabels(selection.scopes).length ? scopeLabels(selection.scopes) : ["All Scopes"])
+      ];
+      els.stackSelection.innerHTML = chips.map((label) => `<span class="selection-chip">${escapeHtml(label)}</span>`).join("");
+
+      const counts = {
+        total: state.generatedRows.length,
+        cooper: state.generatedRows.filter((row) => row.sourceType === "cooper").length,
+        state: state.generatedRows.filter((row) => row.sourceType === "state").length,
+        gc: state.generatedRows.filter((row) => row.sourceType === "gc").length,
+        owner: state.generatedRows.filter((row) => row.sourceType === "owner").length,
+        critical: state.generatedRows.filter((row) => String(row.priority).toLowerCase() === "critical").length
+      };
+
+      els.summaryTotal.textContent = counts.total.toLocaleString();
+      els.summaryCooper.textContent = counts.cooper.toLocaleString();
+      els.summaryState.textContent = counts.state.toLocaleString();
+      els.summaryGc.textContent = counts.gc.toLocaleString();
+      els.summaryOwner.textContent = counts.owner.toLocaleString();
+      els.summaryCritical.textContent = counts.critical.toLocaleString();
+    }
+
+    function setSelectOptions(select, values, allLabel) {
+      select.innerHTML = `<option value="">${escapeHtml(allLabel)}</option>` + uniqueSorted(values).map((value) => (
+        `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+      )).join("");
+    }
+
+    function buildResultFilters() {
+      setSelectOptions(els.priorityFilter, state.generatedRows.map((row) => row.priority), "All Priorities");
+      setSelectOptions(els.groupFilter, state.generatedRows.map((row) => row.dashboardGroup || row.category), "All Groups");
+      setSelectOptions(els.actionFilter, state.generatedRows.map((row) => row.actionType), "All Action Types");
+    }
+
+    function layerLabel(layer) {
+      return { all: "All Layers", cooper: "Cooper Steel", state: "State OSHA", gc: "General Contractor", owner: "Owner" }[layer] || layer;
+    }
+
+    function renderLayerTabs() {
+      const layers = ["all", "cooper", "state", "gc", "owner"];
+      els.layerTabs.innerHTML = layers.map((layer) => {
+        const count = layer === "all" ? state.generatedRows.length : state.generatedRows.filter((row) => row.sourceType === layer).length;
+        return `<button class="layer-tab ${state.activeLayer === layer ? "active" : ""}" type="button" data-layer="${layer}">${escapeHtml(layerLabel(layer))} · ${count}</button>`;
+      }).join("");
+
+      els.layerTabs.querySelectorAll(".layer-tab").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.activeLayer = button.dataset.layer;
+          renderLayerTabs();
+          renderResults();
+        });
+      });
+    }
+
+    function filteredGeneratedRows() {
+      const term = els.resultSearch.value.trim().toLowerCase();
+      const priority = els.priorityFilter.value;
+      const group = els.groupFilter.value;
+      const actionType = els.actionFilter.value;
+
+      return state.generatedRows.filter((row) => {
+        if (state.activeLayer !== "all" && row.sourceType !== state.activeLayer) return false;
+        if (priority && row.priority !== priority) return false;
+        if (group && (row.dashboardGroup || row.category) !== group) return false;
+        if (actionType && row.actionType !== actionType) return false;
+        if (term && !rowSearchText(row).includes(term)) return false;
+        return true;
+      }).sort((a, b) => (
+        priorityRank(a.priority) - priorityRank(b.priority)
+        || String(a.sourceType).localeCompare(String(b.sourceType))
+        || idNumber(a.id) - idNumber(b.id)
+        || String(a.topic || "").localeCompare(String(b.topic || ""))
+      ));
+    }
+
+    function layerClass(sourceType) {
+      return sourceType === "state" ? "layer-state" : sourceType === "gc" ? "layer-gc" : sourceType === "owner" ? "layer-owner" : "layer-cooper";
+    }
+
+    function priorityClass(priority) {
+      const key = String(priority || "").trim().toLowerCase();
+      if (key === "critical") return "priority-critical";
+      if (key === "high") return "priority-high";
+      if (key === "medium") return "priority-medium";
+      if (key === "low") return "priority-low";
+      return "priority-state";
+    }
+
+    function cardMarkup(row) {
+      const sourceLink = resolveSourceLink(row);
+      const displayId = row.id || "Requirement";
+      const group = row.dashboardGroup || row.category || "Other / Review";
+      const topic = row.topic || row.category || "Requirement";
+      const organization = row.sourceType === "state" ? row.state : row.organization;
+
+      return `
+        <article class="requirement-card ${layerClass(row.sourceType)}">
+          <div class="card-top">
+            <div class="card-id">${escapeHtml(displayId)}</div>
+            <span class="priority-badge ${priorityClass(row.priority)}">${escapeHtml(row.priority || layerLabel(row.sourceType))}</span>
+          </div>
+
+          <h3 class="card-title">${escapeHtml(topic)}</h3>
+
+          <div class="card-chips">
+            <span class="mini-chip">${escapeHtml(layerLabel(row.sourceType))}</span>
+            ${organization ? `<span class="mini-chip">${escapeHtml(organization)}</span>` : ""}
+            ${row.category ? `<span class="mini-chip">${escapeHtml(row.category)}</span>` : ""}
+            <span class="mini-chip">${escapeHtml(row.actionType || "Field Requirement")}</span>
+          </div>
+
+          ${row.requirement ? `
+            <div class="card-section">
+              <span class="card-label">Requirement</span>
+              <p class="card-text">${escapeHtml(row.requirement)}</p>
+            </div>` : ""}
+
+          ${row.action ? `
+            <div class="card-section">
+              <span class="card-label">Required Field Action</span>
+              <p class="card-text">${escapeHtml(row.action)}</p>
+            </div>` : ""}
+
+          ${row.trigger ? `
+            <div class="card-section">
+              <span class="card-label">Applies / Trigger</span>
+              <p class="card-text">${escapeHtml(row.trigger)}</p>
+            </div>` : ""}
+
+          <div class="card-footer">
+            <div class="card-section">
+              <span class="card-label">Dashboard Group</span>
+              <p class="card-text">${escapeHtml(group)}</p>
+            </div>
+            <div class="source-row">
+              <div>
+                <span class="card-label">Source Reference</span>
+                <div class="source-ref">${escapeHtml(row.sourceReference || row.citation || "Source reference not listed")}</div>
+              </div>
+              ${sourceLink ? `<a class="source-link" href="${escapeHtml(sourceLink)}" target="_blank" rel="noopener">Open Source</a>` : ""}
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderResults() {
+      const rows = filteredGeneratedRows();
+      els.cards.innerHTML = rows.map(cardMarkup).join("");
+      els.emptyState.classList.toggle("show", rows.length === 0);
+      els.resultsCount.textContent = `${rows.length.toLocaleString()} visible requirement${rows.length === 1 ? "" : "s"} from ${state.generatedRows.length.toLocaleString()} generated.`;
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
+    function exportStackCsv() {
+      if (!state.generatedRows.length) return;
+      const headers = [
+        "Source Layer", "Organization / State", "Requirement ID", "Category", "Requirement / Topic",
+        "Requirement", "Required Field Action", "Priority", "Applies / Trigger", "Action Type",
+        "Source Reference", "Dashboard Group", "Tags", "Source Link"
+      ];
+      const rows = filteredGeneratedRows().map((row) => [
+        layerLabel(row.sourceType), row.sourceType === "state" ? row.state : row.organization, row.id,
+        row.category, row.topic, row.requirement, row.action, row.priority, row.trigger, row.actionType,
+        row.sourceReference || row.citation, row.dashboardGroup, row.tags, resolveSourceLink(row)
+      ]);
+      const csv = [headers, ...rows].map((row) => row.map(csvEscape).join(",")).join("\r\n");
+      const blob = new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const date = new Date().toISOString().slice(0, 10);
+      link.href = url;
+      link.download = `Cooper_Steel_Project_Requirement_Stack_${date}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearResultFilters() {
+      els.resultSearch.value = "";
+      els.priorityFilter.value = "";
+      els.groupFilter.value = "";
+      els.actionFilter.value = "";
+      state.activeLayer = "all";
+      renderLayerTabs();
+      renderResults();
+      els.resultSearch.focus();
+    }
+
+    function bindEvents() {
+      els.buildStackButton.addEventListener("click", buildStack);
+      els.resultSearch.addEventListener("input", renderResults);
+      els.priorityFilter.addEventListener("change", renderResults);
+      els.groupFilter.addEventListener("change", renderResults);
+      els.actionFilter.addEventListener("change", renderResults);
+      els.clearResultFilters.addEventListener("click", clearResultFilters);
+      els.printStackButton.addEventListener("click", () => window.print());
+      els.exportCsvButton.addEventListener("click", exportStackCsv);
+    }
+
+    async function init() {
+      renderScopeChips();
+      bindEvents();
+      await Promise.allSettled([
+        loadFeed("cooper"),
+        loadFeed("osha"),
+        loadFeed("gc"),
+        loadFeed("owner")
+      ]);
+      updateReadyState();
+    }
+
+    init();
+  </script>
+</body>
+</html>
