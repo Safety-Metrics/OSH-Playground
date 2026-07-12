@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111112">
   <title>Cooper Steel Project Requirement Stack Builder</title>
+  <!-- Readability revision: compact headings, readable cards, Field Use Mode panel removed -->
   <link rel="icon" href="data:;base64,=">
 
   <style>
@@ -466,8 +467,9 @@
     .stack-hero h2 {
       margin: 7px 0 0;
       font-family: var(--font-display);
-      font-size: clamp(42px, 6vw, 76px);
-      line-height: .92;
+      font-size: clamp(34px, 4.5vw, 54px);
+      line-height: 1;
+      letter-spacing: -.01em;
       text-transform: uppercase;
     }
 
@@ -491,72 +493,6 @@
       font-weight: 800;
     }
 
-    .field-answer-panel {
-      width: min(1180px, calc(100% - 12px));
-      margin: 0 auto 18px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 18px;
-      align-items: center;
-      padding: 22px;
-      border: 1px solid rgba(159, 28, 31, .58);
-      border-radius: var(--radius-lg);
-      background:
-        radial-gradient(620px 240px at 0% 0%, rgba(159, 28, 31, .30), transparent 62%),
-        linear-gradient(145deg, rgba(17, 17, 18, .96), rgba(40, 40, 40, .88));
-      box-shadow: var(--shadow-lg);
-    }
-
-    .field-answer-kicker {
-      color: var(--cloud);
-      font-family: var(--font-condensed);
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-    }
-
-    .field-answer-title {
-      margin: 8px 0 0;
-      font-family: var(--font-display);
-      font-size: clamp(44px, 6vw, 82px);
-      line-height: .88;
-      text-transform: uppercase;
-    }
-
-    .field-answer-text {
-      max-width: 800px;
-      margin: 12px 0 0;
-      color: rgba(242, 239, 235, .78);
-      font-size: 15px;
-      line-height: 1.5;
-    }
-
-    .governing-count-card {
-      min-width: 210px;
-      padding: 18px;
-      border: 1px solid rgba(242, 239, 235, .12);
-      border-radius: var(--radius-md);
-      background: rgba(0, 0, 0, .28);
-      text-align: center;
-    }
-
-    .governing-count-value {
-      font-size: 46px;
-      font-weight: 900;
-      line-height: .9;
-    }
-
-    .governing-count-label {
-      margin-top: 10px;
-      color: var(--cloud);
-      font-family: var(--font-condensed);
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .13em;
-      text-transform: uppercase;
-    }
-
     .quick-actions {
       width: min(1180px, calc(100% - 12px));
       margin: 0 auto 14px;
@@ -567,14 +503,15 @@
     }
 
     .quick-filter-btn {
-      min-height: 44px;
-      padding: 10px 14px;
+      min-height: 42px;
+      padding: 9px 14px;
       border: 1px solid rgba(93, 92, 90, .86);
       border-radius: 999px;
       background: rgba(40, 40, 40, .84);
       color: var(--cloud);
       cursor: pointer;
-      font-weight: 900;
+      font-size: 14px;
+      font-weight: 800;
     }
 
     .quick-filter-btn.active {
@@ -795,9 +732,14 @@
     .priority-state { background: rgba(59, 111, 150, .72); }
 
     .card-title {
-      margin: 0 0 10px;
-      font-size: 19px;
-      line-height: 1.2;
+      margin: 0 0 12px;
+      font-family: var(--font-body);
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: 0;
+      text-transform: none;
+      overflow-wrap: anywhere;
     }
 
     .card-chips {
@@ -829,9 +771,13 @@
     .field-statement {
       margin: 0;
       color: var(--cream);
-      font-size: 17px;
-      font-weight: 800;
-      line-height: 1.45;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.58;
+      overflow: visible;
+      max-height: none;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
 
     .proof-row {
@@ -1067,12 +1013,14 @@
       text-transform: uppercase;
     }
 
-    .topic-stage h3,
-    .topic-results h3 {
+    .topic-stage-head h3,
+    .topic-results-head h3 {
       margin: 6px 0 0;
-      font-family: var(--font-display);
-      font-size: clamp(38px, 5vw, 64px);
-      line-height: .92;
+      font-family: var(--font-condensed);
+      font-size: clamp(28px, 3.5vw, 42px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -.01em;
       text-transform: uppercase;
     }
 
@@ -1323,7 +1271,7 @@
 
     @media (max-width: 760px) {
       .shell { width: min(100% - 18px, 1680px); }
-      .topbar, .status-panel, .builder-panel, .stack-hero, .field-answer-panel, .quick-actions, .field-search-row, .stack-details, .results-count, .cards, .empty-state, .error-banner, .footer-note {
+      .topbar, .status-panel, .builder-panel, .stack-hero, .quick-actions, .field-search-row, .stack-details, .results-count, .cards, .empty-state, .error-banner, .footer-note {
         width: 100%;
       }
 
@@ -1334,7 +1282,7 @@
 
       .topbar-left, .topbar-right { width: 100%; }
       .nav-link, .export-btn, .ghost-btn { flex: 1; }
-      .selector-grid, .feed-grid, .summary-grid, .toolbar, .cards, .field-answer-panel, .field-search-row { grid-template-columns: 1fr; }
+      .selector-grid, .feed-grid, .summary-grid, .toolbar, .cards, .field-search-row { grid-template-columns: 1fr; }
       .toolbar .clear-btn { grid-column: auto; }
       .scope-note, .builder-message { text-align: left; }
       .build-btn { width: 100%; }
@@ -1345,14 +1293,14 @@
       body { background: #fff; color: #111; }
       .brand-header, .topbar, .status-panel, .builder-panel, .toolbar, .layer-tabs, .footer-note { display: none !important; }
       .results { display: block !important; }
-      .stack-hero, .summary-card, .requirement-card, .field-answer-panel {
+      .stack-hero, .summary-card, .requirement-card {
         color: #111;
         background: #fff;
         border: 1px solid #bbb;
         box-shadow: none;
       }
-      .stack-hero h2, .summary-value, .card-title, .card-text, .source-ref, .field-answer-title, .field-statement { color: #111; }
-      .stack-kicker, .summary-label, .card-label, .card-id, .mini-chip, .field-answer-kicker, .field-statement-label, .proof-label { color: #444; }
+      .stack-hero h2, .summary-value, .card-title, .card-text, .source-ref, .field-statement { color: #111; }
+      .stack-kicker, .summary-label, .card-label, .card-id, .mini-chip, .field-statement-label, .proof-label { color: #444; }
       .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
       .requirement-card { break-inside: avoid; min-height: 0; }
       .source-link { color: #111; background: #fff; }
@@ -1470,20 +1418,6 @@
         <div class="stack-kicker">Project Requirement Stack</div>
         <h2 id="stackTitle">Project Requirements</h2>
         <div id="stackSelection" class="stack-selection"></div>
-      </section>
-
-      <section class="field-answer-panel" aria-label="Field-facing governing requirements summary">
-        <div>
-          <div class="field-answer-kicker">Field Use Mode</div>
-          <h2 class="field-answer-title">Pick a Topic. Get the Answer. Show the Source.</h2>
-          <p class="field-answer-text">
-            Choose the field topic you need. The engine compares the selected project requirements in the background, keeps stricter and supplemental obligations, and hides weaker high-confidence duplicates. Every visible answer keeps its source proof one click away.
-          </p>
-        </div>
-        <div class="governing-count-card">
-          <div id="governingVisibleCount" class="governing-count-value">0</div>
-          <div class="governing-count-label">Governing Field Cards</div>
-        </div>
       </section>
 
       <section class="field-search-row" aria-label="Field search controls">
@@ -1651,7 +1585,6 @@
       results: document.getElementById("results"),
       stackTitle: document.getElementById("stackTitle"),
       stackSelection: document.getElementById("stackSelection"),
-      governingVisibleCount: document.getElementById("governingVisibleCount"),
       resultSearch: document.getElementById("resultSearch"),
       clearResultFilters: document.getElementById("clearResultFilters"),
       topicStage: document.getElementById("topicStage"),
@@ -2379,7 +2312,6 @@
       els.summaryGc.textContent = counts.gc.toLocaleString();
       els.summaryOwner.textContent = counts.owner.toLocaleString();
       els.summaryCritical.textContent = counts.governing.toLocaleString();
-      els.governingVisibleCount.textContent = counts.governing.toLocaleString();
     }
 
     function setSelectOptions(select, values, allLabel) {
@@ -2597,7 +2529,6 @@
     function renderResults() {
       renderQuickFilters();
       renderTopicGrid();
-      els.governingVisibleCount.textContent = state.governingCards.length.toLocaleString();
 
       if (!state.activeTopic) {
         els.topicResults.classList.remove("show");
