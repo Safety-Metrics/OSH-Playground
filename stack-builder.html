@@ -998,6 +998,317 @@
       text-align: center;
     }
 
+
+
+    /* ---------- Topic-first field navigation ---------- */
+    .system-status {
+      margin-bottom: 18px;
+    }
+
+    .system-status > summary {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      list-style: none;
+      font-family: var(--font-condensed);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .system-status > summary::-webkit-details-marker { display: none; }
+
+    .system-status > summary::after {
+      content: "Open Status";
+      padding: 6px 10px;
+      border: 1px solid rgba(93, 92, 90, .86);
+      border-radius: 999px;
+      background: rgba(40, 40, 40, .84);
+      color: var(--cloud);
+      font-family: var(--font-body);
+      font-size: 12px;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .system-status[open] > summary::after { content: "Close Status"; }
+
+    .system-status-body {
+      padding: 0 14px 14px;
+      border-top: 1px solid rgba(93, 92, 90, .62);
+    }
+
+    .topic-stage,
+    .topic-results {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 18px;
+    }
+
+    .topic-stage-head,
+    .topic-results-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .topic-step {
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    .topic-stage h3,
+    .topic-results h3 {
+      margin: 6px 0 0;
+      font-family: var(--font-display);
+      font-size: clamp(38px, 5vw, 64px);
+      line-height: .92;
+      text-transform: uppercase;
+    }
+
+    .topic-stage-copy {
+      max-width: 760px;
+      margin: 9px 0 0;
+      color: rgba(242, 239, 235, .72);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .topic-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .topic-tile {
+      min-height: 132px;
+      position: relative;
+      overflow: hidden;
+      padding: 18px;
+      border: 1px solid rgba(93, 92, 90, .78);
+      border-radius: var(--radius-md);
+      background:
+        radial-gradient(420px 170px at 0% 0%, rgba(159, 28, 31, .20), transparent 62%),
+        linear-gradient(145deg, rgba(40, 40, 40, .92), rgba(17, 17, 18, .96));
+      color: var(--cream);
+      text-align: left;
+      box-shadow: var(--shadow-md);
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+
+    .topic-tile::before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      content: "";
+      background: var(--cooper-red);
+    }
+
+    .topic-tile:hover,
+    .topic-tile:focus-visible {
+      border-color: rgba(159, 28, 31, .95);
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .topic-tile.selected-scope {
+      border-color: rgba(159, 28, 31, .72);
+      background:
+        radial-gradient(420px 170px at 0% 0%, rgba(159, 28, 31, .34), transparent 62%),
+        linear-gradient(145deg, rgba(40, 40, 40, .94), rgba(17, 17, 18, .96));
+    }
+
+    .topic-tile-title {
+      display: block;
+      padding-right: 52px;
+      font-family: var(--font-condensed);
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.06;
+      text-transform: uppercase;
+    }
+
+    .topic-tile-count {
+      display: block;
+      margin-top: 16px;
+      color: var(--cloud);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .topic-tile-arrow {
+      position: absolute;
+      right: 16px;
+      bottom: 14px;
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(242, 239, 235, .12);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .24);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .topic-empty {
+      display: none;
+      padding: 22px;
+      border: 1px dashed rgba(93, 92, 90, .78);
+      border-radius: var(--radius-md);
+      color: var(--cloud);
+      text-align: center;
+    }
+
+    .topic-empty.show { display: block; }
+
+    .topic-results {
+      display: none;
+    }
+
+    .topic-results.show {
+      display: block;
+    }
+
+    .topic-results-head {
+      padding: 18px;
+      border: 1px solid rgba(159, 28, 31, .58);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(620px 240px at 0% 0%, rgba(159, 28, 31, .28), transparent 62%),
+        linear-gradient(145deg, rgba(17, 17, 18, .96), rgba(40, 40, 40, .88));
+      box-shadow: var(--shadow-lg);
+    }
+
+    .topic-count-badge {
+      min-width: 150px;
+      padding: 12px 14px;
+      border: 1px solid rgba(242, 239, 235, .12);
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, .26);
+      text-align: center;
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .topic-count-badge strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--cream);
+      font-family: var(--font-body);
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .back-topics-btn {
+      min-height: 44px;
+      padding: 10px 14px;
+      border: 1px solid rgba(93, 92, 90, .86);
+      border-radius: 12px;
+      background: rgba(40, 40, 40, .84);
+      color: var(--cream);
+      font-weight: 900;
+    }
+
+    .back-topics-btn:hover {
+      background: rgba(93, 92, 90, .78);
+    }
+
+    .secondary-filter-label {
+      width: 100%;
+      margin-bottom: -2px;
+      color: rgba(242, 239, 235, .54);
+      font-family: var(--font-condensed);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .comparison-note {
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      border-left: 3px solid var(--cooper-red);
+      background: rgba(159, 28, 31, .08);
+      color: rgba(242, 239, 235, .68);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .proof-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .source-detail-block {
+      padding: 12px 0;
+      border-top: 1px solid rgba(93, 92, 90, .62);
+    }
+
+    .source-detail-block:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .source-detail-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .source-detail-heading strong {
+      font-size: 13px;
+    }
+
+    .suppressed-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: rgba(242, 239, 235, .68);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 980px) {
+      .topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 780px) {
+      .topic-stage-head,
+      .topic-results-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .topic-count-badge { min-width: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .topic-grid { grid-template-columns: 1fr; }
+      .topic-tile { min-height: 110px; }
+    }
+
     @media (max-width: 1280px) {
       .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .toolbar { grid-template-columns: minmax(260px, 1fr) repeat(2, minmax(150px, 1fr)); }
@@ -1075,37 +1386,39 @@
       </p>
     </section>
 
-    <section class="status-panel" aria-label="Data feed status">
-      <div class="status-head">
-        <h2>Live Requirement Feeds</h2>
+    <details class="status-panel system-status" aria-label="Data feed status">
+      <summary>
+        <span>System Status</span>
         <span id="overallStatus">Loading four source layers...</span>
+      </summary>
+      <div class="system-status-body">
+        <div class="feed-grid">
+          <div id="feedCooper" class="feed-card">
+            <div class="feed-label"><span class="feed-dot"></span>Cooper Steel</div>
+            <div class="feed-value">Loading...</div>
+          </div>
+          <div id="feedOsha" class="feed-card">
+            <div class="feed-label"><span class="feed-dot"></span>State OSHA</div>
+            <div class="feed-value">Loading...</div>
+          </div>
+          <div id="feedGc" class="feed-card">
+            <div class="feed-label"><span class="feed-dot"></span>General Contractors</div>
+            <div class="feed-value">Loading...</div>
+          </div>
+          <div id="feedOwner" class="feed-card">
+            <div class="feed-label"><span class="feed-dot"></span>Owners</div>
+            <div class="feed-value">Loading...</div>
+          </div>
+        </div>
       </div>
-      <div class="feed-grid">
-        <div id="feedCooper" class="feed-card">
-          <div class="feed-label"><span class="feed-dot"></span>Cooper Steel</div>
-          <div class="feed-value">Loading...</div>
-        </div>
-        <div id="feedOsha" class="feed-card">
-          <div class="feed-label"><span class="feed-dot"></span>State OSHA</div>
-          <div class="feed-value">Loading...</div>
-        </div>
-        <div id="feedGc" class="feed-card">
-          <div class="feed-label"><span class="feed-dot"></span>General Contractors</div>
-          <div class="feed-value">Loading...</div>
-        </div>
-        <div id="feedOwner" class="feed-card">
-          <div class="feed-label"><span class="feed-dot"></span>Owners</div>
-          <div class="feed-value">Loading...</div>
-        </div>
-      </div>
-    </section>
+    </details>
 
     <div id="errorBanner" class="error-banner" role="alert"></div>
 
     <section class="builder-panel" aria-label="Project stack builder controls">
       <div class="panel-head">
-        <h2>Build the Project Environment</h2>
-        <p>Cooper Steel is always the baseline. State, GC, owner, and scope are added as governing layers above it.</p>
+        <h2>1. Tell Us Where You Are Working</h2>
+        <p>Select the project environment. Cooper Steel is always included in the background.</p>
       </div>
 
       <div class="builder-body">
@@ -1139,17 +1452,14 @@
 
         <div class="scope-section">
           <div class="scope-head">
-            <div class="section-label">Scope of Work</div>
-            <div class="scope-note">
-              V1 records the selected work scope in the generated project profile but does not remove requirements yet.
-              That is intentionally conservative so no governing requirement is falsely omitted before the Smart Applicability Engine is built.
-            </div>
+            <div class="section-label">2. Tell Us What Work You Are Doing</div>
+            <div class="scope-note">Select every work activity that applies. Selected work topics are moved to the front when your project requirements are built.</div>
           </div>
           <div id="scopeGrid" class="scope-grid"></div>
         </div>
 
         <div class="builder-actions">
-          <button id="buildStackButton" class="build-btn" type="button" disabled>Build Project Requirement Stack</button>
+          <button id="buildStackButton" class="build-btn" type="button" disabled>Show My Governing Requirements</button>
           <div id="builderMessage" class="builder-message">Waiting for all four requirement feeds.</div>
         </div>
       </div>
@@ -1157,7 +1467,7 @@
 
     <section id="results" class="results" aria-live="polite">
       <section class="stack-hero">
-        <div class="stack-kicker">Generated Project Requirement Stack</div>
+        <div class="stack-kicker">Project Requirement Stack</div>
         <h2 id="stackTitle">Project Requirements</h2>
         <div id="stackSelection" class="stack-selection"></div>
       </section>
@@ -1165,28 +1475,55 @@
       <section class="field-answer-panel" aria-label="Field-facing governing requirements summary">
         <div>
           <div class="field-answer-kicker">Field Use Mode</div>
-          <h2 class="field-answer-title">What Governs This Work</h2>
+          <h2 class="field-answer-title">Pick a Topic. Get the Answer. Show the Source.</h2>
           <p class="field-answer-text">
-            Start here. The cards below are written to answer two field questions fast: <strong>who requires what?</strong> and <strong>show me the source.</strong>
-            The deeper source-count and layer-review stuff is still available, but it is tucked under Stack Details.
+            Choose the field topic you need. The engine compares the selected project requirements in the background, keeps stricter and supplemental obligations, and hides weaker high-confidence duplicates. Every visible answer keeps its source proof one click away.
           </p>
         </div>
         <div class="governing-count-card">
           <div id="governingVisibleCount" class="governing-count-value">0</div>
-          <div class="governing-count-label">Visible Field Cards</div>
+          <div class="governing-count-label">Governing Field Cards</div>
         </div>
       </section>
 
-      <div class="quick-actions" aria-label="Quick field filters">
-        <button class="quick-filter-btn active" type="button" data-quick-filter="critical">Critical</button>
-        <button class="quick-filter-btn" type="button" data-quick-filter="before">Before Work</button>
-        <button class="quick-filter-btn" type="button" data-quick-filter="today">Today / This Shift</button>
-        <button class="quick-filter-btn" type="button" data-quick-filter="all">All Field Cards</button>
-      </div>
-
       <section class="field-search-row" aria-label="Field search controls">
-        <input id="resultSearch" class="search-input" type="search" placeholder="Search: fall protection, crane, rigging, hot work, LOTO...">
+        <input id="resultSearch" class="search-input" type="search" placeholder="Search all governing requirements: fall protection, crane, rigging, hot work, LOTO...">
         <button id="clearResultFilters" class="clear-btn" type="button">Clear Filters</button>
+      </section>
+
+      <section id="topicStage" class="topic-stage" aria-label="Field topic navigation">
+        <div class="topic-stage-head">
+          <div>
+            <div class="topic-step">3. Choose a Field Topic</div>
+            <h3>What Do You Need?</h3>
+            <p class="topic-stage-copy">Only topics with applicable project requirements are shown. Selected work scopes are moved to the front.</p>
+          </div>
+        </div>
+        <div id="topicGrid" class="topic-grid"></div>
+        <div id="topicEmpty" class="topic-empty">No field topics match the current search or advanced filters.</div>
+      </section>
+
+      <section id="topicResults" class="topic-results" aria-label="Selected topic governing requirements">
+        <div class="topic-results-head">
+          <div>
+            <button id="backToTopicsButton" class="back-topics-btn" type="button">← Back to Field Topics</button>
+            <div class="topic-step" style="margin-top:14px;">Selected Topic</div>
+            <h3 id="activeTopicTitle">Field Topic</h3>
+          </div>
+          <div id="activeTopicCount" class="topic-count-badge"><strong>0</strong> governing cards</div>
+        </div>
+
+        <div class="quick-actions" aria-label="Secondary topic filters">
+          <div class="secondary-filter-label">Optional quick filters inside this topic</div>
+          <button class="quick-filter-btn active" type="button" data-quick-filter="all">All Requirements</button>
+          <button class="quick-filter-btn" type="button" data-quick-filter="critical">Critical</button>
+          <button class="quick-filter-btn" type="button" data-quick-filter="before">Before Work</button>
+          <button class="quick-filter-btn" type="button" data-quick-filter="today">Today / This Shift</button>
+        </div>
+
+        <div id="resultsCount" class="results-count"></div>
+        <div id="emptyState" class="empty-state">No governing requirements match the current filters for this topic.</div>
+        <section id="cards" class="cards" aria-label="Governing project requirement cards"></section>
       </section>
 
       <details class="stack-details">
@@ -1198,7 +1535,7 @@
             <div class="summary-card"><div id="summaryState" class="summary-value">0</div><div class="summary-label">State Layer</div></div>
             <div class="summary-card"><div id="summaryGc" class="summary-value">0</div><div class="summary-label">GC Layer</div></div>
             <div class="summary-card"><div id="summaryOwner" class="summary-value">0</div><div class="summary-label">Owner Layer</div></div>
-            <div class="summary-card"><div id="summaryCritical" class="summary-value">0</div><div class="summary-label">Critical Source Cards</div></div>
+            <div class="summary-card"><div id="summaryCritical" class="summary-value">0</div><div class="summary-label">Governing Field Cards</div></div>
           </section>
 
           <section class="toolbar" aria-label="Advanced generated stack filters">
@@ -1208,12 +1545,11 @@
           </section>
 
           <div id="layerTabs" class="layer-tabs" aria-label="Requirement source layers"></div>
+          <p class="comparison-note">
+            Comparison engine note: high-confidence threshold conflicts, prohibitions, exact duplicates, and the fall-protection trigger + plan combination are compressed automatically. Uncertain or independent requirements remain separate instead of being guessed together.
+          </p>
         </div>
       </details>
-
-      <div id="resultsCount" class="results-count"></div>
-      <div id="emptyState" class="empty-state">No generated requirements match the current filters.</div>
-      <section id="cards" class="cards" aria-label="Generated project requirement cards"></section>
     </section>
 
     <p class="footer-note">
@@ -1254,18 +1590,35 @@
         }
       },
       scopes: [
-        { id: "steel-erection", label: "Structural Steel Erection", keywords: ["steel erection", "structural steel", "erection", "connector", "column", "beam", "joist", "deck", "bolting", "bolt-up", "bridging", "anchor rod", "stability", "bracing"] },
-        { id: "decking", label: "Decking", keywords: ["decking", "deck", "metal deck", "deck bundle", "deck opening", "controlled decking zone", "cdz"] },
-        { id: "joists", label: "Joists", keywords: ["joist", "bridging", "sji"] },
-        { id: "rigging", label: "Rigging", keywords: ["rigging", "rigger", "sling", "shackle", "hook", "below-the-hook", "signal person", "tag line"] },
-        { id: "crane", label: "Crane Operations", keywords: ["crane", "hoist", "lifting", "lift plan", "critical lift", "multiple lift", "operator"] },
-        { id: "bolt-up", label: "Bolt-Up", keywords: ["bolt", "bolting", "bolt-up", "connector", "connection"] },
-        { id: "welding", label: "Welding / Hot Work", keywords: ["weld", "welding", "hot work", "cutting", "burning", "torch", "fire watch"] },
-        { id: "mewp", label: "MEWP", keywords: ["mewp", "mobile elevated work platform", "aerial lift", "boom lift", "scissor lift"] },
-        { id: "telehandler", label: "Telehandler", keywords: ["telehandler", "rough terrain forklift", "forklift", "powered industrial truck"] },
-        { id: "misc-metals", label: "Miscellaneous Metals", keywords: ["miscellaneous metals", "misc metals", "stairs", "rail", "guardrail", "grating", "ladder"] },
-        { id: "fall-protection", label: "Fall Protection", keywords: ["fall protection", "fall arrest", "harness", "lanyard", "lifeline", "guardrail", "opening", "hole"] },
-        { id: "electrical-loto", label: "Electrical / LOTO", keywords: ["electrical", "loto", "lockout", "tagout", "energized", "energy control"] }
+        { id: "steel-erection", label: "Structural Steel Erection", topicIds: ["steel-erection-stability", "decking-joists", "fall-protection", "cranes-hoisting", "rigging"], keywords: ["steel erection", "structural steel", "erection", "connector", "column", "beam", "joist", "deck", "bolting", "bolt-up", "bridging", "anchor rod", "stability", "bracing"] },
+        { id: "decking", label: "Decking", topicIds: ["decking-joists", "fall-protection"], keywords: ["decking", "deck", "metal deck", "deck bundle", "deck opening", "controlled decking zone", "cdz"] },
+        { id: "joists", label: "Joists", topicIds: ["decking-joists", "steel-erection-stability"], keywords: ["joist", "bridging", "sji"] },
+        { id: "rigging", label: "Rigging", topicIds: ["rigging", "cranes-hoisting"], keywords: ["rigging", "rigger", "sling", "shackle", "hook", "below-the-hook", "signal person", "tag line"] },
+        { id: "crane", label: "Crane Operations", topicIds: ["cranes-hoisting", "rigging"], keywords: ["crane", "hoist", "lifting", "lift plan", "critical lift", "multiple lift", "operator"] },
+        { id: "bolt-up", label: "Bolt-Up", topicIds: ["steel-erection-stability"], keywords: ["bolt", "bolting", "bolt-up", "connector", "connection"] },
+        { id: "welding", label: "Welding / Hot Work", topicIds: ["welding-hot-work"], keywords: ["weld", "welding", "hot work", "cutting", "burning", "torch", "fire watch"] },
+        { id: "mewp", label: "MEWP", topicIds: ["mewp-mobile-equipment", "fall-protection"], keywords: ["mewp", "mobile elevated work platform", "aerial lift", "boom lift", "scissor lift"] },
+        { id: "telehandler", label: "Telehandler", topicIds: ["mewp-mobile-equipment", "material-housekeeping"], keywords: ["telehandler", "rough terrain forklift", "forklift", "powered industrial truck"] },
+        { id: "misc-metals", label: "Miscellaneous Metals", topicIds: ["steel-erection-stability", "fall-protection", "material-housekeeping"], keywords: ["miscellaneous metals", "misc metals", "stairs", "rail", "guardrail", "grating", "ladder"] },
+        { id: "fall-protection", label: "Fall Protection", topicIds: ["fall-protection"], keywords: ["fall protection", "fall arrest", "harness", "lanyard", "lifeline", "guardrail", "opening", "hole"] },
+        { id: "electrical-loto", label: "Electrical / LOTO", topicIds: ["electrical-loto"], keywords: ["electrical", "loto", "lockout", "tagout", "energized", "energy control"] }
+      ],
+      fieldTopics: [
+        { id: "fall-protection", label: "Fall Protection", operational: true, keywords: ["fall protection", "fall arrest", "fall restraint", "tie off", "tie-off", "harness", "lanyard", "lifeline", "leading edge", "floor opening", "hole cover", "guardrail", "controlled decking zone", "cdz", "safety monitor"] },
+        { id: "cranes-hoisting", label: "Crane & Hoisting", operational: true, keywords: ["crane", "hoist", "critical lift", "multiple lift", "dual pick", "personnel platform", "power line", "load chart", "crane operator", "lift director"] },
+        { id: "rigging", label: "Rigging", operational: true, keywords: ["rigging", "rigger", "sling", "shackle", "hook", "below-the-hook", "signal person", "tag line", "tagline"] },
+        { id: "steel-erection-stability", label: "Steel Erection & Stability", operational: true, keywords: ["structural steel", "steel erection", "column", "beam", "bolt-up", "bolting", "connector", "anchor rod", "temporary bracing", "stability", "plumb", "turnbuckle"] },
+        { id: "decking-joists", label: "Decking & Joists", operational: true, keywords: ["metal deck", "decking", "deck bundle", "deck opening", "joist", "bridging", "sji"] },
+        { id: "welding-hot-work", label: "Welding & Hot Work", operational: true, keywords: ["welding", "weld", "hot work", "cutting", "burning", "torch", "fire watch", "spark containment"] },
+        { id: "mewp-mobile-equipment", label: "MEWPs & Mobile Equipment", operational: true, keywords: ["mewp", "mobile elevated work platform", "aerial lift", "boom lift", "scissor lift", "telehandler", "forklift", "powered industrial truck", "mobile equipment"] },
+        { id: "ppe", label: "PPE", operational: true, keywords: ["ppe", "personal protective equipment", "hard hat", "helmet", "type ii", "chin strap", "safety glasses", "eye protection", "gloves", "hi-vis", "high visibility", "hearing protection"] },
+        { id: "electrical-loto", label: "Electrical & LOTO", operational: true, keywords: ["electrical", "loto", "lockout", "tagout", "energized", "energy control", "ground fault", "gfci"] },
+        { id: "material-housekeeping", label: "Material Handling & Housekeeping", operational: true, keywords: ["material handling", "housekeeping", "storage", "staging", "unloading", "delivery", "laydown", "trash", "debris"] },
+        { id: "training-qualifications", label: "Training & Qualifications", operational: false, keywords: ["training", "trained", "qualified", "competent person", "certification", "certified", "authorization"] },
+        { id: "plans-permits-submittals", label: "Plans, Permits & Submittals", operational: false, keywords: ["plan required", "permit required", "submit", "submission", "submittal", "approval required", "sssp", "ssep", "erection plan"] },
+        { id: "inspections-documentation", label: "Inspections & Documentation", operational: false, keywords: ["inspection", "inspect", "audit", "document", "documentation", "record", "checklist"] },
+        { id: "emergency-incident", label: "Emergency, Medical & Incident Response", operational: false, keywords: ["emergency", "incident", "injury", "near miss", "first aid", "medical", "rescue", "reporting"] },
+        { id: "general-site-rules", label: "General Site Rules", operational: false, keywords: [] }
       ],
       priorityRank: { critical: 0, high: 1, medium: 2, low: 3, "state difference": 4, "": 5 }
     });
@@ -1275,8 +1628,10 @@
       loaded: { cooper: false, osha: false, gc: false, owner: false },
       failed: {},
       generatedRows: [],
+      governingCards: [],
       activeLayer: "all",
-      quickFilter: "critical",
+      activeTopic: "",
+      quickFilter: "all",
       currentSelection: null
     };
 
@@ -1297,19 +1652,26 @@
       stackTitle: document.getElementById("stackTitle"),
       stackSelection: document.getElementById("stackSelection"),
       governingVisibleCount: document.getElementById("governingVisibleCount"),
-      quickFilterButtons: Array.from(document.querySelectorAll(".quick-filter-btn")),
+      resultSearch: document.getElementById("resultSearch"),
+      clearResultFilters: document.getElementById("clearResultFilters"),
+      topicStage: document.getElementById("topicStage"),
+      topicGrid: document.getElementById("topicGrid"),
+      topicEmpty: document.getElementById("topicEmpty"),
+      topicResults: document.getElementById("topicResults"),
+      backToTopicsButton: document.getElementById("backToTopicsButton"),
+      activeTopicTitle: document.getElementById("activeTopicTitle"),
+      activeTopicCount: document.getElementById("activeTopicCount"),
       summaryTotal: document.getElementById("summaryTotal"),
       summaryCooper: document.getElementById("summaryCooper"),
       summaryState: document.getElementById("summaryState"),
       summaryGc: document.getElementById("summaryGc"),
       summaryOwner: document.getElementById("summaryOwner"),
       summaryCritical: document.getElementById("summaryCritical"),
-      resultSearch: document.getElementById("resultSearch"),
       priorityFilter: document.getElementById("priorityFilter"),
       groupFilter: document.getElementById("groupFilter"),
       actionFilter: document.getElementById("actionFilter"),
-      clearResultFilters: document.getElementById("clearResultFilters"),
       layerTabs: document.getElementById("layerTabs"),
+      quickFilterButtons: Array.from(document.querySelectorAll(".quick-filter-btn")),
       resultsCount: document.getElementById("resultsCount"),
       emptyState: document.getElementById("emptyState"),
       cards: document.getElementById("cards"),
@@ -1326,23 +1688,12 @@
       for (let i = 0; i < text.length; i += 1) {
         const char = text[i];
         const next = text[i + 1];
-
         if (char === '"') {
-          if (inQuotes && next === '"') {
-            field += '"';
-            i += 1;
-          } else {
-            inQuotes = !inQuotes;
-          }
+          if (inQuotes && next === '"') { field += '"'; i += 1; }
+          else { inQuotes = !inQuotes; }
           continue;
         }
-
-        if (char === "," && !inQuotes) {
-          row.push(field);
-          field = "";
-          continue;
-        }
-
+        if (char === "," && !inQuotes) { row.push(field); field = ""; continue; }
         if ((char === "\n" || char === "\r") && !inQuotes) {
           if (char === "\r" && next === "\n") i += 1;
           row.push(field);
@@ -1351,7 +1702,6 @@
           field = "";
           continue;
         }
-
         field += char;
       }
 
@@ -1412,15 +1762,13 @@
     function addPageToPdfLink(link, page) {
       const cleanLink = String(link || "").trim();
       if (!cleanLink || !page || !isPdfLink(cleanLink) || /#page=/i.test(cleanLink)) return cleanLink;
-      const withoutHash = cleanLink.split("#")[0];
-      return `${withoutHash}#page=${page}`;
+      return `${cleanLink.split("#")[0]}#page=${page}`;
     }
 
     function mappedPdf(sourceType, organization) {
       const map = CONFIG.pdf[sourceType] || {};
       const exact = String(map[organization] || "").trim();
       if (exact) return exact;
-
       const key = sourceKey(organization);
       const match = Object.entries(map).find(([label]) => {
         const labelKey = sourceKey(label);
@@ -1437,7 +1785,6 @@
         mappedPdf(row.sourceType, row.organization),
         row.sourcePdf
       ].map((value) => String(value || "").trim()).filter(Boolean);
-
       const direct = candidates.find((value) => isUrl(value) || isPdfLink(value));
       return direct ? addPageToPdfLink(direct, page) : "";
     }
@@ -1469,7 +1816,6 @@
     function standardRowsFromCsv(text, sourceType) {
       const parsed = parseCsv(text);
       if (!parsed.length) return [];
-
       const headers = parsed[0].map((header) => String(header || "").trim());
       const headerMap = new Map(headers.map((header, index) => [normalizeHeader(header), index]));
       const organizationAliases = sourceType === "cooper"
@@ -1477,11 +1823,7 @@
         : sourceType === "gc"
           ? ["GC / Owner", "GC", "General Contractor", "Organization"]
           : ["Owner", "GC / Owner", "Organization", "GC"];
-
-      const requirementAliases = sourceType === "cooper"
-        ? ["Requirement", "Extra Requirement"]
-        : ["Extra Requirement", "Requirement"];
-
+      const requirementAliases = sourceType === "cooper" ? ["Requirement", "Extra Requirement"] : ["Extra Requirement", "Requirement"];
       const requiredAliasGroups = [
         organizationAliases,
         ["Category"],
@@ -1494,14 +1836,10 @@
       const missing = requiredAliasGroups
         .filter((aliases) => !aliases.some((alias) => headerMap.has(normalizeHeader(alias))))
         .map((aliases) => aliases[0]);
-      if (missing.length) {
-        throw new Error(`${sourceType} requirements CSV is missing: ${missing.join(", ")}`);
-      }
+      if (missing.length) throw new Error(`${sourceType} requirements CSV is missing: ${missing.join(", ")}`);
 
       return parsed.slice(1).map((cells, index) => {
-        const organization = firstAvailableCell(cells, headerMap, organizationAliases)
-          || (sourceType === "cooper" ? "Cooper Steel" : "");
-
+        const organization = firstAvailableCell(cells, headerMap, organizationAliases) || (sourceType === "cooper" ? "Cooper Steel" : "");
         const row = {
           sourceType,
           organization,
@@ -1533,7 +1871,6 @@
       if (!parsed.length) return [];
       const headers = parsed[0].map((header) => String(header || "").trim());
       const headerMap = new Map(headers.map((header, index) => [normalizeHeader(header), index]));
-
       return parsed.slice(1).map((cells, index) => {
         const stateName = firstAvailableCell(cells, headerMap, ["State"]);
         const requirement = firstAvailableCell(cells, headerMap, ["Steel-Erection-Related More Stringent Requirement", "Requirement", "More Stringent Requirement"]);
@@ -1563,8 +1900,8 @@
     }
 
     function setFeedStatus(key, status, text) {
-      const elementMap = { cooper: els.feedCooper, osha: els.feedOsha, gc: els.feedGc, owner: els.feedOwner };
-      const card = elementMap[key];
+      const map = { cooper: els.feedCooper, osha: els.feedOsha, gc: els.feedGc, owner: els.feedOwner };
+      const card = map[key];
       if (!card) return;
       card.classList.remove("ready", "error");
       if (status === "ready") card.classList.add("ready");
@@ -1621,7 +1958,6 @@
 
     function updateReadyState() {
       if (!allFeedsFinished()) return;
-
       const failedKeys = Object.keys(state.failed);
       const usable = usableFeedCount();
       els.overallStatus.textContent = failedKeys.length
@@ -1629,7 +1965,7 @@
         : "All four source layers ready.";
 
       if (failedKeys.length) {
-        els.errorBanner.textContent = `One or more live feeds failed to load: ${failedKeys.join(", ")}. The stack builder can still use any successfully loaded layers, but results will be incomplete until the failed feed is restored.`;
+        els.errorBanner.textContent = `One or more live feeds failed to load: ${failedKeys.join(", ")}. Results will be incomplete until the failed feed is restored.`;
         els.errorBanner.classList.add("show");
       }
 
@@ -1639,7 +1975,7 @@
 
       els.buildStackButton.disabled = !state.loaded.cooper;
       els.builderMessage.textContent = state.loaded.cooper
-        ? "Ready. Build the first unified project-specific requirement stack."
+        ? "Ready. Select the project, select the work, and show what governs."
         : "Cooper Steel baseline did not load, so the stack cannot be generated safely.";
     }
 
@@ -1671,6 +2007,296 @@
       return matched ? matched[0] : "Field Requirement";
     }
 
+    function topicScore(text, topic) {
+      return topic.keywords.reduce((score, keyword) => score + (text.includes(keyword) ? (keyword.includes(" ") ? 3 : 1) : 0), 0);
+    }
+
+    function classifyFieldTopic(row) {
+      const text = rowSearchText(row);
+      const operational = CONFIG.fieldTopics.filter((topic) => topic.operational);
+      const admin = CONFIG.fieldTopics.filter((topic) => !topic.operational && topic.id !== "general-site-rules");
+
+      const choose = (topics) => topics
+        .map((topic) => ({ topic, score: topicScore(text, topic) }))
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score || CONFIG.fieldTopics.findIndex((topic) => topic.id === a.topic.id) - CONFIG.fieldTopics.findIndex((topic) => topic.id === b.topic.id))[0];
+
+      const operationalMatch = choose(operational);
+      if (operationalMatch) return operationalMatch.topic.id;
+      const adminMatch = choose(admin);
+      return adminMatch ? adminMatch.topic.id : "general-site-rules";
+    }
+
+    function topicDefinition(topicId) {
+      return CONFIG.fieldTopics.find((topic) => topic.id === topicId) || CONFIG.fieldTopics[CONFIG.fieldTopics.length - 1];
+    }
+
+    function selectedScopeTopicIds() {
+      const ids = new Set();
+      const selected = state.currentSelection ? state.currentSelection.scopes : selectedScopeIds();
+      CONFIG.scopes.filter((scope) => selected.includes(scope.id)).forEach((scope) => {
+        (scope.topicIds || []).forEach((topicId) => ids.add(topicId));
+      });
+      return ids;
+    }
+
+    function sourceOrganization(row) {
+      if (row.sourceType === "state") {
+        if (String(row.state || "").toLowerCase() === "virginia") return "Virginia VOSH";
+        return row.state ? `${row.state} OSHA` : (row.organization || "State OSHA");
+      }
+      return row.organization || "";
+    }
+
+    function humanList(values) {
+      const list = uniqueSorted(values);
+      if (!list.length) return "The selected source";
+      if (list.length === 1) return list[0];
+      if (list.length === 2) return `${list[0]} and ${list[1]}`;
+      return `${list.slice(0, -1).join(", ")}, and ${list[list.length - 1]}`;
+    }
+
+    function pluralVerb(values, singular, plural) {
+      return uniqueSorted(values).length > 1 ? plural : singular;
+    }
+
+    function normalizeComparisonText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/\b(cooper steel|amazon|clayco|whiting[- ]turner|gray construction|conlan|ee reed|gilbane|mortenson|aecom(?: tishman)?|stack)\b/g, " ")
+        .replace(/\b\d+(?:\.\d+)?\b/g, " # ")
+        .replace(/[^a-z#]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function comparisonText(row) {
+      return `${row.topic} ${row.requirement} ${row.action} ${row.trigger}`.toLowerCase();
+    }
+
+    function hasProhibition(text) {
+      return /\b(prohibit(?:ed|s)?|not permitted|not allowed|shall not|may not|must not)\b/i.test(text);
+    }
+
+    function highConfidenceComparisonKey(row) {
+      const text = comparisonText(row);
+      const topic = row.fieldTopic;
+
+      if (topic === "fall-protection") {
+        if (/controlled decking zone|\bcdz\b/.test(text)) return "fall:cdz";
+        if (/safety monitor(?:ing)?/.test(text)) return "fall:safety-monitoring";
+        if (/fall protection plan/.test(text)) return "fall:plan";
+        if (/fall.{0,80}(rescue|recovery)|(rescue|recovery).{0,80}fall/.test(text)) return "fall:rescue";
+        if (/(fall protection|fall exposure|work at height|working at height).{0,120}(feet|foot|\bft\b)|(?:feet|foot|\bft\b).{0,120}(fall protection|fall exposure|work at height|working at height)/.test(text)) return "fall:trigger";
+      }
+
+      if (topic === "cranes-hoisting") {
+        if (/critical lift/.test(text)) return "crane:critical-lift";
+        if (/multiple lift|dual pick|dual lift|tandem lift/.test(text)) return "crane:multiple-lift";
+        if (/personnel platform|personnel basket|hoisting personnel/.test(text)) return "crane:personnel-platform";
+        if (/lift plan/.test(text)) return "crane:lift-plan";
+        if (/power line|energized line/.test(text)) return "crane:power-line";
+        if (/daily inspection|pre[- ]?shift inspection|before each shift/.test(text)) return "crane:daily-inspection";
+      }
+
+      if (topic === "rigging") {
+        if (/qualified rigger/.test(text)) return "rigging:qualified-rigger";
+        if (/signal person/.test(text)) return "rigging:signal-person";
+        if (/rigging inspection|inspect.{0,50}(sling|rigging)|(?:sling|rigging).{0,50}inspect/.test(text)) return "rigging:inspection";
+        if (/hook.{0,80}(latch|open)|open hook/.test(text)) return "rigging:hook-latch";
+      }
+
+      if (topic === "ppe") {
+        if (/type\s*ii|type 2/.test(text)) return "ppe:type-ii-helmet";
+        if (/chin strap|chinstrap/.test(text)) return "ppe:chin-strap";
+        if (/safety glasses|eye protection|protective eyewear/.test(text)) return "ppe:eye-protection";
+        if (/high visibility|hi-vis|high-vis/.test(text)) return "ppe:hi-vis";
+      }
+
+      if (topic === "welding-hot-work") {
+        if (/hot work permit/.test(text)) return "hotwork:permit";
+        if (/fire watch/.test(text)) return "hotwork:fire-watch";
+        if (/fire extinguisher|extinguisher/.test(text)) return "hotwork:extinguisher";
+      }
+
+      if (topic === "electrical-loto") {
+        if (/lockout|tagout|\bloto\b/.test(text)) return "electrical:loto";
+        if (/gfci|ground fault/.test(text)) return "electrical:gfci";
+      }
+
+      const exact = normalizeComparisonText(row.requirement || row.action || row.topic);
+      return exact.length >= 44 ? `exact:${exact}` : `unique:${row.sourceType}:${row.id}`;
+    }
+
+    function extractFeet(row) {
+      const text = comparisonText(row);
+      const patterns = [
+        /(?:at|above|over|greater than|more than|exposure(?: of)?|height(?: of)?)\s*(\d+(?:\.\d+)?)\s*(?:feet|foot|ft\b)/gi,
+        /(\d+(?:\.\d+)?)\s*(?:feet|foot|ft\b).{0,60}(?:fall protection|fall exposure|work at height|working at height)/gi
+      ];
+      const numbers = [];
+      for (const pattern of patterns) {
+        let match;
+        while ((match = pattern.exec(text)) !== null) numbers.push(Number(match[1]));
+      }
+      return numbers.filter(Number.isFinite).sort((a, b) => a - b)[0] ?? null;
+    }
+
+    function highestPriority(rows) {
+      return [...rows].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))[0]?.priority || "";
+    }
+
+    function makeCard(rows, options = {}) {
+      const sourceRows = rows.filter(Boolean);
+      const primary = options.primary || sourceRows[0];
+      const contributingRows = options.contributingRows || sourceRows;
+      const weakerRows = options.weakerRows || [];
+      return {
+        id: options.id || primary?.id || `CARD-${Math.random().toString(36).slice(2, 8)}`,
+        title: options.title || primary?.topic || primary?.category || topicDefinition(primary?.fieldTopic).label,
+        fieldTopic: options.fieldTopic || primary?.fieldTopic || "general-site-rules",
+        statement: options.statement || "",
+        priority: options.priority || highestPriority(contributingRows),
+        actionTypes: uniqueSorted(contributingRows.map((row) => row.actionType)),
+        contributingRows,
+        weakerRows,
+        allRows: [...contributingRows, ...weakerRows]
+      };
+    }
+
+    function genericRowStatement(row) {
+      const org = sourceOrganization(row) || "The selected source";
+      const requirement = String(row.requirement || row.action || row.topic || "this requirement applies").trim().replace(/\s+/g, " ");
+      const lowerRequirement = requirement.charAt(0).toLowerCase() + requirement.slice(1);
+      return `${org} requires ${lowerRequirement}.`;
+    }
+
+    function fallTriggerStatement(rows, feet) {
+      const orgs = rows.map(sourceOrganization);
+      const subject = humanList(orgs);
+      const verb = pluralVerb(orgs, "requires", "require");
+      return `${subject} ${verb} 100% fall protection at ${feet} feet or greater.`;
+    }
+
+    function prohibitionStatement(rows, key) {
+      const orgs = rows.map(sourceOrganization);
+      const subject = humanList(orgs);
+      const verb = pluralVerb(orgs, "prohibits", "prohibit");
+      const labels = {
+        "fall:cdz": "Controlled Decking Zones",
+        "fall:safety-monitoring": "using a safety monitor as the sole means of fall protection",
+        "crane:critical-lift": "critical lifts",
+        "crane:multiple-lift": "multiple or dual lifts",
+        "crane:personnel-platform": "personnel-platform crane lifts except where a source-specific exception is met"
+      };
+      return `${subject} ${verb} ${labels[key] || "this practice"} on this project.`;
+    }
+
+    function exactDuplicateStatement(rows) {
+      const orgs = rows.map(sourceOrganization);
+      const subject = humanList(orgs);
+      const verb = pluralVerb(orgs, "requires", "require");
+      const requirement = String(rows[0]?.requirement || rows[0]?.action || rows[0]?.topic || "this requirement").trim().replace(/\s+/g, " ");
+      return `${subject} ${verb} ${requirement.charAt(0).toLowerCase() + requirement.slice(1)}.`;
+    }
+
+    function compareGroup(key, rows) {
+      if (rows.length === 1) return [makeCard(rows, { statement: genericRowStatement(rows[0]) })];
+
+      if (key === "fall:trigger") {
+        const withFeet = rows.map((row) => ({ row, feet: extractFeet(row) })).filter((item) => item.feet !== null);
+        if (withFeet.length) {
+          const minimum = Math.min(...withFeet.map((item) => item.feet));
+          const governing = withFeet.filter((item) => item.feet === minimum).map((item) => item.row);
+          const weaker = rows.filter((row) => !governing.includes(row));
+          return [makeCard(governing, {
+            id: "GOV-FALL-TRIGGER",
+            title: "Fall Protection Trigger",
+            fieldTopic: "fall-protection",
+            statement: fallTriggerStatement(governing, minimum),
+            weakerRows: weaker
+          })];
+        }
+      }
+
+      const prohibitions = rows.filter((row) => hasProhibition(comparisonText(row)));
+      if (prohibitions.length) {
+        const weaker = rows.filter((row) => !prohibitions.includes(row));
+        return [makeCard(prohibitions, {
+          id: `GOV-${key.replace(/[^a-z0-9]+/gi, "-").toUpperCase()}`,
+          title: topicDefinition(prohibitions[0].fieldTopic).label,
+          statement: prohibitionStatement(prohibitions, key),
+          weakerRows: weaker
+        })];
+      }
+
+      if (key.startsWith("exact:")) {
+        return [makeCard(rows, {
+          id: `GOV-EXACT-${Math.abs(hashString(key))}`,
+          statement: exactDuplicateStatement(rows)
+        })];
+      }
+
+      // Keep distinct obligations separate unless comparison confidence is high enough to safely compress them.
+      return rows.map((row) => makeCard([row], { statement: genericRowStatement(row) }));
+    }
+
+    function hashString(value) {
+      let hash = 0;
+      for (let i = 0; i < value.length; i += 1) hash = ((hash << 5) - hash) + value.charCodeAt(i) | 0;
+      return hash;
+    }
+
+    function combineFallProtectionTriggerAndPlan(cards) {
+      const triggerIndex = cards.findIndex((card) => card.id === "GOV-FALL-TRIGGER");
+      if (triggerIndex < 0) return cards;
+
+      const planCards = cards.filter((card) => card.fieldTopic === "fall-protection" && card.allRows.some((row) => highConfidenceComparisonKey(row) === "fall:plan"));
+      if (!planCards.length) return cards;
+
+      const trigger = cards[triggerIndex];
+      const planRows = planCards.flatMap((card) => card.contributingRows);
+      const triggerRows = trigger.contributingRows;
+      const feet = Math.min(...triggerRows.map(extractFeet).filter((value) => value !== null));
+      const triggerOrgs = triggerRows.map(sourceOrganization);
+      const planOrgs = planRows.map(sourceOrganization);
+      const triggerSubject = humanList(triggerOrgs);
+      const triggerVerb = pluralVerb(triggerOrgs, "requires", "require");
+      const planSubject = humanList(planOrgs);
+      const planVerb = pluralVerb(planOrgs, "requires", "require");
+      const statement = `${triggerSubject} ${triggerVerb} 100% fall protection at ${feet} feet or greater, and ${planSubject} ${planVerb} that a fall protection plan be completed before elevated work begins.`;
+
+      const planSet = new Set(planCards);
+      const merged = makeCard([...triggerRows, ...planRows], {
+        id: "GOV-FALL-PROTECTION-COMBINED",
+        title: "Fall Protection",
+        fieldTopic: "fall-protection",
+        statement,
+        contributingRows: [...triggerRows, ...planRows],
+        weakerRows: [...trigger.weakerRows, ...planCards.flatMap((card) => card.weakerRows)]
+      });
+
+      return cards.filter((card) => card !== trigger && !planSet.has(card)).concat(merged);
+    }
+
+    function buildGoverningCards(rows) {
+      const groups = new Map();
+      rows.forEach((row) => {
+        const key = highConfidenceComparisonKey(row);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(row);
+      });
+
+      let cards = [...groups.entries()].flatMap(([key, groupRows]) => compareGroup(key, groupRows));
+      cards = combineFallProtectionTriggerAndPlan(cards);
+
+      return cards.sort((a, b) => (
+        CONFIG.fieldTopics.findIndex((topic) => topic.id === a.fieldTopic) - CONFIG.fieldTopics.findIndex((topic) => topic.id === b.fieldTopic)
+        || priorityRank(a.priority) - priorityRank(b.priority)
+        || String(a.title || "").localeCompare(String(b.title || ""))
+      ));
+    }
+
     function buildStack() {
       if (!state.loaded.cooper) return;
 
@@ -1687,15 +2313,21 @@
       if (selection.gc) rows.push(...state.data.gc.filter((row) => row.organization === selection.gc));
       if (selection.owner) rows.push(...state.data.owner.filter((row) => row.organization === selection.owner));
 
-      state.generatedRows = rows
-        .map((row) => ({
+      state.generatedRows = rows.map((row) => {
+        const enriched = {
           ...row,
           actionType: classifyAction(row),
           scopeRelevant: scopeMatches(row, selection.scopes)
-        }));
+        };
+        enriched.fieldTopic = classifyFieldTopic(enriched);
+        return enriched;
+      });
+
+      state.governingCards = buildGoverningCards(state.generatedRows);
       state.currentSelection = selection;
       state.activeLayer = "all";
-      state.quickFilter = "critical";
+      state.activeTopic = "";
+      state.quickFilter = "all";
 
       els.resultSearch.value = "";
       els.priorityFilter.value = "";
@@ -1720,7 +2352,6 @@
     function renderStackHeader() {
       const selection = state.currentSelection;
       if (!selection) return;
-
       const titleParts = [selection.state, selection.gc, selection.owner].filter(Boolean);
       els.stackTitle.textContent = titleParts.length ? titleParts.join(" / ") : "Cooper Steel Baseline Stack";
 
@@ -1739,7 +2370,7 @@
         state: state.generatedRows.filter((row) => row.sourceType === "state").length,
         gc: state.generatedRows.filter((row) => row.sourceType === "gc").length,
         owner: state.generatedRows.filter((row) => row.sourceType === "owner").length,
-        critical: state.generatedRows.filter((row) => String(row.priority).toLowerCase() === "critical").length
+        governing: state.governingCards.length
       };
 
       els.summaryTotal.textContent = counts.total.toLocaleString();
@@ -1747,7 +2378,8 @@
       els.summaryState.textContent = counts.state.toLocaleString();
       els.summaryGc.textContent = counts.gc.toLocaleString();
       els.summaryOwner.textContent = counts.owner.toLocaleString();
-      els.summaryCritical.textContent = counts.critical.toLocaleString();
+      els.summaryCritical.textContent = counts.governing.toLocaleString();
+      els.governingVisibleCount.textContent = counts.governing.toLocaleString();
     }
 
     function setSelectOptions(select, values, allLabel) {
@@ -1757,95 +2389,118 @@
     }
 
     function buildResultFilters() {
-      setSelectOptions(els.priorityFilter, state.generatedRows.map((row) => row.priority), "All Priorities");
+      setSelectOptions(els.priorityFilter, state.governingCards.map((card) => card.priority), "All Priorities");
       setSelectOptions(els.groupFilter, state.generatedRows.map((row) => row.dashboardGroup || row.category), "All Groups");
-      setSelectOptions(els.actionFilter, state.generatedRows.map((row) => row.actionType), "All Action Types");
+      setSelectOptions(els.actionFilter, state.governingCards.flatMap((card) => card.actionTypes), "All Action Types");
     }
 
     function layerLabel(layer) {
       return { all: "All Layers", cooper: "Cooper Steel", state: "State OSHA", gc: "General Contractor", owner: "Owner" }[layer] || layer;
     }
 
+    function cardHasLayer(card, layer) {
+      return layer === "all" || card.allRows.some((row) => row.sourceType === layer);
+    }
+
     function renderLayerTabs() {
       const layers = ["all", "cooper", "state", "gc", "owner"];
       els.layerTabs.innerHTML = layers.map((layer) => {
-        const count = layer === "all" ? state.generatedRows.length : state.generatedRows.filter((row) => row.sourceType === layer).length;
+        const count = state.governingCards.filter((card) => cardHasLayer(card, layer)).length;
         return `<button class="layer-tab ${state.activeLayer === layer ? "active" : ""}" type="button" data-layer="${layer}">${escapeHtml(layerLabel(layer))} · ${count}</button>`;
       }).join("");
 
       els.layerTabs.querySelectorAll(".layer-tab").forEach((button) => {
         button.addEventListener("click", () => {
-          state.activeLayer = button.dataset.layer;
+          state.activeLayer = button.dataset.layer || "all";
           renderLayerTabs();
           renderResults();
         });
       });
     }
 
-    function quickFilterMatches(row) {
-      const mode = state.quickFilter || "critical";
-      if (mode === "all") return true;
-      const priority = String(row.priority || "").toLowerCase();
-      const actionType = String(row.actionType || "").toLowerCase();
-      const text = rowSearchText(row);
+    function cardSearchText(card) {
+      return [
+        card.title,
+        card.statement,
+        topicDefinition(card.fieldTopic).label,
+        ...card.allRows.map((row) => rowSearchText(row))
+      ].join(" ").toLowerCase();
+    }
 
-      if (mode === "critical") return priority === "critical";
+    function quickFilterMatches(card) {
+      const mode = state.quickFilter || "all";
+      if (mode === "all") return true;
+      const text = cardSearchText(card);
+      if (mode === "critical") return String(card.priority || "").toLowerCase() === "critical";
       if (mode === "before") {
-        return actionType.includes("pre-mobilization")
-          || actionType.includes("before work")
-          || actionType.includes("per lift")
-          || text.includes("before work")
-          || text.includes("before starting")
-          || text.includes("prior to")
-          || text.includes("plan required")
-          || text.includes("submit")
-          || text.includes("approval");
+        return card.actionTypes.some((type) => ["Pre-Mobilization", "Plan Required", "Permit Required", "Submit / Document", "Training / Qualification"].includes(type))
+          || /before work|prior to work|before beginning|before starting|before elevated work|prior to starting/.test(text);
       }
       if (mode === "today") {
-        return actionType.includes("daily")
-          || actionType.includes("shift")
-          || actionType.includes("per lift")
-          || actionType.includes("task")
-          || actionType.includes("field requirement")
-          || text.includes("daily")
-          || text.includes("each shift")
-          || text.includes("per shift")
-          || text.includes("pre-task")
-          || text.includes("before each");
+        return card.actionTypes.some((type) => ["Daily / Shift", "Per Lift / Task", "Field Requirement"].includes(type))
+          || /daily|each shift|per shift|per lift|pre-task|before each/.test(text);
       }
       return true;
+    }
+
+    function advancedCardMatches(card) {
+      const term = els.resultSearch.value.trim().toLowerCase();
+      const priority = els.priorityFilter.value;
+      const group = els.groupFilter.value;
+      const actionType = els.actionFilter.value;
+      if (!cardHasLayer(card, state.activeLayer)) return false;
+      if (!quickFilterMatches(card)) return false;
+      if (priority && card.priority !== priority) return false;
+      if (group && !card.allRows.some((row) => (row.dashboardGroup || row.category) === group)) return false;
+      if (actionType && !card.actionTypes.includes(actionType)) return false;
+      if (term && !cardSearchText(card).includes(term)) return false;
+      return true;
+    }
+
+    function topicOrderedIds() {
+      const selectedTopics = selectedScopeTopicIds();
+      return CONFIG.fieldTopics.map((topic) => topic.id).sort((a, b) => {
+        const aSelected = selectedTopics.has(a) ? 0 : 1;
+        const bSelected = selectedTopics.has(b) ? 0 : 1;
+        return aSelected - bSelected
+          || CONFIG.fieldTopics.findIndex((topic) => topic.id === a) - CONFIG.fieldTopics.findIndex((topic) => topic.id === b);
+      });
+    }
+
+    function topicCards(topicId) {
+      return state.governingCards.filter((card) => card.fieldTopic === topicId && advancedCardMatches(card));
+    }
+
+    function renderTopicGrid() {
+      const selectedTopics = selectedScopeTopicIds();
+      const tiles = topicOrderedIds().map((topicId) => {
+        const topic = topicDefinition(topicId);
+        const count = topicCards(topicId).length;
+        if (!count) return "";
+        return `
+          <button class="topic-tile ${selectedTopics.has(topicId) ? "selected-scope" : ""}" type="button" data-topic="${escapeHtml(topicId)}">
+            <span class="topic-tile-title">${escapeHtml(topic.label)}</span>
+            <span class="topic-tile-count">${count.toLocaleString()} governing field ${count === 1 ? "rule" : "rules"}</span>
+            <span class="topic-tile-arrow" aria-hidden="true">→</span>
+          </button>`;
+      }).filter(Boolean);
+
+      els.topicGrid.innerHTML = tiles.join("");
+      els.topicEmpty.classList.toggle("show", tiles.length === 0);
+      els.topicGrid.querySelectorAll(".topic-tile").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.activeTopic = button.dataset.topic || "";
+          state.quickFilter = "all";
+          renderResults();
+          els.topicResults.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
     }
 
     function renderQuickFilters() {
       els.quickFilterButtons.forEach((button) => {
         button.classList.toggle("active", button.dataset.quickFilter === state.quickFilter);
       });
-    }
-
-    function filteredGeneratedRows() {
-      const term = els.resultSearch.value.trim().toLowerCase();
-      const priority = els.priorityFilter.value;
-      const group = els.groupFilter.value;
-      const actionType = els.actionFilter.value;
-
-      return state.generatedRows.filter((row) => {
-        if (state.activeLayer !== "all" && row.sourceType !== state.activeLayer) return false;
-        if (!quickFilterMatches(row)) return false;
-        if (priority && row.priority !== priority) return false;
-        if (group && (row.dashboardGroup || row.category) !== group) return false;
-        if (actionType && row.actionType !== actionType) return false;
-        if (term && !rowSearchText(row).includes(term)) return false;
-        return true;
-      }).sort((a, b) => (
-        priorityRank(a.priority) - priorityRank(b.priority)
-        || String(a.sourceType).localeCompare(String(b.sourceType))
-        || idNumber(a.id) - idNumber(b.id)
-        || String(a.topic || "").localeCompare(String(b.topic || ""))
-      ));
-    }
-
-    function layerClass(sourceType) {
-      return sourceType === "state" ? "layer-state" : sourceType === "gc" ? "layer-gc" : sourceType === "owner" ? "layer-owner" : "layer-cooper";
     }
 
     function priorityClass(priority) {
@@ -1857,105 +2512,111 @@
       return "priority-state";
     }
 
-    function sourceOrganization(row) {
-      return row.sourceType === "state" ? row.state : row.organization;
+    function sourceButtonMarkup(row) {
+      const link = resolveSourceLink(row);
+      const org = sourceOrganization(row) || "Source";
+      return link
+        ? `<a class="source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Show ${escapeHtml(org)} Source</a>`
+        : `<span class="mini-chip">${escapeHtml(org)} source link needs review</span>`;
     }
 
-    function fieldStatement(row) {
+    function uniqueSourceRows(rows) {
+      const seen = new Set();
+      return rows.filter((row) => {
+        const key = `${sourceOrganization(row)}|${resolveSourceLink(row)}|${row.sourceReference || row.citation}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function sourceDetailMarkup(row) {
       const org = sourceOrganization(row) || layerLabel(row.sourceType);
-      const requirement = String(row.requirement || row.action || row.topic || "this requirement applies").trim().replace(/\s+/g, " ");
-      const action = String(row.action || "").trim().replace(/\s+/g, " ");
-      const lowerRequirement = requirement.charAt(0).toLowerCase() + requirement.slice(1);
-      if (action && action.toLowerCase() !== requirement.toLowerCase()) {
-        const lowerAction = action.charAt(0).toLowerCase() + action.slice(1);
-        return `${org} requires ${lowerRequirement}, and the field action is to ${lowerAction}.`;
-      }
-      return `${org} requires ${lowerRequirement}.`;
+      return `
+        <div class="source-detail-block">
+          <div class="source-detail-heading">
+            <strong>${escapeHtml(org)} · ${escapeHtml(row.id || "Requirement")}</strong>
+            ${sourceButtonMarkup(row)}
+          </div>
+          ${row.requirement ? `<div class="card-section"><span class="card-label">Requirement</span><p class="card-text">${escapeHtml(row.requirement)}</p></div>` : ""}
+          ${row.action ? `<div class="card-section"><span class="card-label">Required Field Action</span><p class="card-text">${escapeHtml(row.action)}</p></div>` : ""}
+          ${row.trigger ? `<div class="card-section"><span class="card-label">Applies / Trigger</span><p class="card-text">${escapeHtml(row.trigger)}</p></div>` : ""}
+          <div class="card-section"><span class="card-label">Source Reference</span><div class="source-ref">${escapeHtml(row.sourceReference || row.citation || "Source reference not listed")}</div></div>
+        </div>`;
     }
 
-    function cardMarkup(row) {
-      const sourceLink = resolveSourceLink(row);
-      const displayId = row.id || "Requirement";
-      const group = row.dashboardGroup || row.category || "Other / Review";
-      const topic = row.topic || row.category || "Requirement";
-      const organization = sourceOrganization(row);
-      const proofLabel = organization ? `Show ${organization} Source` : "Show Source";
+    function cardMarkup(card) {
+      const topic = topicDefinition(card.fieldTopic);
+      const sourceRows = uniqueSourceRows(card.contributingRows);
+      const orgs = uniqueSorted(sourceRows.map(sourceOrganization));
+      const proofLinks = sourceRows.map(sourceButtonMarkup).join("");
+      const deepDiveSources = card.contributingRows.map(sourceDetailMarkup).join("");
+      const suppressed = card.weakerRows.length ? `
+        <div class="card-section">
+          <span class="card-label">Compared but Not Shown as Governing</span>
+          <ul class="suppressed-list">
+            ${card.weakerRows.map((row) => `<li>${escapeHtml(sourceOrganization(row))} · ${escapeHtml(row.id || "Requirement")} — a stricter or prohibitive high-confidence match governs this comparison.</li>`).join("")}
+          </ul>
+        </div>` : "";
 
       return `
-        <article class="requirement-card ${layerClass(row.sourceType)}">
+        <article class="requirement-card">
           <div class="card-top">
-            <div class="card-id">${escapeHtml(displayId)}</div>
-            <span class="priority-badge ${priorityClass(row.priority)}">${escapeHtml(row.priority || layerLabel(row.sourceType))}</span>
+            <div class="card-id">${escapeHtml(card.id)}</div>
+            <span class="priority-badge ${priorityClass(card.priority)}">${escapeHtml(card.priority || "Field Requirement")}</span>
           </div>
 
-          <h3 class="card-title">${escapeHtml(topic)}</h3>
+          <h3 class="card-title">${escapeHtml(card.title || topic.label)}</h3>
 
           <div class="field-statement-box">
             <span class="field-statement-label">Who Requires What</span>
-            <p class="field-statement">${escapeHtml(fieldStatement(row))}</p>
+            <p class="field-statement">${escapeHtml(card.statement)}</p>
           </div>
 
           <div class="proof-row">
             <span class="proof-label">Show Me</span>
-            ${sourceLink ? `<a class="source-link" href="${escapeHtml(sourceLink)}" target="_blank" rel="noopener">${escapeHtml(proofLabel)}</a>` : `<span class="mini-chip">Source link needs review</span>`}
+            <div class="proof-links">${proofLinks || '<span class="mini-chip">Source link needs review</span>'}</div>
           </div>
 
           <div class="card-chips">
-            <span class="mini-chip">${escapeHtml(layerLabel(row.sourceType))}</span>
-            ${organization ? `<span class="mini-chip">${escapeHtml(organization)}</span>` : ""}
-            ${row.category ? `<span class="mini-chip">${escapeHtml(row.category)}</span>` : ""}
-            <span class="mini-chip">${escapeHtml(row.actionType || "Field Requirement")}</span>
+            <span class="mini-chip">${escapeHtml(topic.label)}</span>
+            ${orgs.map((org) => `<span class="mini-chip">${escapeHtml(org)}</span>`).join("")}
+            ${card.actionTypes.slice(0, 2).map((type) => `<span class="mini-chip">${escapeHtml(type)}</span>`).join("")}
           </div>
 
           <details class="card-details">
             <summary>Source Details / Deep Dive</summary>
             <div class="card-details-body">
-              ${row.requirement ? `
-                <div class="card-section">
-                  <span class="card-label">Requirement</span>
-                  <p class="card-text">${escapeHtml(row.requirement)}</p>
-                </div>` : ""}
-
-              ${row.action ? `
-                <div class="card-section">
-                  <span class="card-label">Required Field Action</span>
-                  <p class="card-text">${escapeHtml(row.action)}</p>
-                </div>` : ""}
-
-              ${row.trigger ? `
-                <div class="card-section">
-                  <span class="card-label">Applies / Trigger</span>
-                  <p class="card-text">${escapeHtml(row.trigger)}</p>
-                </div>` : ""}
-
-              <div class="card-section">
-                <span class="card-label">Dashboard Group</span>
-                <p class="card-text">${escapeHtml(group)}</p>
-              </div>
-
-              <div class="card-section">
-                <span class="card-label">Source Reference</span>
-                <div class="source-ref">${escapeHtml(row.sourceReference || row.citation || "Source reference not listed")}</div>
-              </div>
+              ${deepDiveSources}
+              ${suppressed}
             </div>
           </details>
-        </article>
-      `;
+        </article>`;
     }
 
     function renderResults() {
-      const rows = filteredGeneratedRows();
       renderQuickFilters();
+      renderTopicGrid();
+      els.governingVisibleCount.textContent = state.governingCards.length.toLocaleString();
+
+      if (!state.activeTopic) {
+        els.topicResults.classList.remove("show");
+        els.cards.innerHTML = "";
+        return;
+      }
+
+      const topic = topicDefinition(state.activeTopic);
+      const rows = topicCards(state.activeTopic).sort((a, b) => (
+        priorityRank(a.priority) - priorityRank(b.priority)
+        || String(a.title || "").localeCompare(String(b.title || ""))
+      ));
+
+      els.topicResults.classList.add("show");
+      els.activeTopicTitle.textContent = topic.label;
+      els.activeTopicCount.innerHTML = `<strong>${rows.length.toLocaleString()}</strong> governing cards`;
       els.cards.innerHTML = rows.map(cardMarkup).join("");
       els.emptyState.classList.toggle("show", rows.length === 0);
-      els.governingVisibleCount.textContent = rows.length.toLocaleString();
-      const modeLabel = {
-        critical: "critical field cards",
-        before: "before-work field cards",
-        today: "today / this-shift field cards",
-        all: "field cards"
-      }[state.quickFilter] || "field cards";
-      els.resultsCount.textContent = `${rows.length.toLocaleString()} ${modeLabel} visible. ${state.generatedRows.length.toLocaleString()} source requirements remain available under Stack Details.`;
+      els.resultsCount.textContent = `${rows.length.toLocaleString()} governing field ${rows.length === 1 ? "card" : "cards"} visible in ${topic.label}.`;
     }
 
     function csvEscape(value) {
@@ -1964,16 +2625,21 @@
     }
 
     function exportStackCsv() {
-      if (!state.generatedRows.length) return;
+      if (!state.governingCards.length) return;
       const headers = [
-        "Source Layer", "Organization / State", "Requirement ID", "Category", "Requirement / Topic",
-        "Requirement", "Required Field Action", "Priority", "Applies / Trigger", "Action Type",
-        "Source Reference", "Dashboard Group", "Tags", "Source Link"
+        "Field Topic", "Governing Statement", "Priority", "Contributing Sources", "Source Requirement IDs",
+        "Source References", "Source Links", "Suppressed Weaker Requirement IDs"
       ];
-      const rows = filteredGeneratedRows().map((row) => [
-        layerLabel(row.sourceType), row.sourceType === "state" ? row.state : row.organization, row.id,
-        row.category, row.topic, row.requirement, row.action, row.priority, row.trigger, row.actionType,
-        row.sourceReference || row.citation, row.dashboardGroup, row.tags, resolveSourceLink(row)
+      const cards = state.activeTopic ? topicCards(state.activeTopic) : state.governingCards.filter(advancedCardMatches);
+      const rows = cards.map((card) => [
+        topicDefinition(card.fieldTopic).label,
+        card.statement,
+        card.priority,
+        uniqueSorted(card.contributingRows.map(sourceOrganization)).join(" | "),
+        card.contributingRows.map((row) => row.id).join(" | "),
+        card.contributingRows.map((row) => row.sourceReference || row.citation).join(" | "),
+        uniqueSorted(card.contributingRows.map(resolveSourceLink)).join(" | "),
+        card.weakerRows.map((row) => row.id).join(" | ")
       ]);
       const csv = [headers, ...rows].map((row) => row.map(csvEscape).join(",")).join("\r\n");
       const blob = new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" });
@@ -1981,7 +2647,7 @@
       const link = document.createElement("a");
       const date = new Date().toISOString().slice(0, 10);
       link.href = url;
-      link.download = `Cooper_Steel_Project_Requirement_Stack_${date}.csv`;
+      link.download = `Cooper_Steel_Governing_Project_Requirements_${date}.csv`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -1994,7 +2660,7 @@
       els.groupFilter.value = "";
       els.actionFilter.value = "";
       state.activeLayer = "all";
-      state.quickFilter = "critical";
+      state.quickFilter = "all";
       renderLayerTabs();
       renderResults();
       els.resultSearch.focus();
@@ -2007,9 +2673,15 @@
       els.groupFilter.addEventListener("change", renderResults);
       els.actionFilter.addEventListener("change", renderResults);
       els.clearResultFilters.addEventListener("click", clearResultFilters);
+      els.backToTopicsButton.addEventListener("click", () => {
+        state.activeTopic = "";
+        state.quickFilter = "all";
+        renderResults();
+        els.topicStage.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       els.quickFilterButtons.forEach((button) => {
         button.addEventListener("click", () => {
-          state.quickFilter = button.dataset.quickFilter || "critical";
+          state.quickFilter = button.dataset.quickFilter || "all";
           renderResults();
         });
       });
