@@ -491,45 +491,103 @@
       font-weight: 800;
     }
 
-    .summary-grid {
+    .field-answer-panel {
       width: min(1180px, calc(100% - 12px));
       margin: 0 auto 18px;
       display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      padding: 22px;
+      border: 1px solid rgba(159, 28, 31, .58);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(620px 240px at 0% 0%, rgba(159, 28, 31, .30), transparent 62%),
+        linear-gradient(145deg, rgba(17, 17, 18, .96), rgba(40, 40, 40, .88));
+      box-shadow: var(--shadow-lg);
     }
 
-    .summary-card {
-      min-height: 100px;
-      padding: 14px;
-      border: 1px solid rgba(93, 92, 90, .72);
-      border-radius: var(--radius-md);
-      background: rgba(17, 17, 18, .84);
-      box-shadow: var(--shadow-md);
-      text-align: center;
-    }
-
-    .summary-value {
-      font-size: 28px;
-      font-weight: 900;
-      line-height: 1;
-    }
-
-    .summary-label {
-      margin-top: 9px;
+    .field-answer-kicker {
       color: var(--cloud);
       font-family: var(--font-condensed);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 900;
-      letter-spacing: .1em;
+      letter-spacing: .16em;
       text-transform: uppercase;
     }
 
-    .toolbar {
+    .field-answer-title {
+      margin: 8px 0 0;
+      font-family: var(--font-display);
+      font-size: clamp(44px, 6vw, 82px);
+      line-height: .88;
+      text-transform: uppercase;
+    }
+
+    .field-answer-text {
+      max-width: 800px;
+      margin: 12px 0 0;
+      color: rgba(242, 239, 235, .78);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .governing-count-card {
+      min-width: 210px;
+      padding: 18px;
+      border: 1px solid rgba(242, 239, 235, .12);
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, .28);
+      text-align: center;
+    }
+
+    .governing-count-value {
+      font-size: 46px;
+      font-weight: 900;
+      line-height: .9;
+    }
+
+    .governing-count-label {
+      margin-top: 10px;
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .quick-actions {
       width: min(1180px, calc(100% - 12px));
-      margin: 0 auto 18px;
+      margin: 0 auto 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .quick-filter-btn {
+      min-height: 44px;
+      padding: 10px 14px;
+      border: 1px solid rgba(93, 92, 90, .86);
+      border-radius: 999px;
+      background: rgba(40, 40, 40, .84);
+      color: var(--cloud);
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .quick-filter-btn.active {
+      border-color: rgba(159, 28, 31, .9);
+      background: linear-gradient(135deg, var(--cooper-red), var(--burgundy));
+      color: var(--cream);
+    }
+
+    .field-search-row {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 16px;
       display: grid;
-      grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(150px, 190px)) auto;
+      grid-template-columns: minmax(260px, 1fr) auto;
       gap: 10px;
       padding: 12px;
       border: 1px solid rgba(93, 92, 90, .72);
@@ -539,12 +597,100 @@
     }
 
     .search-input { min-height: 48px; }
-    .toolbar .select { min-height: 48px; }
     .clear-btn { min-height: 48px; background: var(--burgundy); }
 
-    .layer-tabs {
+    .stack-details {
       width: min(1180px, calc(100% - 12px));
       margin: 0 auto 18px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-md);
+      background: rgba(17, 17, 18, .76);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .stack-details > summary {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      color: var(--cream);
+      cursor: pointer;
+      font-family: var(--font-condensed);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      list-style: none;
+    }
+
+    .stack-details > summary::-webkit-details-marker { display: none; }
+
+    .stack-details > summary::after {
+      content: "Open";
+      padding: 6px 10px;
+      border: 1px solid rgba(93, 92, 90, .86);
+      border-radius: 999px;
+      background: rgba(40, 40, 40, .84);
+      color: var(--cloud);
+      font-family: var(--font-body);
+      font-size: 12px;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .stack-details[open] > summary::after { content: "Close"; }
+
+    .stack-details-body {
+      padding: 0 14px 16px;
+      border-top: 1px solid rgba(93, 92, 90, .62);
+    }
+
+    .summary-grid {
+      margin: 14px 0;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .summary-card {
+      min-height: 84px;
+      padding: 12px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-md);
+      background: rgba(40, 40, 40, .54);
+      text-align: center;
+    }
+
+    .summary-value {
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .summary-label {
+      margin-top: 8px;
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .toolbar .select { min-height: 46px; }
+
+    .layer-tabs {
+      margin-top: 14px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
@@ -659,6 +805,82 @@
       flex-wrap: wrap;
       gap: 7px;
       margin-bottom: 14px;
+    }
+
+    .field-statement-box {
+      margin: 0 0 16px;
+      padding: 16px;
+      border: 1px solid rgba(242, 239, 235, .10);
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, .20);
+    }
+
+    .field-statement-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .field-statement {
+      margin: 0;
+      color: var(--cream);
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .proof-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 0 0 16px;
+    }
+
+    .proof-label {
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .card-details {
+      margin-top: auto;
+      border-top: 1px solid rgba(93, 92, 90, .74);
+    }
+
+    .card-details summary {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 0;
+      color: var(--cloud);
+      cursor: pointer;
+      font-family: var(--font-bold);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      list-style: none;
+    }
+
+    .card-details summary::-webkit-details-marker { display: none; }
+    .card-details summary::after { content: "Open"; opacity: .75; }
+    .card-details[open] summary::after { content: "Close"; }
+
+    .card-details-body {
+      display: grid;
+      gap: 14px;
+      padding-bottom: 6px;
     }
 
     .mini-chip {
@@ -790,7 +1012,7 @@
 
     @media (max-width: 760px) {
       .shell { width: min(100% - 18px, 1680px); }
-      .topbar, .status-panel, .builder-panel, .stack-hero, .summary-grid, .toolbar, .layer-tabs, .results-count, .cards, .empty-state, .error-banner, .footer-note {
+      .topbar, .status-panel, .builder-panel, .stack-hero, .field-answer-panel, .quick-actions, .field-search-row, .stack-details, .results-count, .cards, .empty-state, .error-banner, .footer-note {
         width: 100%;
       }
 
@@ -801,7 +1023,7 @@
 
       .topbar-left, .topbar-right { width: 100%; }
       .nav-link, .export-btn, .ghost-btn { flex: 1; }
-      .selector-grid, .feed-grid, .summary-grid, .toolbar, .cards { grid-template-columns: 1fr; }
+      .selector-grid, .feed-grid, .summary-grid, .toolbar, .cards, .field-answer-panel, .field-search-row { grid-template-columns: 1fr; }
       .toolbar .clear-btn { grid-column: auto; }
       .scope-note, .builder-message { text-align: left; }
       .build-btn { width: 100%; }
@@ -812,14 +1034,14 @@
       body { background: #fff; color: #111; }
       .brand-header, .topbar, .status-panel, .builder-panel, .toolbar, .layer-tabs, .footer-note { display: none !important; }
       .results { display: block !important; }
-      .stack-hero, .summary-card, .requirement-card {
+      .stack-hero, .summary-card, .requirement-card, .field-answer-panel {
         color: #111;
         background: #fff;
         border: 1px solid #bbb;
         box-shadow: none;
       }
-      .stack-hero h2, .summary-value, .card-title, .card-text, .source-ref { color: #111; }
-      .stack-kicker, .summary-label, .card-label, .card-id, .mini-chip { color: #444; }
+      .stack-hero h2, .summary-value, .card-title, .card-text, .source-ref, .field-answer-title, .field-statement { color: #111; }
+      .stack-kicker, .summary-label, .card-label, .card-id, .mini-chip, .field-answer-kicker, .field-statement-label, .proof-label { color: #444; }
       .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
       .requirement-card { break-inside: avoid; min-height: 0; }
       .source-link { color: #111; background: #fff; }
@@ -940,24 +1162,55 @@
         <div id="stackSelection" class="stack-selection"></div>
       </section>
 
-      <section class="summary-grid" aria-label="Project stack totals">
-        <div class="summary-card"><div id="summaryTotal" class="summary-value">0</div><div class="summary-label">Total Requirements</div></div>
-        <div class="summary-card"><div id="summaryCooper" class="summary-value">0</div><div class="summary-label">Cooper Baseline</div></div>
-        <div class="summary-card"><div id="summaryState" class="summary-value">0</div><div class="summary-label">State Differences</div></div>
-        <div class="summary-card"><div id="summaryGc" class="summary-value">0</div><div class="summary-label">GC Extras</div></div>
-        <div class="summary-card"><div id="summaryOwner" class="summary-value">0</div><div class="summary-label">Owner Extras</div></div>
-        <div class="summary-card"><div id="summaryCritical" class="summary-value">0</div><div class="summary-label">Critical</div></div>
+      <section class="field-answer-panel" aria-label="Field-facing governing requirements summary">
+        <div>
+          <div class="field-answer-kicker">Field Use Mode</div>
+          <h2 class="field-answer-title">What Governs This Work</h2>
+          <p class="field-answer-text">
+            Start here. The cards below are written to answer two field questions fast: <strong>who requires what?</strong> and <strong>show me the source.</strong>
+            The deeper source-count and layer-review stuff is still available, but it is tucked under Stack Details.
+          </p>
+        </div>
+        <div class="governing-count-card">
+          <div id="governingVisibleCount" class="governing-count-value">0</div>
+          <div class="governing-count-label">Visible Field Cards</div>
+        </div>
       </section>
 
-      <section class="toolbar" aria-label="Generated stack filters">
-        <input id="resultSearch" class="search-input" type="search" placeholder="Search the generated stack, e.g. fall protection, lift plan, LOTO">
-        <select id="priorityFilter" class="select" aria-label="Filter by priority"><option value="">All Priorities</option></select>
-        <select id="groupFilter" class="select" aria-label="Filter by dashboard group"><option value="">All Groups</option></select>
-        <select id="actionFilter" class="select" aria-label="Filter by required action"><option value="">All Action Types</option></select>
+      <div class="quick-actions" aria-label="Quick field filters">
+        <button class="quick-filter-btn active" type="button" data-quick-filter="critical">Critical</button>
+        <button class="quick-filter-btn" type="button" data-quick-filter="before">Before Work</button>
+        <button class="quick-filter-btn" type="button" data-quick-filter="today">Today / This Shift</button>
+        <button class="quick-filter-btn" type="button" data-quick-filter="all">All Field Cards</button>
+      </div>
+
+      <section class="field-search-row" aria-label="Field search controls">
+        <input id="resultSearch" class="search-input" type="search" placeholder="Search: fall protection, crane, rigging, hot work, LOTO...">
         <button id="clearResultFilters" class="clear-btn" type="button">Clear Filters</button>
       </section>
 
-      <div id="layerTabs" class="layer-tabs" aria-label="Requirement source layers"></div>
+      <details class="stack-details">
+        <summary>Stack Details / Deep Dive</summary>
+        <div class="stack-details-body">
+          <section class="summary-grid" aria-label="Project stack source totals">
+            <div class="summary-card"><div id="summaryTotal" class="summary-value">0</div><div class="summary-label">Source Requirements Reviewed</div></div>
+            <div class="summary-card"><div id="summaryCooper" class="summary-value">0</div><div class="summary-label">Cooper Baseline</div></div>
+            <div class="summary-card"><div id="summaryState" class="summary-value">0</div><div class="summary-label">State Layer</div></div>
+            <div class="summary-card"><div id="summaryGc" class="summary-value">0</div><div class="summary-label">GC Layer</div></div>
+            <div class="summary-card"><div id="summaryOwner" class="summary-value">0</div><div class="summary-label">Owner Layer</div></div>
+            <div class="summary-card"><div id="summaryCritical" class="summary-value">0</div><div class="summary-label">Critical Source Cards</div></div>
+          </section>
+
+          <section class="toolbar" aria-label="Advanced generated stack filters">
+            <select id="priorityFilter" class="select" aria-label="Filter by priority"><option value="">All Priorities</option></select>
+            <select id="groupFilter" class="select" aria-label="Filter by dashboard group"><option value="">All Groups</option></select>
+            <select id="actionFilter" class="select" aria-label="Filter by required action"><option value="">All Action Types</option></select>
+          </section>
+
+          <div id="layerTabs" class="layer-tabs" aria-label="Requirement source layers"></div>
+        </div>
+      </details>
+
       <div id="resultsCount" class="results-count"></div>
       <div id="emptyState" class="empty-state">No generated requirements match the current filters.</div>
       <section id="cards" class="cards" aria-label="Generated project requirement cards"></section>
@@ -1023,6 +1276,7 @@
       failed: {},
       generatedRows: [],
       activeLayer: "all",
+      quickFilter: "critical",
       currentSelection: null
     };
 
@@ -1042,6 +1296,8 @@
       results: document.getElementById("results"),
       stackTitle: document.getElementById("stackTitle"),
       stackSelection: document.getElementById("stackSelection"),
+      governingVisibleCount: document.getElementById("governingVisibleCount"),
+      quickFilterButtons: Array.from(document.querySelectorAll(".quick-filter-btn")),
       summaryTotal: document.getElementById("summaryTotal"),
       summaryCooper: document.getElementById("summaryCooper"),
       summaryState: document.getElementById("summaryState"),
@@ -1439,6 +1695,7 @@
         }));
       state.currentSelection = selection;
       state.activeLayer = "all";
+      state.quickFilter = "critical";
 
       els.resultSearch.value = "";
       els.priorityFilter.value = "";
@@ -1525,6 +1782,46 @@
       });
     }
 
+    function quickFilterMatches(row) {
+      const mode = state.quickFilter || "critical";
+      if (mode === "all") return true;
+      const priority = String(row.priority || "").toLowerCase();
+      const actionType = String(row.actionType || "").toLowerCase();
+      const text = rowSearchText(row);
+
+      if (mode === "critical") return priority === "critical";
+      if (mode === "before") {
+        return actionType.includes("pre-mobilization")
+          || actionType.includes("before work")
+          || actionType.includes("per lift")
+          || text.includes("before work")
+          || text.includes("before starting")
+          || text.includes("prior to")
+          || text.includes("plan required")
+          || text.includes("submit")
+          || text.includes("approval");
+      }
+      if (mode === "today") {
+        return actionType.includes("daily")
+          || actionType.includes("shift")
+          || actionType.includes("per lift")
+          || actionType.includes("task")
+          || actionType.includes("field requirement")
+          || text.includes("daily")
+          || text.includes("each shift")
+          || text.includes("per shift")
+          || text.includes("pre-task")
+          || text.includes("before each");
+      }
+      return true;
+    }
+
+    function renderQuickFilters() {
+      els.quickFilterButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.quickFilter === state.quickFilter);
+      });
+    }
+
     function filteredGeneratedRows() {
       const term = els.resultSearch.value.trim().toLowerCase();
       const priority = els.priorityFilter.value;
@@ -1533,6 +1830,7 @@
 
       return state.generatedRows.filter((row) => {
         if (state.activeLayer !== "all" && row.sourceType !== state.activeLayer) return false;
+        if (!quickFilterMatches(row)) return false;
         if (priority && row.priority !== priority) return false;
         if (group && (row.dashboardGroup || row.category) !== group) return false;
         if (actionType && row.actionType !== actionType) return false;
@@ -1559,12 +1857,29 @@
       return "priority-state";
     }
 
+    function sourceOrganization(row) {
+      return row.sourceType === "state" ? row.state : row.organization;
+    }
+
+    function fieldStatement(row) {
+      const org = sourceOrganization(row) || layerLabel(row.sourceType);
+      const requirement = String(row.requirement || row.action || row.topic || "this requirement applies").trim().replace(/\s+/g, " ");
+      const action = String(row.action || "").trim().replace(/\s+/g, " ");
+      const lowerRequirement = requirement.charAt(0).toLowerCase() + requirement.slice(1);
+      if (action && action.toLowerCase() !== requirement.toLowerCase()) {
+        const lowerAction = action.charAt(0).toLowerCase() + action.slice(1);
+        return `${org} requires ${lowerRequirement}, and the field action is to ${lowerAction}.`;
+      }
+      return `${org} requires ${lowerRequirement}.`;
+    }
+
     function cardMarkup(row) {
       const sourceLink = resolveSourceLink(row);
       const displayId = row.id || "Requirement";
       const group = row.dashboardGroup || row.category || "Other / Review";
       const topic = row.topic || row.category || "Requirement";
-      const organization = row.sourceType === "state" ? row.state : row.organization;
+      const organization = sourceOrganization(row);
+      const proofLabel = organization ? `Show ${organization} Source` : "Show Source";
 
       return `
         <article class="requirement-card ${layerClass(row.sourceType)}">
@@ -1575,6 +1890,16 @@
 
           <h3 class="card-title">${escapeHtml(topic)}</h3>
 
+          <div class="field-statement-box">
+            <span class="field-statement-label">Who Requires What</span>
+            <p class="field-statement">${escapeHtml(fieldStatement(row))}</p>
+          </div>
+
+          <div class="proof-row">
+            <span class="proof-label">Show Me</span>
+            ${sourceLink ? `<a class="source-link" href="${escapeHtml(sourceLink)}" target="_blank" rel="noopener">${escapeHtml(proofLabel)}</a>` : `<span class="mini-chip">Source link needs review</span>`}
+          </div>
+
           <div class="card-chips">
             <span class="mini-chip">${escapeHtml(layerLabel(row.sourceType))}</span>
             ${organization ? `<span class="mini-chip">${escapeHtml(organization)}</span>` : ""}
@@ -1582,46 +1907,55 @@
             <span class="mini-chip">${escapeHtml(row.actionType || "Field Requirement")}</span>
           </div>
 
-          ${row.requirement ? `
-            <div class="card-section">
-              <span class="card-label">Requirement</span>
-              <p class="card-text">${escapeHtml(row.requirement)}</p>
-            </div>` : ""}
+          <details class="card-details">
+            <summary>Source Details / Deep Dive</summary>
+            <div class="card-details-body">
+              ${row.requirement ? `
+                <div class="card-section">
+                  <span class="card-label">Requirement</span>
+                  <p class="card-text">${escapeHtml(row.requirement)}</p>
+                </div>` : ""}
 
-          ${row.action ? `
-            <div class="card-section">
-              <span class="card-label">Required Field Action</span>
-              <p class="card-text">${escapeHtml(row.action)}</p>
-            </div>` : ""}
+              ${row.action ? `
+                <div class="card-section">
+                  <span class="card-label">Required Field Action</span>
+                  <p class="card-text">${escapeHtml(row.action)}</p>
+                </div>` : ""}
 
-          ${row.trigger ? `
-            <div class="card-section">
-              <span class="card-label">Applies / Trigger</span>
-              <p class="card-text">${escapeHtml(row.trigger)}</p>
-            </div>` : ""}
+              ${row.trigger ? `
+                <div class="card-section">
+                  <span class="card-label">Applies / Trigger</span>
+                  <p class="card-text">${escapeHtml(row.trigger)}</p>
+                </div>` : ""}
 
-          <div class="card-footer">
-            <div class="card-section">
-              <span class="card-label">Dashboard Group</span>
-              <p class="card-text">${escapeHtml(group)}</p>
-            </div>
-            <div class="source-row">
-              <div>
+              <div class="card-section">
+                <span class="card-label">Dashboard Group</span>
+                <p class="card-text">${escapeHtml(group)}</p>
+              </div>
+
+              <div class="card-section">
                 <span class="card-label">Source Reference</span>
                 <div class="source-ref">${escapeHtml(row.sourceReference || row.citation || "Source reference not listed")}</div>
               </div>
-              ${sourceLink ? `<a class="source-link" href="${escapeHtml(sourceLink)}" target="_blank" rel="noopener">Open Source</a>` : ""}
             </div>
-          </div>
+          </details>
         </article>
       `;
     }
 
     function renderResults() {
       const rows = filteredGeneratedRows();
+      renderQuickFilters();
       els.cards.innerHTML = rows.map(cardMarkup).join("");
       els.emptyState.classList.toggle("show", rows.length === 0);
-      els.resultsCount.textContent = `${rows.length.toLocaleString()} visible requirement${rows.length === 1 ? "" : "s"} from ${state.generatedRows.length.toLocaleString()} generated.`;
+      els.governingVisibleCount.textContent = rows.length.toLocaleString();
+      const modeLabel = {
+        critical: "critical field cards",
+        before: "before-work field cards",
+        today: "today / this-shift field cards",
+        all: "field cards"
+      }[state.quickFilter] || "field cards";
+      els.resultsCount.textContent = `${rows.length.toLocaleString()} ${modeLabel} visible. ${state.generatedRows.length.toLocaleString()} source requirements remain available under Stack Details.`;
     }
 
     function csvEscape(value) {
@@ -1660,6 +1994,7 @@
       els.groupFilter.value = "";
       els.actionFilter.value = "";
       state.activeLayer = "all";
+      state.quickFilter = "critical";
       renderLayerTabs();
       renderResults();
       els.resultSearch.focus();
@@ -1672,6 +2007,12 @@
       els.groupFilter.addEventListener("change", renderResults);
       els.actionFilter.addEventListener("change", renderResults);
       els.clearResultFilters.addEventListener("click", clearResultFilters);
+      els.quickFilterButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          state.quickFilter = button.dataset.quickFilter || "critical";
+          renderResults();
+        });
+      });
       els.printStackButton.addEventListener("click", () => window.print());
       els.exportCsvButton.addEventListener("click", exportStackCsv);
     }
