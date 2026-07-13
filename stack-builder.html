@@ -1694,6 +1694,8 @@
       failed: {},
       generatedRows: [],
       governingCards: [],
+      relationshipDiagnostics: [],
+      signatureStats: {},
       activeTopic: "",
       activeSubtopic: "",
       quickFilter: "all",
@@ -2231,6 +2233,16 @@
       return uniqueSorted(values).length > 1 ? plural : singular;
     }
 
+    /* ---------- Phase 1.8 / 1.9: requirement signatures + relationship engine ---------- */
+
+    const SIGNATURE_STOP_WORDS = new Set([
+      "a", "an", "and", "are", "as", "at", "be", "been", "before", "by", "can", "for", "from",
+      "has", "have", "if", "in", "into", "is", "it", "may", "more", "must", "of", "on", "or",
+      "other", "prior", "project", "provide", "provided", "require", "required", "requirement", "requirements",
+      "shall", "should", "steel", "erection", "specific", "stringent", "than", "that", "the", "their", "this",
+      "to", "use", "used", "using", "when", "where", "which", "with", "work", "working"
+    ]);
+
     function normalizeComparisonText(value) {
       return String(value || "")
         .toLowerCase()
@@ -2241,12 +2253,30 @@
         .trim();
     }
 
+    function canonicalRequirementText(row) {
+      return normalizeComparisonText([
+        row.topic,
+        row.requirement,
+        row.action,
+        row.trigger
+      ].filter(Boolean).join(" "));
+    }
+
     function comparisonText(row) {
       return `${row.topic} ${row.requirement} ${row.action} ${row.trigger}`.toLowerCase();
     }
 
     function hasProhibition(text) {
-      return /\b(prohibit(?:ed|s)?|not permitted|not allowed|shall not|may not|must not)\b/i.test(text);
+      return /\b(prohibit(?:ed|s)?|not permitted|not allowed|shall not|may not|must not|forbidden)\b/i.test(text);
+    }
+
+    function hasConditionalPermission(text) {
+      return /\b(?:may|permitted|allowed)\b.{0,80}\b(?:only if|only when|provided that|subject to|with (?:prior |written )?approval|upon approval|unless)\b/i.test(text)
+        || /\b(?:only if|only when|provided that|subject to|upon approval)\b.{0,80}\b(?:may|permitted|allowed)\b/i.test(text);
+    }
+
+    function hasPermission(text) {
+      return !hasProhibition(text) && /\b(?:permitted|allowed|may be used|may use|may perform|is acceptable)\b/i.test(text);
     }
 
     function highConfidenceComparisonKey(row) {
@@ -2295,22 +2325,296 @@
         if (/gfci|ground fault/.test(text)) return "electrical:gfci";
       }
 
+      if (topic === "confined-space") {
+        if (/entry permit|permit[- ]?to[- ]?work|permit required confined space/.test(text)) return "confined-space:permit";
+        if (/atmospheric test|atmospheric monitor|gas monitor/.test(text)) return "confined-space:atmospheric-testing";
+        if (/attendant|entry supervisor|rescue|retrieval/.test(text)) return "confined-space:entry-team-rescue";
+      }
+
       const exact = normalizeComparisonText(row.requirement || row.action || row.topic);
       return exact.length >= 44 ? `exact:${exact}` : `unique:${row.sourceType}:${row.id}`;
     }
 
-    function extractFeet(row) {
-      const text = comparisonText(row);
-      const patterns = [
-        /(?:at|above|over|greater than|more than|exposure(?: of)?|height(?: of)?)\s*(\d+(?:\.\d+)?)\s*(?:feet|foot|ft\b)/gi,
-        /(\d+(?:\.\d+)?)\s*(?:feet|foot|ft\b).{0,60}(?:fall protection|fall exposure|work at height|working at height)/gi
-      ];
-      const numbers = [];
-      for (const pattern of patterns) {
-        let match;
-        while ((match = pattern.exec(text)) !== null) numbers.push(Number(match[1]));
+    function meaningfulSubjectTokens(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .split(/\s+/)
+        .map((token) => token.trim())
+        .filter((token) => token.length >= 3 && !SIGNATURE_STOP_WORDS.has(token));
+    }
+
+    function signatureSubjectKey(row) {
+      const knownKey = highConfidenceComparisonKey(row);
+      if (!knownKey.startsWith("exact:") && !knownKey.startsWith("unique:")) return knownKey;
+
+      const strongFields = [row.topic, row.dashboardGroup, row.category].filter(Boolean).join(" ");
+      let tokens = meaningfulSubjectTokens(strongFields);
+      if (tokens.length < 2) {
+        tokens = meaningfulSubjectTokens([row.requirement, row.action].filter(Boolean).join(" "));
       }
-      return numbers.filter(Number.isFinite).sort((a, b) => a - b)[0] ?? null;
+
+      const uniqueTokens = [...new Set(tokens)].slice(0, 6);
+      if (uniqueTokens.length >= 2) {
+        return `subject:${row.fieldTopic}:${uniqueTokens.join("-")}`;
+      }
+
+      return knownKey;
+    }
+
+    function extractNumericConstraints(row) {
+      const text = comparisonText(row);
+      const specs = [
+        { unit: "feet", regex: /(\d+(?:\.\d+)?)\s*(?:feet|foot|ft\b)/gi },
+        { unit: "inches", regex: /(\d+(?:\.\d+)?)\s*(?:inches|inch|in\b)/gi },
+        { unit: "pounds", regex: /(\d+(?:\.\d+)?)\s*(?:pounds|pound|lbs?\b)/gi },
+        { unit: "minutes", regex: /(\d+(?:\.\d+)?)\s*(?:minutes|minute|mins?\b)/gi },
+        { unit: "hours", regex: /(\d+(?:\.\d+)?)\s*(?:hours|hour|hrs?\b)/gi },
+        { unit: "days", regex: /(\d+(?:\.\d+)?)\s*(?:days|day\b)/gi },
+        { unit: "months", regex: /(\d+(?:\.\d+)?)\s*(?:months|month\b)/gi },
+        { unit: "years", regex: /(\d+(?:\.\d+)?)\s*(?:years|year\b)/gi },
+        { unit: "percent", regex: /(\d+(?:\.\d+)?)\s*(?:%|percent\b)/gi },
+        { unit: "volts", regex: /(\d+(?:\.\d+)?)\s*(?:volts|volt|v\b)/gi }
+      ];
+
+      const constraints = [];
+      specs.forEach((spec) => {
+        let match;
+        while ((match = spec.regex.exec(text)) !== null) {
+          const value = Number(match[1]);
+          if (!Number.isFinite(value)) continue;
+          const contextStart = Math.max(0, match.index - 70);
+          const contextEnd = Math.min(text.length, match.index + match[0].length + 70);
+          const context = text.slice(contextStart, contextEnd);
+          let comparator = "exact";
+
+          if (/\b(at least|minimum|min\.?|not less than|or greater|or more|no fewer than)\b/i.test(context)) comparator = "minimum";
+          else if (/\b(no more than|maximum|max\.?|not exceed|not greater than|or less|no higher than)\b/i.test(context)) comparator = "maximum";
+          else if (/\b(at|above|over|greater than|more than|exposure of|height of)\b/i.test(context)) comparator = "trigger";
+
+          constraints.push({ value, unit: spec.unit, comparator, context: context.trim() });
+        }
+      });
+
+      const seen = new Set();
+      return constraints.filter((constraint) => {
+        const key = `${constraint.value}|${constraint.unit}|${constraint.comparator}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function detectTimingSignals(text) {
+      const rules = [
+        ["before-mobilization", /pre[- ]?mobil|before mobil|prior to mobil|before arrival|prior to arrival/i],
+        ["before-work", /before work|prior to work|before beginning|before starting|prior to starting|before elevated work/i],
+        ["before-use", /before use|prior to use|before operation|prior to operation/i],
+        ["before-each-shift", /before each shift|pre[- ]?shift/i],
+        ["daily", /\bdaily\b|each day/i],
+        ["each-shift", /each shift|per shift/i],
+        ["per-lift", /per lift|each lift|before lifting/i],
+        ["per-task", /per task|each task|pre[- ]?task|\bjha\b|\baha\b|\bptp\b/i],
+        ["weekly", /\bweekly\b|each week/i],
+        ["monthly", /\bmonthly\b|each month/i],
+        ["annual", /\bannual(?:ly)?\b|each year/i]
+      ];
+      return rules.filter(([, pattern]) => pattern.test(text)).map(([label]) => label);
+    }
+
+    function detectRequirementKinds(row) {
+      const text = comparisonText(row);
+      const kinds = [];
+      const add = (value) => { if (!kinds.includes(value)) kinds.push(value); };
+
+      if (extractNumericConstraints(row).length) add("numeric-threshold");
+      if (/\b(?:fall protection plan|lift plan|erection plan|rescue plan|emergency plan|safety plan|sssp|ssep|plan required|required plan)\b/i.test(text)) add("plan");
+      if (/\b(?:permit[- ]?to[- ]?work|hot work permit|energized work permit|entry permit|permit required|required permit)\b/i.test(text)) add("permit");
+      if (/\b(?:inspect|inspection|audit|checklist)\b/i.test(text)) add("inspection");
+      if (/\b(?:trained|training|qualified|competent person|certified|certification|authorized|authorization)\b/i.test(text)) add("qualification");
+      if (/\b(?:document|documentation|record|recorded|log|checklist|submit|submission|upload|provide to)\b/i.test(text)) add("documentation");
+      if (detectTimingSignals(text).length || /\b(?:frequency|every \d+|once per|each time)\b/i.test(text)) add("timing-frequency");
+      if (/\b(?:prior approval|advance approval|written approval|approval required|must be approved|approved by|authorization required)\b/i.test(text)) add("prior-approval");
+      if (/\b(?:attendant|spotter|fire watch|safety representative|safety manager|lift director|signal person|rigger|competent person|qualified person)\b/i.test(text)) add("staffing");
+      if (/\b(?:type\s*ii|type 2|class [a-e]|rated|capacity|extinguisher|helmet|hard hat|harness|lanyard|lifeline|sling|shackle|hook|guardrail|equipment specification)\b/i.test(text)) add("equipment-specification");
+
+      if (!kinds.length) add("general-obligation");
+      return kinds;
+    }
+
+    function buildRequirementSignature(row) {
+      const text = comparisonText(row);
+      const subjectKey = signatureSubjectKey(row);
+      const kinds = detectRequirementKinds(row);
+      const numericConstraints = extractNumericConstraints(row);
+      const polarity = hasProhibition(text)
+        ? "prohibit"
+        : hasConditionalPermission(text)
+          ? "permit-conditional"
+          : hasPermission(text)
+            ? "permit"
+            : "require";
+      const confidence = subjectKey.startsWith("subject:")
+        ? 0.78
+        : subjectKey.startsWith("exact:")
+          ? 0.92
+          : subjectKey.startsWith("unique:")
+            ? 0.45
+            : 0.98;
+
+      return {
+        version: "1.8",
+        subjectKey,
+        subjectFamily: subjectKey.includes(":") ? subjectKey.split(":")[0] : row.fieldTopic,
+        fieldTopic: row.fieldTopic,
+        primaryKind: kinds[0],
+        kinds,
+        polarity,
+        conditional: polarity === "permit-conditional" || /\b(?:if|when|unless|provided that|subject to)\b/i.test(text),
+        requiresPriorApproval: kinds.includes("prior-approval"),
+        timing: detectTimingSignals(text),
+        numericConstraints,
+        canonicalText: canonicalRequirementText(row),
+        confidence
+      };
+    }
+
+    function extractFeet(row) {
+      const constraints = row.signature?.numericConstraints || extractNumericConstraints(row);
+      const feet = constraints.filter((constraint) => constraint.unit === "feet").map((constraint) => constraint.value);
+      return feet.filter(Number.isFinite).sort((a, b) => a - b)[0] ?? null;
+    }
+
+    function tokenSet(value) {
+      return new Set(String(value || "").split(/\s+/).filter((token) => token && token !== "#"));
+    }
+
+    function textSimilarity(a, b) {
+      const aText = String(a || "").trim();
+      const bText = String(b || "").trim();
+      if (!aText || !bText) return 0;
+      if (aText === bText) return 1;
+      const aTokens = tokenSet(aText);
+      const bTokens = tokenSet(bText);
+      if (!aTokens.size || !bTokens.size) return 0;
+      let intersection = 0;
+      aTokens.forEach((token) => { if (bTokens.has(token)) intersection += 1; });
+      const union = new Set([...aTokens, ...bTokens]).size;
+      return union ? intersection / union : 0;
+    }
+
+    function comparableNumericConstraint(signatureA, signatureB) {
+      const preferredUnits = ["feet", "inches", "pounds", "percent", "volts", "minutes", "hours", "days", "months", "years"];
+      for (const unit of preferredUnits) {
+        const a = signatureA.numericConstraints.find((constraint) => constraint.unit === unit);
+        const b = signatureB.numericConstraints.find((constraint) => constraint.unit === unit);
+        if (a && b) return { a, b };
+      }
+      return null;
+    }
+
+    function strictnessDirection(subjectKey, constraintA, constraintB) {
+      if (subjectKey === "fall:trigger") return "lower";
+      if (subjectKey === "crane:power-line" && constraintA.unit === "feet") return "higher";
+      if (constraintA.comparator === "minimum" && constraintB.comparator === "minimum") return "higher";
+      if (constraintA.comparator === "maximum" && constraintB.comparator === "maximum") return "lower";
+      if (constraintA.comparator === "trigger" && constraintB.comparator === "trigger" && subjectKey === "fall:trigger") return "lower";
+      return "unknown";
+    }
+
+    function signatureForRow(row) {
+      return row.signature || buildRequirementSignature(row);
+    }
+
+    function classifyRequirementRelationship(rowA, rowB) {
+      const a = signatureForRow(rowA);
+      const b = signatureForRow(rowB);
+      const sameSubject = a.subjectKey === b.subjectKey;
+      const sameTopic = a.fieldTopic === b.fieldTopic;
+      const sameFamily = sameTopic && a.subjectFamily === b.subjectFamily;
+      const similarity = textSimilarity(a.canonicalText, b.canonicalText);
+
+      if (!sameTopic) {
+        return { type: "independent", confidence: 0.99, reason: "Different field topics." };
+      }
+
+      if (sameSubject) {
+        const polarityPair = new Set([a.polarity, b.polarity]);
+        const oneProhibits = polarityPair.has("prohibit");
+        const onePermits = polarityPair.has("permit") || polarityPair.has("permit-conditional");
+        if (oneProhibits && onePermits) {
+          return {
+            type: "conflicts",
+            confidence: 0.97,
+            reason: "The same operational subject is prohibited by one requirement and permitted by another.",
+            governingRowId: a.polarity === "prohibit" ? rowA.id : rowB.id
+          };
+        }
+
+        const numeric = comparableNumericConstraint(a, b);
+        if (numeric) {
+          const direction = strictnessDirection(a.subjectKey, numeric.a, numeric.b);
+          if (numeric.a.value === numeric.b.value && numeric.a.unit === numeric.b.unit) {
+            return {
+              type: "duplicates",
+              confidence: Math.max(0.88, similarity),
+              reason: `Same ${numeric.a.value} ${numeric.a.unit} threshold on the same operational subject.`
+            };
+          }
+          if (direction !== "unknown") {
+            const aStricter = direction === "lower" ? numeric.a.value < numeric.b.value : numeric.a.value > numeric.b.value;
+            return {
+              type: "supersedes",
+              confidence: 0.95,
+              reason: `Comparable ${numeric.a.unit} thresholds; the ${direction} value is more stringent for this subject.`,
+              governingRowId: aStricter ? rowA.id : rowB.id,
+              weakerRowId: aStricter ? rowB.id : rowA.id
+            };
+          }
+        }
+
+        if (similarity >= 0.90 && a.polarity === b.polarity) {
+          return {
+            type: "duplicates",
+            confidence: similarity,
+            reason: "Near-identical normalized requirement language on the same operational subject."
+          };
+        }
+
+        const kindOverlap = a.kinds.some((kind) => b.kinds.includes(kind));
+        if (!kindOverlap && !oneProhibits) {
+          return {
+            type: "supplements",
+            confidence: 0.88,
+            reason: "Same operational subject with different compatible obligation types."
+          };
+        }
+
+        return {
+          type: "human-review",
+          confidence: 0.66,
+          reason: "Same operational subject, but the engine cannot safely determine duplicate, superseding, or supplemental status."
+        };
+      }
+
+      const knownSupplementPairs = new Set([
+        "fall:plan|fall:trigger",
+        "fall:rescue|fall:trigger",
+        "crane:critical-lift|crane:lift-plan",
+        "hotwork:fire-watch|hotwork:permit",
+        "confined-space:atmospheric-testing|confined-space:permit",
+        "confined-space:entry-team-rescue|confined-space:permit"
+      ]);
+      const pairKey = [a.subjectKey, b.subjectKey].sort().join("|");
+      if (sameFamily && knownSupplementPairs.has(pairKey)) {
+        return {
+          type: "supplements",
+          confidence: 0.94,
+          reason: "Known compatible obligations within the same operational subject family."
+        };
+      }
+
+      return { type: "independent", confidence: 0.92, reason: "No high-confidence shared operational subject." };
     }
 
     function highestPriority(rows) {
@@ -2329,6 +2633,9 @@
         statement: options.statement || "",
         priority: options.priority || highestPriority(contributingRows),
         actionTypes: uniqueSorted(contributingRows.map((row) => row.actionType)),
+        relationshipType: options.relationshipType || "independent",
+        relationshipReason: options.relationshipReason || "",
+        signatures: contributingRows.map(signatureForRow),
         contributingRows,
         weakerRows,
         allRows: [...contributingRows, ...weakerRows]
@@ -2384,6 +2691,44 @@
       return `${subject} ${verb} ${ensureSentencePunctuation(requirement.charAt(0).toLowerCase() + requirement.slice(1))}`;
     }
 
+    function governingNumericRows(key, rows) {
+      if (rows.length < 2) return null;
+      const signatures = rows.map((row) => signatureForRow(row));
+      const first = signatures[0];
+      const highConfidenceSubject = !key.startsWith("subject:") && !key.startsWith("exact:") && !key.startsWith("unique:");
+      const minimumSimilarity = Math.min(...rows.slice(1).map((row, index) => (
+        textSimilarity(signatures[index].canonicalText, signatureForRow(row).canonicalText)
+      )));
+      if (!highConfidenceSubject && minimumSimilarity < 0.60) return null;
+
+      const commonUnit = first.numericConstraints.find((constraint) => (
+        signatures.every((signature) => signature.numericConstraints.some((item) => item.unit === constraint.unit))
+      ))?.unit;
+      if (!commonUnit) return null;
+
+      const constraints = signatures.map((signature) => signature.numericConstraints.find((item) => item.unit === commonUnit));
+      const direction = strictnessDirection(key, constraints[0], constraints[1] || constraints[0]);
+      if (direction === "unknown") return null;
+
+      const governingValue = direction === "lower"
+        ? Math.min(...constraints.map((constraint) => constraint.value))
+        : Math.max(...constraints.map((constraint) => constraint.value));
+      const governingRows = rows.filter((row, index) => constraints[index].value === governingValue);
+      const weakerRows = rows.filter((row) => !governingRows.includes(row));
+      return { governingRows, weakerRows, governingValue, unit: commonUnit, direction };
+    }
+
+    function allNearDuplicates(rows) {
+      if (rows.length < 2) return false;
+      for (let i = 0; i < rows.length; i += 1) {
+        for (let j = i + 1; j < rows.length; j += 1) {
+          const relation = classifyRequirementRelationship(rows[i], rows[j]);
+          if (relation.type !== "duplicates") return false;
+        }
+      }
+      return true;
+    }
+
     function compareGroup(key, rows) {
       if (rows.length === 1) return [makeCard(rows, { statement: genericRowStatement(rows[0]) })];
 
@@ -2398,31 +2743,57 @@
             title: "Fall Protection Trigger",
             fieldTopic: "fall-protection",
             statement: fallTriggerStatement(governing, minimum),
-            weakerRows: weaker
+            weakerRows: weaker,
+            relationshipType: weaker.length ? "supersedes" : "duplicates",
+            relationshipReason: weaker.length ? "Lower fall-protection trigger governs." : "Same governing fall-protection trigger."
           })];
         }
       }
 
-      const prohibitions = rows.filter((row) => hasProhibition(comparisonText(row)));
+      const prohibitions = rows.filter((row) => signatureForRow(row).polarity === "prohibit");
       if (prohibitions.length) {
         const weaker = rows.filter((row) => !prohibitions.includes(row));
         return [makeCard(prohibitions, {
           id: `GOV-${key.replace(/[^a-z0-9]+/gi, "-").toUpperCase()}`,
           title: topicDefinition(prohibitions[0].fieldTopic).label,
           statement: prohibitionStatement(prohibitions, key),
-          weakerRows: weaker
+          weakerRows: weaker,
+          relationshipType: weaker.length ? "conflicts" : "duplicates",
+          relationshipReason: weaker.length
+            ? "A prohibition controls over a permission or less restrictive treatment of the same subject."
+            : "Multiple selected sources prohibit the same practice."
         })];
       }
 
-      if (key.startsWith("exact:")) {
+      const numeric = governingNumericRows(key, rows);
+      if (numeric && numeric.weakerRows.length) {
+        const governingStatement = numeric.governingRows.length > 1
+          ? exactDuplicateStatement(numeric.governingRows)
+          : genericRowStatement(numeric.governingRows[0]);
+        return [makeCard(numeric.governingRows, {
+          id: `GOV-NUMERIC-${Math.abs(hashString(key))}`,
+          statement: governingStatement,
+          weakerRows: numeric.weakerRows,
+          relationshipType: "supersedes",
+          relationshipReason: `${numeric.direction === "lower" ? "Lower" : "Higher"} ${numeric.unit} threshold is more stringent for this subject.`
+        })];
+      }
+
+      if (key.startsWith("exact:") || allNearDuplicates(rows)) {
         return [makeCard(rows, {
           id: `GOV-EXACT-${Math.abs(hashString(key))}`,
-          statement: exactDuplicateStatement(rows)
+          statement: exactDuplicateStatement(rows),
+          relationshipType: "duplicates",
+          relationshipReason: "Requirements are equivalent at high comparison confidence."
         })];
       }
 
-      // Keep distinct obligations separate unless comparison confidence is high enough to safely compress them.
-      return rows.map((row) => makeCard([row], { statement: genericRowStatement(row) }));
+      // Preserve distinct obligations unless the engine has high confidence that one supersedes, duplicates, or directly conflicts.
+      return rows.map((row) => makeCard([row], {
+        statement: genericRowStatement(row),
+        relationshipType: "human-review",
+        relationshipReason: "Same candidate subject group, but automatic compression would be unsafe."
+      }));
     }
 
     function hashString(value) {
@@ -2457,16 +2828,99 @@
         fieldTopic: "fall-protection",
         statement,
         contributingRows: [...triggerRows, ...planRows],
-        weakerRows: [...trigger.weakerRows, ...planCards.flatMap((card) => card.weakerRows)]
+        weakerRows: [...trigger.weakerRows, ...planCards.flatMap((card) => card.weakerRows)],
+        relationshipType: "supplements",
+        relationshipReason: "Fall-protection trigger and pre-work plan obligation are compatible and both govern."
       });
 
       return cards.filter((card) => card !== trigger && !planSet.has(card)).concat(merged);
     }
 
+    function analyzeRequirementRelationships(rows) {
+      const diagnostics = [];
+      const groups = new Map();
+      rows.forEach((row) => {
+        const key = signatureForRow(row).subjectKey;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(row);
+      });
+
+      groups.forEach((groupRows, subjectKey) => {
+        for (let i = 0; i < groupRows.length; i += 1) {
+          for (let j = i + 1; j < groupRows.length; j += 1) {
+            const relation = classifyRequirementRelationship(groupRows[i], groupRows[j]);
+            if (relation.type === "independent") continue;
+            diagnostics.push({
+              ...relation,
+              subjectKey,
+              rowAId: groupRows[i].id,
+              rowBId: groupRows[j].id,
+              sourceA: sourceOrganization(groupRows[i]),
+              sourceB: sourceOrganization(groupRows[j])
+            });
+          }
+        }
+      });
+
+      // Known supplemental relationships can span separate high-confidence subject keys within the same family.
+      const knownKeys = [...groups.keys()].filter((key) => !key.startsWith("subject:") && !key.startsWith("exact:") && !key.startsWith("unique:"));
+      for (let i = 0; i < knownKeys.length; i += 1) {
+        for (let j = i + 1; j < knownKeys.length; j += 1) {
+          const rowsA = groups.get(knownKeys[i]) || [];
+          const rowsB = groups.get(knownKeys[j]) || [];
+          if (!rowsA.length || !rowsB.length) continue;
+          const relation = classifyRequirementRelationship(rowsA[0], rowsB[0]);
+          if (relation.type !== "supplements") continue;
+          diagnostics.push({
+            ...relation,
+            subjectKey: `${knownKeys[i]} + ${knownKeys[j]}`,
+            rowAId: rowsA[0].id,
+            rowBId: rowsB[0].id,
+            sourceA: sourceOrganization(rowsA[0]),
+            sourceB: sourceOrganization(rowsB[0])
+          });
+        }
+      }
+
+      return diagnostics;
+    }
+
+    function summarizeSignatures(rows) {
+      const byKind = {};
+      const byPolarity = {};
+      rows.forEach((row) => {
+        const signature = signatureForRow(row);
+        signature.kinds.forEach((kind) => { byKind[kind] = (byKind[kind] || 0) + 1; });
+        byPolarity[signature.polarity] = (byPolarity[signature.polarity] || 0) + 1;
+      });
+      return { total: rows.length, byKind, byPolarity };
+    }
+
+    function logRelationshipDiagnostics() {
+      const counts = state.relationshipDiagnostics.reduce((acc, item) => {
+        acc[item.type] = (acc[item.type] || 0) + 1;
+        return acc;
+      }, {});
+
+      console.info("[Phase 1.8] Requirement signatures generated", state.signatureStats);
+      console.info("[Phase 1.9] Relationship engine summary", counts);
+
+      const reviewItems = state.relationshipDiagnostics.filter((item) => ["conflicts", "human-review"].includes(item.type));
+      if (reviewItems.length) {
+        console.warn(`[Relationship review] ${reviewItems.length} conflict/human-review relationship${reviewItems.length === 1 ? "" : "s"} detected.`, reviewItems);
+      }
+
+      window.__COOPER_STACK_DEV__ = {
+        signatures: state.generatedRows.map((row) => ({ id: row.id, source: sourceOrganization(row), signature: row.signature })),
+        relationships: state.relationshipDiagnostics,
+        governingCards: state.governingCards
+      };
+    }
+
     function buildGoverningCards(rows) {
       const groups = new Map();
       rows.forEach((row) => {
-        const key = highConfidenceComparisonKey(row);
+        const key = signatureForRow(row).subjectKey;
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(row);
       });
@@ -2508,10 +2962,14 @@
           scopeRelevant: scopeMatches(row, selection.scopes)
         };
         enriched.fieldTopic = classifyFieldTopic(enriched);
+        enriched.signature = buildRequirementSignature(enriched);
         return enriched;
       });
 
+      state.signatureStats = summarizeSignatures(state.generatedRows);
+      state.relationshipDiagnostics = analyzeRequirementRelationships(state.generatedRows);
       state.governingCards = buildGoverningCards(state.generatedRows);
+      logRelationshipDiagnostics();
       state.currentSelection = selection;
       state.activeTopic = "";
       state.activeSubtopic = "";
