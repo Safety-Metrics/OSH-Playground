@@ -1508,6 +1508,36 @@
           "AECOM Tishman Construction": "AECOM_Tishman_SHE_Program_2025.pdf.pdf"
         }
       },
+      classification: {
+        otherReviewThreshold: 8,
+        minimumTopicScore: 12,
+        fieldWeights: {
+          topic: 18,
+          dashboardGroup: 16,
+          category: 14,
+          requirement: 9,
+          action: 7,
+          trigger: 5,
+          tags: 2
+        },
+        specificityBoost: {
+          "confined-space": 70,
+          "electrical-loto": 40,
+          "cranes-hoisting": 36,
+          "rigging": 36,
+          "fall-protection": 36,
+          "welding-hot-work": 34,
+          "mewp-mobile-equipment": 32,
+          "decking-joists": 32,
+          "steel-erection-stability": 30,
+          "ppe": 26,
+          "material-housekeeping": 22,
+          "emergency-incident": 18,
+          "training-qualifications": 12,
+          "plans-permits-submittals": 12,
+          "inspections-documentation": 12
+        }
+      },
       scopes: [
         { id: "steel-erection", label: "Structural Steel Erection", topicIds: ["steel-erection-stability", "decking-joists", "fall-protection", "cranes-hoisting", "rigging"], keywords: ["steel erection", "structural steel", "erection", "connector", "column", "beam", "joist", "deck", "bolting", "bolt-up", "bridging", "anchor rod", "stability", "bracing"] },
         { id: "decking", label: "Decking", topicIds: ["decking-joists", "fall-protection"], keywords: ["decking", "deck", "metal deck", "deck bundle", "deck opening", "controlled decking zone", "cdz"] },
@@ -1530,8 +1560,9 @@
         { id: "decking-joists", label: "Decking & Joists", operational: true, keywords: ["metal deck", "decking", "deck bundle", "deck opening", "joist", "bridging", "sji"] },
         { id: "welding-hot-work", label: "Welding & Hot Work", operational: true, keywords: ["welding", "weld", "hot work", "cutting", "burning", "torch", "fire watch", "spark containment"] },
         { id: "mewp-mobile-equipment", label: "MEWPs & Mobile Equipment", operational: true, keywords: ["mewp", "mobile elevated work platform", "aerial lift", "boom lift", "scissor lift", "telehandler", "forklift", "powered industrial truck", "mobile equipment"] },
-        { id: "ppe", label: "PPE", operational: true, keywords: ["ppe", "personal protective equipment", "hard hat", "helmet", "type ii", "chin strap", "safety glasses", "eye protection", "gloves", "hi-vis", "high visibility", "hearing protection"] },
-        { id: "electrical-loto", label: "Electrical & LOTO", operational: true, keywords: ["electrical", "loto", "lockout", "tagout", "energized", "energy control", "ground fault", "gfci"] },
+        { id: "ppe", label: "PPE", operational: true, keywords: ["ppe", "personal protective equipment", "hard hat", "helmet", "type ii", "type 2 helmet", "chin strap", "chinstrap", "safety glasses", "eye protection", "face shield", "protective eyewear", "gloves", "hand protection", "hi-vis", "high visibility", "hearing protection", "respirator", "respiratory protection"] },
+        { id: "electrical-loto", label: "Electrical & LOTO", operational: true, keywords: ["electrical", "loto", "lockout", "tagout", "energized", "energy control", "zero energy", "ground fault", "gfci", "arc flash", "temporary power", "live service", "live services", "energized service", "electrical drawing", "source and field end"] },
+        { id: "confined-space", label: "Confined Space", operational: true, keywords: ["confined space", "permit-required confined space", "permit required confined space", "confined-space", "entry permit", "permit to work", "permit-to-work", "atmospheric testing", "atmospheric monitoring", "confined space attendant", "entry supervisor"] },
         { id: "material-housekeeping", label: "Material Handling & Housekeeping", operational: true, keywords: ["material handling", "housekeeping", "storage", "staging", "unloading", "delivery", "laydown", "trash", "debris"] },
         { id: "training-qualifications", label: "Training & Qualifications", operational: false, keywords: ["training", "trained", "qualified", "competent person", "certification", "certified", "authorization"] },
         { id: "plans-permits-submittals", label: "Plans, Permits & Submittals", operational: false, keywords: ["plan required", "permit required", "submit", "submission", "submittal", "approval required", "sssp", "ssep", "erection plan"] },
@@ -1606,8 +1637,16 @@
         "electrical-loto": [
           { id: "loto", label: "Lockout / Tagout & Energy Control", keywords: ["lockout", "tagout", "loto", "energy control", "zero energy"] },
           { id: "energized-work", label: "Energized Work & Electrical Clearances", keywords: ["energized", "power line", "electrical clearance", "arc flash"] },
+          { id: "live-services-documentation", label: "Live Services, Drawings & Identification", keywords: ["live service", "live services", "energized service", "drawings", "drawing", "source and field end", "labeling", "identification"] },
           { id: "gfci-temp-power", label: "GFCI, Temporary Power & Cord Safety", keywords: ["gfci", "ground fault", "temporary power", "extension cord", "cord"] },
           { id: "other", label: "Other Electrical & LOTO Requirements", keywords: [] }
+        ],
+        "confined-space": [
+          { id: "entry-permits", label: "Entry, Permit-to-Work & Access Controls", keywords: ["confined space", "permit to work", "permit-to-work", "entry permit", "entry authorization", "permit-required confined space", "permit required confined space", "entry"] },
+          { id: "atmospheric-testing", label: "Atmospheric Testing, Monitoring & Ventilation", keywords: ["atmospheric testing", "atmospheric monitoring", "gas test", "air monitoring", "oxygen", "lel", "ventilation", "continuous monitoring"] },
+          { id: "attendants-rescue", label: "Attendants, Rescue & Emergency Response", keywords: ["attendant", "rescue", "retrieval", "entry supervisor", "rescue equipment", "emergency response"] },
+          { id: "training-qualifications", label: "Training, Competency & Qualifications", keywords: ["training", "trained", "qualified", "competent", "authorization", "authorized"] },
+          { id: "other", label: "Other Confined Space Requirements", keywords: [] }
         ],
         "material-housekeeping": [
           { id: "unloading-staging", label: "Unloading, Staging & Material Storage", keywords: ["unloading", "staging", "storage", "laydown", "delivery"] },
@@ -2045,24 +2084,71 @@
       return matched ? matched[0] : "Field Requirement";
     }
 
-    function topicScore(text, topic) {
-      return topic.keywords.reduce((score, keyword) => score + (text.includes(keyword) ? (keyword.includes(" ") ? 3 : 1) : 0), 0);
+    function keywordMatchStrength(value, keyword) {
+      const text = String(value || "").toLowerCase();
+      const term = String(keyword || "").toLowerCase().trim();
+      if (!text || !term || !text.includes(term)) return 0;
+      if (text.trim() === term) return 5;
+      return term.includes(" ") || term.includes("-") ? 3 : 1;
+    }
+
+    function classificationFields(row) {
+      return [
+        ["topic", row.topic],
+        ["dashboardGroup", row.dashboardGroup],
+        ["category", row.category],
+        ["requirement", row.requirement],
+        ["action", row.action],
+        ["trigger", row.trigger],
+        ["tags", row.tags]
+      ];
+    }
+
+    function topicScoreForRow(row, topic) {
+      const weights = CONFIG.classification.fieldWeights;
+      let score = 0;
+
+      classificationFields(row).forEach(([fieldName, value]) => {
+        const fieldWeight = weights[fieldName] || 0;
+        topic.keywords.forEach((keyword) => {
+          score += fieldWeight * keywordMatchStrength(value, keyword);
+        });
+      });
+
+      const primaryText = [
+        row.topic,
+        row.dashboardGroup,
+        row.category,
+        row.requirement
+      ].join(" ").toLowerCase();
+
+      const hasPrimarySpecificMatch = topic.keywords.some((keyword) => (
+        keywordMatchStrength(primaryText, keyword) >= 3
+      ));
+
+      if (hasPrimarySpecificMatch) {
+        score += CONFIG.classification.specificityBoost[topic.id] || 0;
+      }
+
+      return score;
     }
 
     function classifyFieldTopic(row) {
-      const text = rowSearchText(row);
-      const operational = CONFIG.fieldTopics.filter((topic) => topic.operational);
-      const admin = CONFIG.fieldTopics.filter((topic) => !topic.operational && topic.id !== "general-site-rules");
+      const candidates = CONFIG.fieldTopics
+        .filter((topic) => topic.id !== "general-site-rules")
+        .map((topic, index) => ({
+          topic,
+          index,
+          score: topicScoreForRow(row, topic)
+        }))
+        .sort((a, b) => b.score - a.score || a.index - b.index);
 
-      const choose = (topics) => topics
-        .map((topic) => ({ topic, score: topicScore(text, topic) }))
-        .filter((item) => item.score > 0)
-        .sort((a, b) => b.score - a.score || CONFIG.fieldTopics.findIndex((topic) => topic.id === a.topic.id) - CONFIG.fieldTopics.findIndex((topic) => topic.id === b.topic.id))[0];
+      const best = candidates[0];
+      if (!best || best.score < CONFIG.classification.minimumTopicScore) {
+        return "general-site-rules";
+      }
 
-      const operationalMatch = choose(operational);
-      if (operationalMatch) return operationalMatch.topic.id;
-      const adminMatch = choose(admin);
-      return adminMatch ? adminMatch.topic.id : "general-site-rules";
+      return best.topic.id;
     }
 
     function topicDefinition(topicId) {
@@ -2079,18 +2165,40 @@
         || subtopicDefinitions(topicId)[0];
     }
 
+    function subtopicScoreForCard(card, subtopic) {
+      const fields = [
+        { value: card.title, weight: 20 },
+        { value: card.statement, weight: 12 },
+        ...card.allRows.flatMap((row) => [
+          { value: row.topic, weight: 18 },
+          { value: row.dashboardGroup, weight: 16 },
+          { value: row.category, weight: 14 },
+          { value: row.requirement, weight: 10 },
+          { value: row.action, weight: 7 },
+          { value: row.trigger, weight: 5 },
+          { value: row.tags, weight: 2 }
+        ])
+      ];
+
+      return subtopic.keywords.reduce((total, keyword) => (
+        total + fields.reduce((fieldTotal, field) => (
+          fieldTotal + (field.weight * keywordMatchStrength(field.value, keyword))
+        ), 0)
+      ), 0);
+    }
+
     function classifyCardSubtopic(card) {
-      const text = cardSearchText(card);
       const definitions = subtopicDefinitions(card.fieldTopic);
       const candidates = definitions
         .filter((subtopic) => subtopic.id !== "other")
         .map((subtopic, index) => ({
           subtopic,
           index,
-          score: subtopic.keywords.reduce((score, keyword) => score + (text.includes(keyword) ? (keyword.includes(" ") ? 3 : 1) : 0), 0)
+          score: subtopicScoreForCard(card, subtopic)
         }))
         .filter((item) => item.score > 0)
         .sort((a, b) => b.score - a.score || a.index - b.index);
+
       return candidates[0]?.subtopic.id || "other";
     }
 
@@ -2525,6 +2633,14 @@
       const total = topicCards(state.activeTopic).length;
       els.activeTopicTitle.textContent = topic.label;
       els.activeTopicCount.innerHTML = `<strong>${total.toLocaleString()}</strong> governing answers`;
+
+      const otherCount = subtopicCards(state.activeTopic, "other").length;
+      if (otherCount > CONFIG.classification.otherReviewThreshold) {
+        console.warn(
+          `[Classification review] ${topic.label} has ${otherCount} governing answers in its Other bucket. ` +
+          `Development threshold is ${CONFIG.classification.otherReviewThreshold}; revisit this topic's classification logic.`
+        );
+      }
 
       const tiles = subtopicDefinitions(state.activeTopic).map((subtopic) => {
         const count = subtopicCards(state.activeTopic, subtopic.id).length;
