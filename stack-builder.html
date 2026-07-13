@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111112">
   <title>Cooper Steel Project Requirement Stack Builder</title>
-  <!-- Readability revision: compact headings, readable cards, Field Use Mode panel removed -->
+  <!-- Phase 2.0.1 integrity revision: source-faithful answers, safer clustering, support-only authority suppression, operational titles -->
   <link rel="icon" href="data:;base64,=">
 
   <style>
@@ -1577,6 +1577,7 @@
           { id: "cdz-decking-controls", label: "Controlled Decking Zones & Decking Controls", keywords: ["controlled decking zone", "cdz", "controlled access zone", "caz", "decking zone"] },
           { id: "pfas-anchorages", label: "Harnesses, Lifelines, Anchorages & PFAS", keywords: ["harness", "lanyard", "lifeline", "anchor", "anchorage", "fall arrest", "fall restraint", "self retracting", "srl"] },
           { id: "rescue-recovery", label: "Rescue, Recovery & Suspension", keywords: ["rescue", "recovery", "suspension trauma"] },
+          { id: "scaffolds-platforms", label: "Scaffolds & Work Platforms", keywords: ["scaffold", "scaffolding", "work platform"] },
           { id: "ladders-access", label: "Ladders & Access", keywords: ["ladder", "access"] },
           { id: "inspection-training", label: "Inspections, Training & Qualifications", keywords: ["inspection", "inspect", "training", "qualified", "competent person"] },
           { id: "other", label: "Other Fall Protection Requirements", keywords: [] }
@@ -1699,6 +1700,9 @@
       phase2Clusters: [],
       phase2Diagnostics: [],
       phase2Stats: {},
+      phase2SupportRows: [],
+      phase2CoverageDiagnostics: [],
+      integritySafeguardsApplied: [],
       activeTopic: "",
       activeSubtopic: "",
       quickFilter: "all",
@@ -2138,7 +2142,40 @@
       return score;
     }
 
+    function explicitFieldTopicOverride(row) {
+      const strongText = `${row.category || ""} ${row.topic || ""} ${row.requirement || ""}`.toLowerCase();
+
+      // Phase 2.0.1 specificity gate: a named fall-protection system beats the broader decking subject.
+      if (/controlled decking zone|\bcdz\b|safety monitor(?:ing)?/.test(strongText)) return "fall-protection";
+
+      const operationalSignals = [
+        ["confined-space", /confined space|permit-required confined space|entry permit/],
+        ["electrical-loto", /lockout|tagout|\bloto\b|energized|arc flash|gfci|electrical/],
+        ["cranes-hoisting", /crane|critical lift|multiple lift|dual lift|personnel platform|load chart/],
+        ["rigging", /rigging|qualified rigger|sling|shackle|signal person|tag line|tagline/],
+        ["welding-hot-work", /welding|hot work|fire watch|torch|cutting|burning/],
+        ["mewp-mobile-equipment", /mewp|aerial lift|boom lift|scissor lift|telehandler|forklift/],
+        ["decking-joists", /metal deck|decking|deck bundle|joist|bridging|\bsji\b/],
+        ["steel-erection-stability", /structural steel|steel erection|anchor rod|temporary bracing|bolt-up|column|beam/],
+        ["fall-protection", /fall protection|fall arrest|fall restraint|leading edge|controlled decking zone|\bcdz\b|guardrail|lifeline|harness|lanyard/]
+      ];
+
+      const specificOperational = operationalSignals.find(([, pattern]) => pattern.test(strongText));
+      if (specificOperational) return specificOperational[0];
+
+      const explicitTraining = /(?:^|[-–—:])\s*training\b|\b(?:employees?|workers?|personnel)\s+(?:shall|must|are required to)\s+be trained\b|\btraining required\b/.test(strongText);
+      if (explicitTraining) return "training-qualifications";
+
+      const explicitInspection = /(?:^|[-–—:])\s*(?:inspection|inspect)\b|\b(?:pre-use|daily|documented) inspection\b/.test(strongText);
+      if (explicitInspection) return "inspections-documentation";
+
+      return "";
+    }
+
     function classifyFieldTopic(row) {
+      const override = explicitFieldTopicOverride(row);
+      if (override) return override;
+
       const candidates = CONFIG.fieldTopics
         .filter((topic) => topic.id !== "general-site-rules")
         .map((topic, index) => ({
@@ -2287,11 +2324,19 @@
       const topic = row.fieldTopic;
 
       if (topic === "fall-protection") {
+        const scaffoldContext = /\bscaffold(?:s|ing)?\b/.test(text);
+        const ladderContext = /\bladder(?:s)?\b/.test(text);
+        const numericFallTrigger = /(fall protection|fall exposure|work at height|working at height|height exposure|heights? (?:greater than|above|at|of)|tied off|tie off).{0,140}(feet|foot|\bft\b|inches|inch|\bin\.\b)|(?:feet|foot|\bft\b|inches|inch|\bin\.\b).{0,140}(fall protection|fall exposure|work at height|working at height|tied off|tie off)/.test(text);
+
         if (/controlled decking zone|\bcdz\b/.test(text)) return "fall:cdz";
         if (/safety monitor(?:ing)?/.test(text)) return "fall:safety-monitoring";
+        if (scaffoldContext && numericFallTrigger) return "fall:scaffold-trigger";
+        if (ladderContext && numericFallTrigger) return "fall:ladder-trigger";
+        if (scaffoldContext && /inspect|inspection|tagged out|remove(?:d)? from service|damaged|weakened/.test(text)) return "fall:scaffold-inspection";
+        if (ladderContext && /inspect|inspection|before each use|pre-use/.test(text)) return "fall:ladder-inspection";
+        if (numericFallTrigger) return "fall:trigger";
         if (/fall protection plan/.test(text)) return "fall:plan";
         if (/fall.{0,80}(rescue|recovery)|(rescue|recovery).{0,80}fall/.test(text)) return "fall:rescue";
-        if (/(fall protection|fall exposure|work at height|working at height).{0,120}(feet|foot|\bft\b|inches|inch|\bin\.\b)|(?:feet|foot|\bft\b|inches|inch|\bin\.\b).{0,120}(fall protection|fall exposure|work at height|working at height)/.test(text)) return "fall:trigger";
       }
 
       if (topic === "cranes-hoisting") {
@@ -2427,8 +2472,14 @@
 
     function detectRequirementKinds(row) {
       const text = comparisonText(row);
+      const strongText = `${row.category || ""} ${row.topic || ""} ${row.requirement || ""}`.toLowerCase();
       const kinds = [];
       const add = (value) => { if (!kinds.includes(value)) kinds.push(value); };
+
+      const explicitTraining = /(?:^|[-–—:])\s*training\b|\b(?:employees?|workers?|personnel)\s+(?:shall|must|are required to)\s+be trained\b|\btraining required\b/.test(strongText);
+      const explicitInspection = /(?:^|[-–—:])\s*(?:inspection|inspect)\b|\b(?:pre-use|daily|documented) inspection\b/.test(strongText);
+      if (explicitTraining) add("qualification");
+      if (explicitInspection) add("inspection");
 
       if (extractNumericConstraints(row).length) add("numeric-threshold");
       if (/\b(?:fall protection plan|lift plan|erection plan|rescue plan|emergency plan|safety plan|sssp|ssep|plan required|required plan)\b/i.test(text)) add("plan");
@@ -2683,7 +2734,9 @@
         "crane:multiple-lift": "multiple or dual lifts",
         "crane:personnel-platform": "personnel-platform crane lifts except where a source-specific exception is met"
       };
-      return `${subject} ${verb} ${labels[key] || "this practice"} on this project.`;
+      if (labels[key]) return `${subject} ${verb} ${labels[key]} on this project.`;
+      const sourceText = cleanSentence(rows[0]?.requirement || rows[0]?.topic || rows[0]?.category || "");
+      return `${subject} ${verb} the following: ${ensureSentencePunctuation(sourceText)}`;
     }
 
     function exactDuplicateStatement(rows) {
@@ -2912,8 +2965,10 @@
 
       console.info("[Phase 1.8] Requirement signatures generated", state.signatureStats);
       console.info("[Phase 1.9] Relationship engine summary", counts);
-      console.info("[Phase 2.0] Governing requirement engine", state.phase2Stats);
-      console.info("[Phase 2.0] Resolved relationship summary", phase2Counts);
+      console.info("[Phase 2.0.1] Governing requirement engine", state.phase2Stats);
+      console.info("[Phase 2.0.1] Resolved relationship summary", phase2Counts);
+      if (state.phase2SupportRows.length) console.info("[Phase 2.0.1] Support-only authority rows kept out of field cards", state.phase2SupportRows.map((row) => row.id));
+      if (state.phase2CoverageDiagnostics.length) console.warn("[Phase 2.0.1] Coverage integrity safeguards applied", state.phase2CoverageDiagnostics);
 
       const reviewItems = state.phase2Diagnostics.filter((item) => ["conflicts", "human-review"].includes(item.type) && item.reviewNeeded);
       if (reviewItems.length) {
@@ -2921,7 +2976,7 @@
       }
 
       window.__COOPER_STACK_DEV__ = {
-        phase: "2.0",
+        phase: "2.0.1",
         signatures: state.generatedRows.map((row) => ({ id: row.id, source: sourceOrganization(row), signature: row.signature })),
         relationships: state.relationshipDiagnostics,
         phase2: {
@@ -2935,6 +2990,9 @@
             confidence: cluster.confidence
           })),
           relationships: state.phase2Diagnostics,
+          supportOnlyRows: state.phase2SupportRows.map((row) => ({ id: row.id, source: sourceOrganization(row), requirement: row.requirement })),
+          coverageDiagnostics: state.phase2CoverageDiagnostics,
+          integritySafeguardsApplied: state.integritySafeguardsApplied,
           governingCards: state.governingCards.map((card) => ({
             id: card.id,
             fieldTopic: card.fieldTopic,
@@ -2976,8 +3034,8 @@
     /* ---------- Phase 2.0: operational clustering + governing resolution + clause lineage ---------- */
 
     const PHASE2 = Object.freeze({
-      version: "2.0",
-      clusterMergeThreshold: 64,
+      version: "2.0.1",
+      clusterMergeThreshold: 72,
       autoResolveConfidence: 0.86,
       highConfidence: 0.90,
       moderateConfidence: 0.78,
@@ -3006,6 +3064,10 @@
       "fall:safety-monitoring": "Safety Monitoring",
       "fall:plan": "Fall Protection Planning",
       "fall:rescue": "Fall Rescue & Recovery",
+      "fall:scaffold-trigger": "Scaffold Fall Protection Trigger",
+      "fall:ladder-trigger": "Ladder Fall Protection Trigger",
+      "fall:scaffold-inspection": "Scaffold Condition & Inspection",
+      "fall:ladder-inspection": "Ladder Pre-Use Inspection",
       "crane:critical-lift": "Critical Lifts",
       "crane:multiple-lift": "Multiple & Dual Lifts",
       "crane:personnel-platform": "Personnel Hoisting",
@@ -3169,19 +3231,34 @@
       const sameSubtopic = phase2RowSubtopic(rowA) === phase2RowSubtopic(rowB);
       const samePrimaryKind = a.primaryKind === b.primaryKind;
       const numeric = phase2ComparableNumeric(a, b);
+      const categoryA = normalizeComparisonText(rowA.category);
+      const categoryB = normalizeComparisonText(rowB.category);
+      const sameCategory = Boolean(categoryA && categoryB && categoryA === categoryB);
+      const sectionA = String(rowA.tags || "").match(/\bsection-\d+\b/i)?.[0]?.toLowerCase() || "";
+      const sectionB = String(rowB.tags || "").match(/\bsection-\d+\b/i)?.[0]?.toLowerCase() || "";
+      const differentSections = Boolean(sectionA && sectionB && sectionA !== sectionB);
+
+      if (!knownA && !knownB && !sameCategory && differentSections && canonicalSimilarity < 0.90) {
+        return { score: 0, hardReject: true, reason: "Different source sections and categories with no known shared operational subject." };
+      }
+
+      if (!knownA && !knownB && !sameCategory && tokenSimilarity < 0.55 && canonicalSimilarity < 0.82) {
+        return { score: 0, hardReject: true, reason: "Unknown fallback subjects from different categories lack enough source-language similarity." };
+      }
 
       let score = 0;
-      if (sameSubtopic) score += 18;
-      score += tokenSimilarity * 44;
-      score += canonicalSimilarity * 28;
-      if (samePrimaryKind) score += 7;
-      if (numeric) score += 6;
+      if (sameSubtopic) score += 8;
+      if (sameCategory) score += 12;
+      score += tokenSimilarity * 46;
+      score += canonicalSimilarity * 30;
+      if (samePrimaryKind) score += 5;
+      if (numeric && sameCategory) score += 4;
 
-      const hardReject = !sameSubtopic && tokenSimilarity < 0.32 && canonicalSimilarity < 0.52;
+      const hardReject = !sameSubtopic && !sameCategory && tokenSimilarity < 0.42 && canonicalSimilarity < 0.68;
       return {
         score: Math.min(99, Math.round(score * 100) / 100),
         hardReject,
-        reason: `Subtopic=${sameSubtopic}; token similarity=${tokenSimilarity.toFixed(2)}; text similarity=${canonicalSimilarity.toFixed(2)}.`
+        reason: `Subtopic=${sameSubtopic}; category=${sameCategory}; token similarity=${tokenSimilarity.toFixed(2)}; text similarity=${canonicalSimilarity.toFixed(2)}.`
       };
     }
 
@@ -3282,6 +3359,22 @@
       }
 
       if (sameSubject) {
+        const knownSharedSubject = phase2KnownSubject(a.subjectKey);
+        if (!knownSharedSubject) {
+          if (a.canonicalText && a.canonicalText === b.canonicalText) {
+            return { type: "duplicates", confidence: 1, reason: "Exact canonical requirement match inside the same fallback subject." };
+          }
+          if (similarity >= 0.94 && a.polarity === b.polarity) {
+            return { type: "duplicates", confidence: similarity, reason: "Near-identical source language inside the same fallback subject." };
+          }
+          return {
+            type: "human-review",
+            confidence: 0.64,
+            reason: "Fallback subject match alone is not strong enough to merge, suppress, or compose distinct source requirements.",
+            reviewNeeded: true
+          };
+        }
+
         const numeric = phase2ComparableNumeric(a, b);
         if (numeric) {
           const direction = phase2StrictnessDirection(a, b, numeric);
@@ -3391,14 +3484,44 @@
       return { find, union };
     }
 
+    const PHASE201_BOILERPLATE_ACTIONS = [
+      /review and apply the state-specific requirement/i,
+      /this requirement applies/i,
+      /review source requirement/i,
+      /verify this requirement is implemented before the applicable task or exposure begins/i,
+      /complete the required inspection before use or operation, document the result when required, and remove\/?tag defective equipment or conditions from service until corrected/i,
+      /complete and review the required plan\/?jsa before work starts/i,
+      /verify affected personnel have the required training, qualification, or certification before assignment/i,
+      /enforce this as a no-go requirement in the field/i,
+      /report or notify the required supervisor, safety department, or designated management contact/i,
+      /review this requirement with affected employees and supervision, implement the stated control/i,
+      /verify the required fall-protection, anchorage, rescue, and inspection controls are in place/i,
+      /verify the lift, equipment, rigging, personnel, and exclusion-zone controls satisfy this requirement/i,
+      /complete, approve, and make the required permit available before the activity begins/i
+    ];
+
+    function phase201IsBoilerplateAction(value) {
+      const text = cleanSentence(value);
+      return !text || PHASE201_BOILERPLATE_ACTIONS.some((pattern) => pattern.test(text));
+    }
+
+    function phase201TextIsGeneric(value) {
+      const text = cleanSentence(value).toLowerCase();
+      return !text
+        || /^(purpose|scope|responsibilities|policy|procedure|requirements?)$/.test(text)
+        || /^this (?:field )?requirement applies/.test(text)
+        || /^review (?:and )?apply/.test(text);
+    }
+
     function phase2PreferredObligationText(row) {
-      const action = cleanSentence(row.action);
       const requirement = cleanSentence(row.requirement);
+      const action = cleanSentence(row.action);
       const topic = cleanSentence(row.topic);
-      const actionIsGeneric = /review and apply the state-specific requirement|this requirement applies|review source requirement/i.test(action);
-      if (action && !actionIsGeneric && action.length <= 360) return action;
-      if (requirement) return requirement;
-      return topic || "this field requirement applies";
+
+      if (requirement && !phase201TextIsGeneric(requirement)) return requirement;
+      if (action && !phase201IsBoilerplateAction(action) && action.length <= 420) return action;
+      if (topic && !phase201TextIsGeneric(topic)) return topic;
+      return requirement || action || topic || "";
     }
 
     function phase2StripOrganizationPrefix(value, row) {
@@ -3421,11 +3544,23 @@
         .trim();
       if (!text) return { mode: "direct", text: "this field requirement" };
 
-      let match = text.match(/^(workers|employees|crews|contractors|subcontractors|operators|riggers|personnel|persons?)\s+(?:must|shall|are required to)\s+(.+)$/i);
+      const rowContext = `${row.category || ""} ${row.trigger || ""}`.toLowerCase();
+      if (/working alone|working or traveling alone/.test(rowContext) && /^inspect\b/i.test(text)) {
+        return { mode: "direct", text: `crews working alone to ${phase2LowerFirst(text)}` };
+      }
+
+      let match = text.match(/^((?:all\s+)?(?:workers|employees|crews|contractors|subcontractors|operators|riggers|personnel|persons?))\s+(?:must|shall|are required to)\s+(.+)$/i);
       if (match) return { mode: "direct", text: `${match[1].toLowerCase()} to ${phase2LowerFirst(match[2])}` };
 
       match = text.match(/^(?:must|shall|is required to|are required to|required to)\s+(.+)$/i);
       if (match) return { mode: "direct", text: `crews to ${phase2LowerFirst(match[1])}` };
+
+      // Convert source language such as "A fall protection plan shall be completed" into
+      // a clean WHO-REQUIRES-WHAT phrase: "a fall protection plan to be completed".
+      match = text.match(/^(.{1,120}?)\s+(?:must|shall|is required to|are required to)\s+(.+)$/i);
+      if (match && !/[,:;]$/.test(match[1])) {
+        return { mode: "direct", text: `${phase2LowerFirst(match[1])} to ${phase2LowerFirst(match[2])}` };
+      }
 
       const imperativeVerbs = "complete|submit|inspect|provide|use|maintain|ensure|document|obtain|install|verify|perform|develop|prepare|conduct|review|keep|wear|remove|identify|establish|notify|report|train|designate|protect|secure|test|monitor|stop|prohibit";
       match = text.match(new RegExp(`^(${imperativeVerbs})\\b(.+)$`, "i"));
@@ -3439,6 +3574,34 @@
       return { mode: "direct", text: phase2LowerFirst(text) };
     }
 
+    function phase201SpecificSourceText(row) {
+      return cleanSentence(phase2PreferredObligationText(row) || row.requirement || row.topic || row.category);
+    }
+
+    function phase201StatementIsVague(value) {
+      const text = cleanSentence(value).toLowerCase();
+      return /\b(?:this practice|this requirement|this activity|the applicable activity|this condition|this field requirement)\b/.test(text)
+        || /(?:requires?|prohibits?|allows?)\s*\.$/.test(text);
+    }
+
+    function phase201SourceFaithfulFallback(rows) {
+      const sourceRows = rows.filter(Boolean);
+      const primary = [...sourceRows].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))[0] || sourceRows[0];
+      const orgs = uniqueSorted(sourceRows.map(sourceOrganization));
+      const subject = humanList(orgs);
+      const signature = signatureForRow(primary);
+      const sourceText = phase201SpecificSourceText(primary);
+
+      if (signature.polarity === "prohibit") {
+        return `${subject} ${pluralVerb(orgs, "prohibits", "prohibit")} the following: ${ensureSentencePunctuation(sourceText || primary.topic || primary.category)}`;
+      }
+      if (signature.polarity === "permit" || signature.polarity === "permit-conditional") {
+        return `${subject} ${pluralVerb(orgs, "allows", "allow")} the following under the stated source conditions: ${ensureSentencePunctuation(sourceText || primary.topic || primary.category)}`;
+      }
+      const phrase = phase2ObligationPhrase(primary).text;
+      return `${subject} ${pluralVerb(orgs, "requires", "require")} ${ensureSentencePunctuation(phrase || phase2LowerFirst(sourceText))}`;
+    }
+
     function phase2GenericWhoWhatStatement(rows) {
       const sourceRows = rows.filter(Boolean);
       const primary = [...sourceRows].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))[0] || sourceRows[0];
@@ -3446,6 +3609,7 @@
       const subject = humanList(orgs);
       const signature = signatureForRow(primary);
       const phrase = phase2ObligationPhrase(primary).text;
+      let statement;
 
       if (signature.polarity === "prohibit") {
         const cleaned = phrase
@@ -3456,15 +3620,17 @@
           .replace(/\b(?:is|are) prohibited\b/gi, "")
           .replace(/^prohibit\s+/i, "")
           .trim();
-        return `${subject} ${pluralVerb(orgs, "prohibits", "prohibit")} ${ensureSentencePunctuation(cleaned || "this practice")}`;
-      }
-
-      if (signature.polarity === "permit" || signature.polarity === "permit-conditional") {
+        statement = cleaned
+          ? `${subject} ${pluralVerb(orgs, "prohibits", "prohibit")} ${ensureSentencePunctuation(cleaned)}`
+          : phase201SourceFaithfulFallback(sourceRows);
+      } else if (signature.polarity === "permit" || signature.polarity === "permit-conditional") {
         const sourceText = ensureSentencePunctuation(phase2PreferredObligationText(primary));
-        return `${subject} ${pluralVerb(orgs, "allows", "allow")} the following practice under the stated conditions: ${sourceText}`;
+        statement = `${subject} ${pluralVerb(orgs, "allows", "allow")} the following under the stated source conditions: ${sourceText}`;
+      } else {
+        statement = `${subject} ${pluralVerb(orgs, "requires", "require")} ${ensureSentencePunctuation(phrase)}`;
       }
 
-      return `${subject} ${pluralVerb(orgs, "requires", "require")} ${ensureSentencePunctuation(phrase)}`;
+      return phase201StatementIsVague(statement) ? phase201SourceFaithfulFallback(sourceRows) : statement;
     }
 
     function phase2ClauseForUnit(unit, cluster, context) {
@@ -3483,11 +3649,38 @@
         }
       }
 
+      if (!text && subjectKey === "fall:scaffold-trigger") {
+        const sourceRows = uniqueSourceRows(rows);
+        const orgs = uniqueSorted(sourceRows.map(sourceOrganization));
+        const subject = humanList(orgs);
+        const primaryText = comparisonText(primary);
+        const constraints = sourceRows
+          .flatMap((row) => signatureForRow(row).numericConstraints.map((constraint) => phase2NormalizedConstraint(constraint)))
+          .filter((constraint) => constraint?.dimension === "length");
+        if (constraints.length) {
+          const feet = Math.min(...constraints.map((constraint) => constraint.baseValue));
+          const threshold = Number.isInteger(feet) ? feet : Number(feet.toFixed(2));
+          const method = /handrails/.test(primaryText) && /personal fall protection/.test(primaryText)
+            ? " by guardrails and/or personal fall protection systems"
+            : "";
+          text = `${subject} ${pluralVerb(orgs, "requires", "require")} fall protection${method} for workers on scaffolds more than ${threshold} feet above a lower level.`;
+        }
+      }
+
+      if (!text && subjectKey === "fall:ladder-trigger") {
+        const sourceRows = uniqueSourceRows(rows);
+        const orgs = uniqueSorted(sourceRows.map(sourceOrganization));
+        const subject = humanList(orgs);
+        const sourceText = phase201SpecificSourceText(primary);
+        text = `${subject} ${pluralVerb(orgs, "requires", "require")} ${ensureSentencePunctuation(phase2ObligationPhrase(primary).text || phase2LowerFirst(sourceText))}`;
+      }
+
       if (!text && rows.every((row) => signatureForRow(row).polarity === "prohibit")) {
         text = prohibitionStatement(rows, subjectKey);
       }
 
       if (!text) text = phase2GenericWhoWhatStatement(rows);
+      if (phase201StatementIsVague(text)) text = phase201SourceFaithfulFallback(rows);
 
       const sourceRows = uniqueSourceRows(rows);
       const confidence = Math.min(cluster.confidence, ...rows.map((row) => signatureForRow(row).confidence));
@@ -3520,13 +3713,75 @@
       return "low";
     }
 
+    function phase201TitleCaseWords(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+        .replace(/\bAnd\b/g, "&")
+        .replace(/\bPfas\b/g, "PFAS")
+        .replace(/\bMewp\b/g, "MEWP")
+        .replace(/\bLoto\b/g, "LOTO")
+        .replace(/\bGfci\b/g, "GFCI")
+        .replace(/\bCdz\b/g, "CDZ")
+        .replace(/\bJsa\b/g, "JSA")
+        .trim();
+    }
+
+    function phase201CompactSubjectBase(row) {
+      const category = cleanSentence(row.category).replace(/\s*&\s*/g, " & ");
+      if (category && category.length <= 52 && !/difference|governance|responsibilit/i.test(category)) return category;
+
+      let topic = cleanSentence(row.topic)
+        .replace(/^\s*(?:training|inspection|responsibilities|policy|procedure|requirements?|general rules?)\s*[-–—:]\s*/i, "")
+        .replace(/\s*[-–—]\s*(?:all employees|workers|employees|shall|must|will)\b.*$/i, "")
+        .trim();
+      if (topic && topic.length <= 64) return topic;
+
+      const dashboard = cleanSentence(row.dashboardGroup);
+      if (dashboard && dashboard.length <= 52) return dashboard;
+      return topic || category || topicDefinition(row.fieldTopic).label;
+    }
+
+    function phase201OperationalTitleForRow(row) {
+      const text = comparisonText(row);
+      const context = `${row.category || ""} ${text}`.toLowerCase();
+      const signature = signatureForRow(row);
+      const knownLabel = PHASE2_SUBJECT_LABELS[signature.subjectKey];
+      if (knownLabel) return knownLabel;
+
+      if (/working alone|working or traveling alone/.test(context) && /inspect|hazard/.test(context)) return "Working Alone Hazard Inspection";
+      if (/ladder/.test(context) && /trained|training/.test(context) && /inspection/.test(context)) return "Ladder Use, Inspection & Maintenance Training";
+      if (/ladder/.test(context) && /inspect|inspection|before each use/.test(context)) return "Ladder Pre-Use Inspection";
+      if (/scaffold/.test(context) && /damaged|weakened|tagged out|remove(?:d)? from service/.test(context)) return "Damaged Scaffold Removal From Service";
+      if (/scaffold/.test(context) && /power line|energized/.test(context)) return "Scaffold Clearance From Energized Power Lines";
+
+      const base = phase201CompactSubjectBase(row);
+      if (signature.primaryKind === "qualification") return phase201TitleCaseWords(`${base} Training`);
+      if (signature.primaryKind === "inspection") return phase201TitleCaseWords(`${base} Inspection`);
+      if (signature.primaryKind === "permit") return phase201TitleCaseWords(`${base} Permit`);
+      if (signature.primaryKind === "plan") return phase201TitleCaseWords(`${base} Plan`);
+      if (signature.primaryKind === "prior-approval") return phase201TitleCaseWords(`${base} Approval`);
+
+      let topic = cleanSentence(row.topic)
+        .replace(/^\s*(?:purpose|scope|responsibilities|policy|procedure|requirements?|general rules?)\s*[-–—:]\s*/i, "")
+        .trim();
+      if (topic.length > 72 || /\b(?:shall|must|will|requires?|employees?|workers?)\b/i.test(topic)) topic = base;
+      return phase201TitleCaseWords(topic || base || topicDefinition(row.fieldTopic).label);
+    }
+
     function phase2TitleForCluster(cluster, units) {
       const knownKeys = uniqueSorted(units.flatMap((unit) => unit.rows.map((row) => signatureForRow(row).subjectKey)).filter(phase2KnownSubject));
       if (knownKeys.length === 1 && PHASE2_SUBJECT_LABELS[knownKeys[0]]) return PHASE2_SUBJECT_LABELS[knownKeys[0]];
-      const subtopics = uniqueSorted(units.flatMap((unit) => unit.rows.map(phase2RowSubtopic)));
-      if (subtopics.length === 1 && subtopics[0] !== "other") return subtopicDefinition(cluster.fieldTopic, subtopics[0]).label;
-      const primary = units[0]?.primary;
-      return primary?.topic || primary?.category || topicDefinition(cluster.fieldTopic).label;
+
+      const sourceRows = phase2UniqueRows(units.flatMap((unit) => unit.rows));
+      if (sourceRows.length === 1) return phase201OperationalTitleForRow(sourceRows[0]);
+
+      const titles = uniqueSorted(sourceRows.map(phase201OperationalTitleForRow));
+      if (titles.length === 1) return titles[0];
+
+      const categories = uniqueSorted(sourceRows.map((row) => cleanSentence(row.category)).filter(Boolean));
+      if (categories.length === 1) return phase201TitleCaseWords(categories[0]);
+      return topicDefinition(cluster.fieldTopic).label;
     }
 
     function phase2UniqueRows(rows) {
@@ -3818,7 +4073,7 @@
       return merged;
     }
 
-    function phase2BuildStats(rows, clusters, cards, diagnostics) {
+    function phase2BuildStats(rows, clusters, cards, diagnostics, supportRows = []) {
       const relationshipCounts = diagnostics.reduce((acc, item) => {
         acc[item.type] = (acc[item.type] || 0) + 1;
         return acc;
@@ -3842,12 +4097,91 @@
         humanReviewCards: reviewCards.length,
         highConfidenceCards: cards.filter((card) => card.confidenceBand === "high").length,
         moderateConfidenceCards: cards.filter((card) => card.confidenceBand === "moderate").length,
-        lowConfidenceCards: cards.filter((card) => card.confidenceBand === "low").length
+        lowConfidenceCards: cards.filter((card) => card.confidenceBand === "low").length,
+        supportOnlyRows: supportRows.length,
+        integritySafeguardsApplied: state.integritySafeguardsApplied.length,
+        coverageWarnings: state.phase2CoverageDiagnostics.length
       };
     }
 
+    function phase201HasDirectOperationalObligation(row) {
+      const text = comparisonText(row);
+      const directVerb = /\b(?:must|shall|required to|requires?|prohibit(?:ed|s)?|not permitted|not allowed|may not|must not|before each|prior to|at least|minimum|maximum|no more than|no less than)\b/i.test(text);
+      const actionableKind = signatureForRow(row).kinds.some((kind) => [
+        "numeric-threshold", "plan", "permit", "inspection", "qualification", "prior-approval", "staffing", "equipment-specification"
+      ].includes(kind));
+      return directVerb || actionableKind;
+    }
+
+    function phase201IsSupportOnlyRow(row) {
+      const text = comparisonText(row);
+      const authorityLanguage = /\b(?:takes precedence|precedence over|supersedes? contrary|jurisdiction|state plan coverage|authority hierarchy|regulatory precedence|adopted standard|federal baseline)\b/i.test(text);
+      if (!authorityLanguage) return false;
+
+      const actualOperationalRule = /\b(?:prohibit(?:ed|s)?|not permitted|not allowed|shall not|must not|required to|must|shall)\b/i.test(row.requirement || "")
+        || signatureForRow(row).numericConstraints.length > 0;
+      return !actualOperationalRule && !phase201HasDirectOperationalObligation({ ...row, action: "" });
+    }
+
+    function phase201GeneralCooperFallTriggerExists(rows) {
+      return rows.some((row) => {
+        if (row.sourceType !== "cooper") return false;
+        const text = comparisonText(row);
+        if (!/fall protection/.test(text)) return false;
+        if (/\b(?:ladder|scaffold|mewp|aerial lift|boom lift|scissor lift)\b/.test(text)) return false;
+        return /(?:greater than or equal to|at least|at|above|over).{0,60}(?:six\s*\(6\)|6)\s*(?:feet|foot|ft\b)|(?:six\s*\(6\)|6)\s*(?:feet|foot|ft\b).{0,80}(?:fall protection|height|exposure)/i.test(text);
+      });
+    }
+
+    function phase201CanonicalCooperFallTriggerRow() {
+      return {
+        sourceType: "cooper",
+        organization: "Cooper Steel",
+        state: "",
+        id: "COOP-INTEGRITY-FALL-6FT",
+        category: "Fall Protection",
+        topic: "General Fall Protection Trigger - 6 Feet",
+        requirement: "This policy applies to all Cooper Steel field construction activities involving exposure to heights greater than or equal to six (6) feet and/or where falling objects exist.",
+        action: "Apply Cooper Steel fall protection policy to field construction activities involving exposure to heights of 6 feet or greater.",
+        priority: "Critical",
+        trigger: "All Cooper Steel field construction activities involving exposure to heights of 6 feet or greater.",
+        sourceReference: "Cooper Steel Sec. 37.2, PDF p. 169 (manual p. 154)",
+        sourceUrl: "",
+        sourcePdf: "Cooper_Steel_Field_Health_and_Safety_Manual_2025.pdf",
+        dashboardGroup: "Fall Protection & Elevated Work",
+        status: "Active",
+        tags: "section-37;fall-protection;6-feet;integrity-safeguard",
+        source: "",
+        citation: "",
+        integritySafeguard: true
+      };
+    }
+
+    function applyPhase201IntegritySafeguards(rows, selection) {
+      const output = [...rows];
+      state.integritySafeguardsApplied = [];
+      state.phase2CoverageDiagnostics = [];
+
+      if (selection?.includeCooper && !phase201GeneralCooperFallTriggerExists(output)) {
+        const safeguard = phase201CanonicalCooperFallTriggerRow();
+        output.push(safeguard);
+        state.integritySafeguardsApplied.push(safeguard.id);
+        state.phase2CoverageDiagnostics.push({
+          type: "missing-canonical-subject",
+          subjectKey: "fall:trigger",
+          source: "Cooper Steel",
+          action: "Injected canonical 6-foot fall-protection scope rule from Cooper Steel Sec. 37.2 so the governing-answer engine cannot silently omit the company trigger.",
+          rowId: safeguard.id
+        });
+      }
+
+      return output;
+    }
+
     function buildPhase2GoverningCards(rows) {
-      const clusters = buildOperationalClusters(rows);
+      const supportRows = rows.filter(phase201IsSupportOnlyRow);
+      const operationalRows = rows.filter((row) => !phase201IsSupportOnlyRow(row));
+      const clusters = buildOperationalClusters(operationalRows);
       const cards = [];
       const diagnostics = [];
 
@@ -3864,9 +4198,14 @@
         || String(a.title || "").localeCompare(String(b.title || ""))
       ));
 
+      finalCards.forEach((card) => {
+        card.supportingAuthorityRows = supportRows.filter((row) => row.fieldTopic === card.fieldTopic);
+      });
+
       state.phase2Clusters = clusters;
       state.phase2Diagnostics = diagnostics;
-      state.phase2Stats = phase2BuildStats(rows, clusters, finalCards, diagnostics);
+      state.phase2SupportRows = supportRows;
+      state.phase2Stats = phase2BuildStats(operationalRows, clusters, finalCards, diagnostics, supportRows);
       return finalCards;
     }
 
@@ -3890,7 +4229,9 @@
       if (selection.gc) rows.push(...state.data.gc.filter((row) => row.organization === selection.gc));
       if (selection.owner) rows.push(...state.data.owner.filter((row) => row.organization === selection.owner));
 
-      state.generatedRows = rows.map((row) => {
+      const safeguardedRows = applyPhase201IntegritySafeguards(rows, selection);
+
+      state.generatedRows = safeguardedRows.map((row) => {
         const enriched = {
           ...row,
           actionType: classifyAction(row),
