@@ -147,34 +147,27 @@
       text-align: center;
     }
 
-    .eyebrow {
+    .hero h1 {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 10px;
-      margin-bottom: 14px;
+      margin: 0 auto;
       color: var(--cloud);
       font-family: var(--font-condensed);
       font-size: 13px;
       font-weight: 900;
+      line-height: 1.2;
       letter-spacing: .18em;
       text-transform: uppercase;
     }
 
-    .eyebrow::before, .eyebrow::after {
+    .hero h1::before,
+    .hero h1::after {
       width: 34px;
       height: 2px;
       content: "";
       background: var(--cooper-red);
-    }
-
-    .hero h1 {
-      max-width: 1050px;
-      margin: 0 auto;
-      font-family: var(--font-display);
-      font-size: clamp(48px, 7vw, 94px);
-      line-height: .92;
-      letter-spacing: -.02em;
-      text-transform: uppercase;
     }
 
     .hero p {
@@ -334,27 +327,73 @@
 
     .select:focus, .search-input:focus { border-color: var(--cooper-red); }
 
-    .baseline-box {
+    .baseline-toggle-box {
       min-height: 52px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      border: 1px solid rgba(159, 28, 31, .72);
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 12px 10px 14px;
+      border: 1px solid rgba(93, 92, 90, .9);
       border-radius: 14px;
-      background: rgba(159, 28, 31, .17);
-      font-weight: 850;
+      background: rgba(40, 40, 40, .92);
+      cursor: pointer;
     }
 
-    .baseline-check {
-      width: 22px;
-      height: 22px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    .baseline-toggle-copy {
+      min-width: 0;
+      color: var(--cream);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .toggle-control {
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .toggle-control input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toggle-track {
+      width: 48px;
+      height: 28px;
+      display: block;
+      position: relative;
+      border: 1px solid rgba(93, 92, 90, .9);
+      border-radius: 999px;
+      background: rgba(17, 17, 18, .92);
+      transition: background 160ms ease, border-color 160ms ease;
+    }
+
+    .toggle-knob {
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      top: 3px;
+      left: 3px;
       border-radius: 50%;
+      background: var(--cloud);
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .toggle-control input:checked + .toggle-track {
+      border-color: rgba(159, 28, 31, .95);
       background: var(--cooper-red);
-      font-weight: 900;
+    }
+
+    .toggle-control input:checked + .toggle-track .toggle-knob {
+      transform: translateX(20px);
+      background: var(--cream);
+    }
+
+    .baseline-toggle-box:focus-within {
+      border-color: var(--cooper-red);
+      box-shadow: 0 0 0 3px rgba(159, 28, 31, .18);
     }
 
     .scope-section {
@@ -466,31 +505,12 @@
 
     .stack-hero h2 {
       margin: 7px 0 0;
-      font-family: var(--font-display);
-      font-size: clamp(34px, 4.5vw, 54px);
-      line-height: 1;
-      letter-spacing: -.01em;
-      text-transform: uppercase;
-    }
-
-    .stack-selection {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .selection-chip {
-      min-height: 32px;
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 10px;
-      border: 1px solid rgba(93, 92, 90, .8);
-      border-radius: 999px;
-      background: rgba(40, 40, 40, .74);
-      color: var(--cloud);
-      font-size: 12px;
+      font-family: var(--font-condensed);
+      font-size: clamp(28px, 3vw, 42px);
       font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: 0;
+      text-transform: uppercase;
     }
 
     .quick-actions {
@@ -544,15 +564,15 @@
     }
 
     .cards {
-      width: min(1680px, calc(100% - 12px));
+      width: min(1380px, calc(100% - 12px));
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }
 
     .requirement-card {
-      min-height: 400px;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -1057,14 +1077,157 @@
       justify-content: flex-end;
     }
 
+    .subtopic-stage,
+    .requirement-results {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 18px;
+      display: none;
+    }
+
+    .subtopic-stage.show,
+    .requirement-results.show {
+      display: block;
+    }
+
+    .subtopic-stage-head,
+    .requirement-results-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+      padding: 18px;
+      border: 1px solid rgba(159, 28, 31, .42);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(620px 240px at 0% 0%, rgba(159, 28, 31, .20), transparent 62%),
+        linear-gradient(145deg, rgba(17, 17, 18, .96), rgba(40, 40, 40, .88));
+      box-shadow: var(--shadow-lg);
+    }
+
+    .subtopic-stage-head h3,
+    .requirement-results-head h3 {
+      margin: 6px 0 0;
+      font-family: var(--font-condensed);
+      font-size: clamp(28px, 3.2vw, 40px);
+      font-weight: 900;
+      line-height: 1.06;
+      text-transform: uppercase;
+    }
+
+    .subtopic-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .subtopic-tile {
+      min-height: 112px;
+      position: relative;
+      padding: 16px 54px 16px 16px;
+      border: 1px solid rgba(93, 92, 90, .78);
+      border-radius: var(--radius-md);
+      background: linear-gradient(145deg, rgba(40, 40, 40, .90), rgba(17, 17, 18, .96));
+      color: var(--cream);
+      text-align: left;
+      box-shadow: var(--shadow-md);
+      transition: transform 150ms ease, border-color 150ms ease;
+    }
+
+    .subtopic-tile::before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      content: "";
+      background: rgba(159, 28, 31, .82);
+    }
+
+    .subtopic-tile:hover,
+    .subtopic-tile:focus-visible {
+      border-color: rgba(159, 28, 31, .92);
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .subtopic-tile-title {
+      display: block;
+      font-family: var(--font-condensed);
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.08;
+      text-transform: uppercase;
+    }
+
+    .subtopic-tile-count {
+      display: block;
+      margin-top: 12px;
+      color: rgba(242, 239, 235, .62);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .subtopic-tile-arrow {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(242, 239, 235, .12);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .24);
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .keyword-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+
+    .keyword-tag {
+      min-height: 27px;
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid rgba(93, 92, 90, .62);
+      border-radius: 999px;
+      background: rgba(40, 40, 40, .42);
+      color: rgba(242, 239, 235, .62);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 750;
+      line-height: 1;
+      transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+    }
+
+    .keyword-tag:hover,
+    .keyword-tag:focus-visible {
+      border-color: rgba(159, 28, 31, .84);
+      background: rgba(159, 28, 31, .14);
+      color: var(--cream);
+      outline: none;
+    }
+
 
     @media (max-width: 980px) {
-      .topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .topic-grid,
+      .subtopic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 780px) {
       .topic-stage-head,
-      .topic-results-head {
+      .topic-results-head,
+      .subtopic-stage-head,
+      .requirement-results-head {
         align-items: stretch;
         flex-direction: column;
       }
@@ -1073,7 +1236,8 @@
     }
 
     @media (max-width: 560px) {
-      .topic-grid { grid-template-columns: 1fr; }
+      .topic-grid,
+      .subtopic-grid { grid-template-columns: 1fr; }
       .topic-tile { min-height: 110px; }
     }
 
@@ -1086,7 +1250,7 @@
     @media (max-width: 1080px) {
       .selector-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 760px) {
@@ -1146,11 +1310,9 @@
     </nav>
 
     <section class="hero">
-      <div class="eyebrow">Cooper Steel Requirements Intelligence</div>
       <h1>Project Requirement Stack Builder</h1>
       <p>
-        Select the project environment and work scope. This prototype assembles Cooper Steel baseline requirements,
-        state-specific OSHA differences, general contractor extras, and owner extras into one project-specific requirement stack.
+        Select the project sources and work scope you want included. The engine compares applicable requirements in the background and delivers only the governing field answers.
       </p>
     </section>
 
@@ -1186,7 +1348,7 @@
     <section class="builder-panel" aria-label="Project stack builder controls">
       <div class="panel-head">
         <h2>1. Tell Us Where You Are Working</h2>
-        <p>Select the project environment. Cooper Steel is always included in the background.</p>
+        <p>Select only the sources that actually control the project.</p>
       </div>
 
       <div class="builder-body">
@@ -1199,8 +1361,14 @@
           </div>
 
           <div class="field">
-            <label>Cooper Steel Baseline</label>
-            <div class="baseline-box"><span class="baseline-check">✓</span>Always Included</div>
+            <label for="cooperToggle">Include Cooper Steel Policy</label>
+            <label class="baseline-toggle-box" for="cooperToggle">
+              <span class="baseline-toggle-copy">Use Cooper Requirements In The Results</span>
+              <span class="toggle-control">
+                <input id="cooperToggle" type="checkbox" checked>
+                <span class="toggle-track"><span class="toggle-knob"></span></span>
+              </span>
+            </label>
           </div>
 
           <div class="field">
@@ -1237,7 +1405,6 @@
       <section class="stack-hero">
         <div class="stack-kicker">Project Requirement Stack</div>
         <h2 id="stackTitle">Project Requirements</h2>
-        <div id="stackSelection" class="stack-selection"></div>
       </section>
 
       <section class="field-search-row" aria-label="Field search controls">
@@ -1257,18 +1424,32 @@
         <div id="topicEmpty" class="topic-empty">No field topics match the current search or advanced filters.</div>
       </section>
 
-      <section id="topicResults" class="topic-results" aria-label="Selected topic governing requirements">
-        <div class="topic-results-head">
+      <section id="subtopicStage" class="subtopic-stage" aria-label="Selected topic subtopic navigation">
+        <div class="subtopic-stage-head">
           <div>
-            <button id="backToTopicsButton" class="back-topics-btn" type="button">← Back to Field Topics</button>
-            <div class="topic-step" style="margin-top:14px;">Selected Topic</div>
+            <button id="backToTopicsButton" class="back-topics-btn" type="button">← Back One Screen</button>
+            <div class="topic-step" style="margin-top:14px;">Selected Field Topic</div>
             <h3 id="activeTopicTitle">Field Topic</h3>
+            <p class="topic-stage-copy">Choose the specific question or work condition you need. Only subtopics with applicable governing answers are shown.</p>
           </div>
-          <div id="activeTopicCount" class="topic-count-badge"><strong>0</strong> governing cards</div>
+          <div id="activeTopicCount" class="topic-count-badge"><strong>0</strong> governing answers</div>
+        </div>
+        <div id="subtopicGrid" class="subtopic-grid"></div>
+        <div id="subtopicEmpty" class="topic-empty">No subtopics match the current project selection or search.</div>
+      </section>
+
+      <section id="requirementResults" class="requirement-results" aria-label="Selected subtopic governing answers">
+        <div class="requirement-results-head">
+          <div>
+            <button id="backToSubtopicsButton" class="back-topics-btn" type="button">← Back One Screen</button>
+            <div class="topic-step" style="margin-top:14px;">Governing Field Answers</div>
+            <h3 id="activeSubtopicTitle">Subtopic</h3>
+          </div>
+          <div id="activeSubtopicCount" class="topic-count-badge"><strong>0</strong> governing answers</div>
         </div>
 
-        <div class="quick-actions" aria-label="Secondary topic filters">
-          <div class="secondary-filter-label">Optional quick filters inside this topic</div>
+        <div class="quick-actions" aria-label="Secondary subtopic filters">
+          <div class="secondary-filter-label">Optional quick filters inside this subtopic</div>
           <button class="quick-filter-btn active" type="button" data-quick-filter="all">All Requirements</button>
           <button class="quick-filter-btn" type="button" data-quick-filter="critical">Critical</button>
           <button class="quick-filter-btn" type="button" data-quick-filter="before">Before Work</button>
@@ -1276,10 +1457,9 @@
         </div>
 
         <div id="resultsCount" class="results-count"></div>
-        <div id="emptyState" class="empty-state">No governing requirements match the current filters for this topic.</div>
+        <div id="emptyState" class="empty-state">No governing requirements match the current filters for this subtopic.</div>
         <section id="cards" class="cards" aria-label="Governing project requirement cards"></section>
       </section>
-
 
     </section>
 
@@ -1351,6 +1531,113 @@
         { id: "emergency-incident", label: "Emergency, Medical & Incident Response", operational: false, keywords: ["emergency", "incident", "injury", "near miss", "first aid", "medical", "rescue", "reporting"] },
         { id: "general-site-rules", label: "General Site Rules", operational: false, keywords: [] }
       ],
+      subtopics: {
+        "fall-protection": [
+          { id: "triggers-plans", label: "Trigger Heights & Fall Protection Plans", keywords: ["fall protection trigger", "fall protection plan", "feet", "foot", "work at height", "fall exposure", "100% fall protection"] },
+          { id: "leading-edges-openings", label: "Leading Edges, Open Sides & Floor Openings", keywords: ["leading edge", "open side", "floor opening", "hole", "hole cover", "guardrail", "opening"] },
+          { id: "cdz-decking-controls", label: "Controlled Decking Zones & Decking Controls", keywords: ["controlled decking zone", "cdz", "controlled access zone", "caz", "decking zone"] },
+          { id: "pfas-anchorages", label: "Harnesses, Lifelines, Anchorages & PFAS", keywords: ["harness", "lanyard", "lifeline", "anchor", "anchorage", "fall arrest", "fall restraint", "self retracting", "srl"] },
+          { id: "rescue-recovery", label: "Rescue, Recovery & Suspension", keywords: ["rescue", "recovery", "suspension trauma"] },
+          { id: "ladders-access", label: "Ladders & Access", keywords: ["ladder", "access"] },
+          { id: "inspection-training", label: "Inspections, Training & Qualifications", keywords: ["inspection", "inspect", "training", "qualified", "competent person"] },
+          { id: "other", label: "Other Fall Protection Requirements", keywords: [] }
+        ],
+        "cranes-hoisting": [
+          { id: "lift-planning-critical", label: "Lift Planning, Critical Lifts & Multiple Lifts", keywords: ["lift plan", "critical lift", "multiple lift", "dual pick", "dual lift", "tandem lift"] },
+          { id: "setup-capacity", label: "Crane Setup, Capacity & Ground Conditions", keywords: ["load chart", "capacity", "radius", "outrigger", "ground condition", "assembly", "disassembly", "setup"] },
+          { id: "operators-signals", label: "Operators, Signal Persons & Lift Direction", keywords: ["crane operator", "operator qualification", "signal person", "lift director", "qualified operator"] },
+          { id: "power-lines", label: "Power Lines & Energized Hazards", keywords: ["power line", "energized line", "electrical clearance"] },
+          { id: "personnel-hoisting", label: "Personnel Platforms & Hoisting Personnel", keywords: ["personnel platform", "personnel basket", "hoisting personnel"] },
+          { id: "inspections-docs", label: "Inspections, Certifications & Documentation", keywords: ["inspection", "inspect", "certification", "document", "annual inspection", "daily inspection"] },
+          { id: "other", label: "Other Crane & Hoisting Requirements", keywords: [] }
+        ],
+        "rigging": [
+          { id: "qualification-signals", label: "Rigger & Signal Person Qualifications", keywords: ["qualified rigger", "rigger qualification", "signal person", "qualification"] },
+          { id: "slings-hardware", label: "Slings, Shackles, Hooks & Rigging Hardware", keywords: ["sling", "shackle", "hook", "below-the-hook", "rigging hardware", "lifting clamp"] },
+          { id: "inspection-removal", label: "Rigging Inspection & Removal From Service", keywords: ["inspection", "inspect", "remove from service", "defect", "damaged"] },
+          { id: "load-control", label: "Load Control, Tag Lines & Hoisting Practices", keywords: ["tag line", "tagline", "load control", "suspended load", "free rigging", "side loading"] },
+          { id: "plans-docs", label: "Rigging Plans, JHAs & Documentation", keywords: ["lift plan", "rigging plan", "jha", "aha", "documentation", "document"] },
+          { id: "other", label: "Other Rigging Requirements", keywords: [] }
+        ],
+        "steel-erection-stability": [
+          { id: "columns-anchors", label: "Columns, Anchor Rods & Base Connections", keywords: ["column", "anchor rod", "base plate", "anchor bolt"] },
+          { id: "beams-connections", label: "Beams, Connections & Bolt-Up", keywords: ["beam", "bolt-up", "bolting", "connection", "connector"] },
+          { id: "bracing-stability", label: "Temporary Bracing, Plumbing & Stability", keywords: ["temporary bracing", "bracing", "stability", "plumb", "turnbuckle"] },
+          { id: "erection-sequence", label: "Erection Sequence & Structural Controls", keywords: ["erection sequence", "sequence", "structural stability", "erection plan"] },
+          { id: "other", label: "Other Steel Erection Requirements", keywords: [] }
+        ],
+        "decking-joists": [
+          { id: "deck-installation", label: "Deck Installation, Openings & Bundles", keywords: ["metal deck", "decking", "deck bundle", "deck opening", "floor opening"] },
+          { id: "joists-bridging", label: "Joists, Bridging & Stability", keywords: ["joist", "bridging", "sji"] },
+          { id: "access-fall", label: "Decking Access & Fall Protection", keywords: ["controlled decking zone", "cdz", "fall protection", "leading edge", "access"] },
+          { id: "other", label: "Other Decking & Joist Requirements", keywords: [] }
+        ],
+        "welding-hot-work": [
+          { id: "permits-authorization", label: "Hot Work Permits & Authorization", keywords: ["hot work permit", "permit", "authorization", "approval"] },
+          { id: "fire-watch", label: "Fire Watch & Fire Prevention", keywords: ["fire watch", "fire prevention", "spark containment"] },
+          { id: "extinguishers", label: "Fire Extinguishers & Fire Protection Equipment", keywords: ["extinguisher", "fire extinguisher", "fire protection equipment"] },
+          { id: "welding-equipment", label: "Welding, Cutting & Torch Equipment", keywords: ["welding", "weld", "cutting", "burning", "torch", "cylinder"] },
+          { id: "ventilation-exposure", label: "Ventilation, Fumes & Exposure Controls", keywords: ["ventilation", "fume", "respirator", "exposure"] },
+          { id: "other", label: "Other Welding & Hot Work Requirements", keywords: [] }
+        ],
+        "mewp-mobile-equipment": [
+          { id: "mewp", label: "MEWPs, Aerial Lifts & Work Platforms", keywords: ["mewp", "aerial lift", "boom lift", "scissor lift", "mobile elevated work platform"] },
+          { id: "telehandlers-forklifts", label: "Telehandlers, Forklifts & Industrial Trucks", keywords: ["telehandler", "forklift", "powered industrial truck", "rough terrain forklift"] },
+          { id: "operator-training", label: "Operator Training & Authorization", keywords: ["operator training", "trained operator", "authorized operator", "qualification"] },
+          { id: "inspections", label: "Equipment Inspections & Documentation", keywords: ["inspection", "inspect", "pre-use", "daily inspection", "document"] },
+          { id: "travel-ground", label: "Travel, Ground Conditions & Equipment Movement", keywords: ["travel", "ground condition", "spotter", "pedestrian", "movement"] },
+          { id: "other", label: "Other Mobile Equipment Requirements", keywords: [] }
+        ],
+        "ppe": [
+          { id: "head-protection", label: "Head Protection, Helmets & Chin Straps", keywords: ["hard hat", "helmet", "type ii", "type 2", "chin strap", "chinstrap"] },
+          { id: "eye-face", label: "Eye & Face Protection", keywords: ["safety glasses", "eye protection", "face shield", "protective eyewear"] },
+          { id: "hand-body", label: "Hand, Body & High-Visibility Protection", keywords: ["glove", "hand protection", "hi-vis", "high visibility", "vest"] },
+          { id: "hearing-respiratory", label: "Hearing & Respiratory Protection", keywords: ["hearing protection", "respirator", "respiratory"] },
+          { id: "other", label: "Other PPE Requirements", keywords: [] }
+        ],
+        "electrical-loto": [
+          { id: "loto", label: "Lockout / Tagout & Energy Control", keywords: ["lockout", "tagout", "loto", "energy control", "zero energy"] },
+          { id: "energized-work", label: "Energized Work & Electrical Clearances", keywords: ["energized", "power line", "electrical clearance", "arc flash"] },
+          { id: "gfci-temp-power", label: "GFCI, Temporary Power & Cord Safety", keywords: ["gfci", "ground fault", "temporary power", "extension cord", "cord"] },
+          { id: "other", label: "Other Electrical & LOTO Requirements", keywords: [] }
+        ],
+        "material-housekeeping": [
+          { id: "unloading-staging", label: "Unloading, Staging & Material Storage", keywords: ["unloading", "staging", "storage", "laydown", "delivery"] },
+          { id: "housekeeping", label: "Housekeeping, Debris & Access", keywords: ["housekeeping", "trash", "debris", "access", "walkway"] },
+          { id: "manual-handling", label: "Material Handling & Manual Handling", keywords: ["material handling", "manual handling", "lifting", "carry"] },
+          { id: "other", label: "Other Material & Housekeeping Requirements", keywords: [] }
+        ],
+        "training-qualifications": [
+          { id: "competent-qualified", label: "Competent & Qualified Persons", keywords: ["competent person", "qualified person", "qualified"] },
+          { id: "operator-craft", label: "Operator & Craft Qualifications", keywords: ["operator", "rigger", "welder", "signal person", "certification"] },
+          { id: "orientation-training", label: "Orientation, Training & Refresher Requirements", keywords: ["orientation", "training", "refresher", "initial training"] },
+          { id: "other", label: "Other Training & Qualification Requirements", keywords: [] }
+        ],
+        "plans-permits-submittals": [
+          { id: "plans", label: "Required Plans", keywords: ["plan required", "erection plan", "lift plan", "rescue plan", "emergency plan", "fall protection plan", "sssp", "ssep"] },
+          { id: "permits", label: "Required Permits", keywords: ["permit required", "permit"] },
+          { id: "submittals-approvals", label: "Submittals, Approvals & Pre-Mobilization", keywords: ["submit", "submission", "submittal", "approval", "pre-mobil", "before mobil"] },
+          { id: "other", label: "Other Plans, Permits & Submittals", keywords: [] }
+        ],
+        "inspections-documentation": [
+          { id: "equipment-inspections", label: "Equipment & Tool Inspections", keywords: ["equipment inspection", "tool inspection", "pre-use inspection", "daily inspection"] },
+          { id: "documented-inspections", label: "Documented Inspections, Audits & Records", keywords: ["documented inspection", "audit", "record", "documentation", "checklist"] },
+          { id: "certifications-records", label: "Certifications & Required Records", keywords: ["certification", "certificate", "record retention", "records"] },
+          { id: "other", label: "Other Inspection & Documentation Requirements", keywords: [] }
+        ],
+        "emergency-incident": [
+          { id: "emergency-plans", label: "Emergency Plans & Response", keywords: ["emergency plan", "emergency response", "evacuation"] },
+          { id: "medical-first-aid", label: "Medical, First Aid & Rescue", keywords: ["medical", "first aid", "rescue", "aed"] },
+          { id: "incident-reporting", label: "Incident, Injury & Near-Miss Reporting", keywords: ["incident", "injury", "near miss", "reporting", "report"] },
+          { id: "other", label: "Other Emergency & Incident Requirements", keywords: [] }
+        ],
+        "general-site-rules": [
+          { id: "conduct-access", label: "Site Conduct, Access & General Rules", keywords: ["site rule", "conduct", "access", "prohibited", "smoking", "drug", "alcohol"] },
+          { id: "meetings-communication", label: "Meetings, Communication & Coordination", keywords: ["meeting", "toolbox", "coordination", "communication"] },
+          { id: "weather-environment", label: "Weather & Environmental Conditions", keywords: ["weather", "wind", "lightning", "heat", "cold", "environmental"] },
+          { id: "other", label: "Other General Site Requirements", keywords: [] }
+        ]
+      },
       priorityRank: { critical: 0, high: 1, medium: 2, low: 3, "state difference": 4, "": 5 }
     });
 
@@ -1361,6 +1648,7 @@
       generatedRows: [],
       governingCards: [],
       activeTopic: "",
+      activeSubtopic: "",
       quickFilter: "all",
       currentSelection: null
     };
@@ -1373,6 +1661,7 @@
       feedGc: document.getElementById("feedGc"),
       feedOwner: document.getElementById("feedOwner"),
       stateSelect: document.getElementById("stateSelect"),
+      cooperToggle: document.getElementById("cooperToggle"),
       gcSelect: document.getElementById("gcSelect"),
       ownerSelect: document.getElementById("ownerSelect"),
       scopeGrid: document.getElementById("scopeGrid"),
@@ -1380,16 +1669,21 @@
       builderMessage: document.getElementById("builderMessage"),
       results: document.getElementById("results"),
       stackTitle: document.getElementById("stackTitle"),
-      stackSelection: document.getElementById("stackSelection"),
       resultSearch: document.getElementById("resultSearch"),
       clearResultFilters: document.getElementById("clearResultFilters"),
       topicStage: document.getElementById("topicStage"),
       topicGrid: document.getElementById("topicGrid"),
       topicEmpty: document.getElementById("topicEmpty"),
-      topicResults: document.getElementById("topicResults"),
+      subtopicStage: document.getElementById("subtopicStage"),
       backToTopicsButton: document.getElementById("backToTopicsButton"),
       activeTopicTitle: document.getElementById("activeTopicTitle"),
       activeTopicCount: document.getElementById("activeTopicCount"),
+      subtopicGrid: document.getElementById("subtopicGrid"),
+      subtopicEmpty: document.getElementById("subtopicEmpty"),
+      requirementResults: document.getElementById("requirementResults"),
+      backToSubtopicsButton: document.getElementById("backToSubtopicsButton"),
+      activeSubtopicTitle: document.getElementById("activeSubtopicTitle"),
+      activeSubtopicCount: document.getElementById("activeSubtopicCount"),
       quickFilterButtons: Array.from(document.querySelectorAll(".quick-filter-btn")),
       resultsCount: document.getElementById("resultsCount"),
       emptyState: document.getElementById("emptyState"),
@@ -1675,6 +1969,27 @@
       return ["cooper", "osha", "gc", "owner"].filter((key) => state.loaded[key]).length;
     }
 
+    function refreshBuildAvailability() {
+      const anyLayerSelected = Boolean(
+        els.cooperToggle.checked || els.stateSelect.value || els.gcSelect.value || els.ownerSelect.value
+      );
+      const selectedLayersReady = Boolean(
+        (!els.cooperToggle.checked || state.loaded.cooper)
+        && (!els.stateSelect.value || state.loaded.osha)
+        && (!els.gcSelect.value || state.loaded.gc)
+        && (!els.ownerSelect.value || state.loaded.owner)
+      );
+
+      els.buildStackButton.disabled = !anyLayerSelected || !selectedLayersReady;
+      if (!anyLayerSelected) {
+        els.builderMessage.textContent = "Select at least one controlling source before building the project requirements.";
+      } else if (!selectedLayersReady) {
+        els.builderMessage.textContent = "A selected source feed is unavailable. Turn that source off or wait for the feed to recover.";
+      } else {
+        els.builderMessage.textContent = "Ready. Select the project, select the work, and show what governs.";
+      }
+    }
+
     function updateReadyState() {
       if (!allFeedsFinished()) return;
       const failedKeys = Object.keys(state.failed);
@@ -1691,11 +2006,7 @@
       populateSelect(els.stateSelect, state.data.osha.map((row) => row.state), "No state layer", "Virginia");
       populateSelect(els.gcSelect, state.data.gc.map((row) => row.organization), "No GC layer", "Whiting-Turner");
       populateSelect(els.ownerSelect, state.data.owner.map((row) => row.organization), "No owner layer", "Amazon");
-
-      els.buildStackButton.disabled = !state.loaded.cooper;
-      els.builderMessage.textContent = state.loaded.cooper
-        ? "Ready. Select the project, select the work, and show what governs."
-        : "Cooper Steel baseline did not load, so the stack cannot be generated safely.";
+      refreshBuildAvailability();
     }
 
     function selectedScopeIds() {
@@ -1748,6 +2059,31 @@
 
     function topicDefinition(topicId) {
       return CONFIG.fieldTopics.find((topic) => topic.id === topicId) || CONFIG.fieldTopics[CONFIG.fieldTopics.length - 1];
+    }
+
+    function subtopicDefinitions(topicId) {
+      return CONFIG.subtopics[topicId] || [{ id: "other", label: `Other ${topicDefinition(topicId).label} Requirements`, keywords: [] }];
+    }
+
+    function subtopicDefinition(topicId, subtopicId) {
+      return subtopicDefinitions(topicId).find((subtopic) => subtopic.id === subtopicId)
+        || subtopicDefinitions(topicId).find((subtopic) => subtopic.id === "other")
+        || subtopicDefinitions(topicId)[0];
+    }
+
+    function classifyCardSubtopic(card) {
+      const text = cardSearchText(card);
+      const definitions = subtopicDefinitions(card.fieldTopic);
+      const candidates = definitions
+        .filter((subtopic) => subtopic.id !== "other")
+        .map((subtopic, index) => ({
+          subtopic,
+          index,
+          score: subtopic.keywords.reduce((score, keyword) => score + (text.includes(keyword) ? (keyword.includes(" ") ? 3 : 1) : 0), 0)
+        }))
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score || a.index - b.index);
+      return candidates[0]?.subtopic.id || "other";
     }
 
     function selectedScopeTopicIds() {
@@ -2030,17 +2366,21 @@
     }
 
     function buildStack() {
-      if (!state.loaded.cooper) return;
-
       const selection = {
+        includeCooper: els.cooperToggle.checked,
         state: els.stateSelect.value,
         gc: els.gcSelect.value,
         owner: els.ownerSelect.value,
         scopes: selectedScopeIds()
       };
 
+      if (!selection.includeCooper && !selection.state && !selection.gc && !selection.owner) {
+        els.builderMessage.textContent = "Select at least one controlling source before building the project requirements.";
+        return;
+      }
+
       const rows = [];
-      rows.push(...state.data.cooper.map((row) => ({ ...row, sourceType: "cooper" })));
+      if (selection.includeCooper) rows.push(...state.data.cooper.map((row) => ({ ...row, sourceType: "cooper" })));
       if (selection.state) rows.push(...state.data.osha.filter((row) => row.state === selection.state));
       if (selection.gc) rows.push(...state.data.gc.filter((row) => row.organization === selection.gc));
       if (selection.owner) rows.push(...state.data.owner.filter((row) => row.organization === selection.owner));
@@ -2058,6 +2398,7 @@
       state.governingCards = buildGoverningCards(state.generatedRows);
       state.currentSelection = selection;
       state.activeTopic = "";
+      state.activeSubtopic = "";
       state.quickFilter = "all";
 
       els.resultSearch.value = "";
@@ -2079,17 +2420,13 @@
       const selection = state.currentSelection;
       if (!selection) return;
       const titleParts = [selection.state, selection.gc, selection.owner].filter(Boolean);
-      els.stackTitle.textContent = titleParts.length ? titleParts.join(" / ") : "Cooper Steel Baseline Stack";
-
-      const chips = [
-        "Cooper Steel Baseline",
-        selection.state || "No State Layer",
-        selection.gc || "No GC Layer",
-        selection.owner || "No Owner Layer",
-        ...(scopeLabels(selection.scopes).length ? scopeLabels(selection.scopes) : ["All Scopes"])
-      ];
-      els.stackSelection.innerHTML = chips.map((label) => `<span class="selection-chip">${escapeHtml(label)}</span>`).join("");
-
+      if (titleParts.length) {
+        els.stackTitle.textContent = titleParts.join(" / ");
+      } else if (selection.includeCooper) {
+        els.stackTitle.textContent = "Cooper Steel Policy";
+      } else {
+        els.stackTitle.textContent = "Project Requirements";
+      }
     }
 
     function cardSearchText(card) {
@@ -2157,9 +2494,49 @@
       els.topicGrid.querySelectorAll(".topic-tile").forEach((button) => {
         button.addEventListener("click", () => {
           state.activeTopic = button.dataset.topic || "";
+          state.activeSubtopic = "";
           state.quickFilter = "all";
           renderResults();
-          els.topicResults.scrollIntoView({ behavior: "smooth", block: "start" });
+          els.subtopicStage.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    }
+
+    function subtopicCards(topicId, subtopicId) {
+      return topicCards(topicId).filter((card) => classifyCardSubtopic(card) === subtopicId);
+    }
+
+    function renderSubtopicGrid() {
+      if (!state.activeTopic) {
+        els.subtopicStage.classList.remove("show");
+        els.subtopicGrid.innerHTML = "";
+        return;
+      }
+
+      const topic = topicDefinition(state.activeTopic);
+      const total = topicCards(state.activeTopic).length;
+      els.activeTopicTitle.textContent = topic.label;
+      els.activeTopicCount.innerHTML = `<strong>${total.toLocaleString()}</strong> governing answers`;
+
+      const tiles = subtopicDefinitions(state.activeTopic).map((subtopic) => {
+        const count = subtopicCards(state.activeTopic, subtopic.id).length;
+        if (!count) return "";
+        return `
+          <button class="subtopic-tile" type="button" data-subtopic="${escapeHtml(subtopic.id)}">
+            <span class="subtopic-tile-title">${escapeHtml(subtopic.label)}</span>
+            <span class="subtopic-tile-count">${count.toLocaleString()} governing ${count === 1 ? "answer" : "answers"}</span>
+            <span class="subtopic-tile-arrow" aria-hidden="true">→</span>
+          </button>`;
+      }).filter(Boolean);
+
+      els.subtopicGrid.innerHTML = tiles.join("");
+      els.subtopicEmpty.classList.toggle("show", tiles.length === 0);
+      els.subtopicGrid.querySelectorAll(".subtopic-tile").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.activeSubtopic = button.dataset.subtopic || "";
+          state.quickFilter = "all";
+          renderResults();
+          els.requirementResults.scrollIntoView({ behavior: "smooth", block: "start" });
         });
       });
     }
@@ -2197,11 +2574,36 @@
       });
     }
 
+    function rawTagValues(card) {
+      const values = [];
+      card.contributingRows.forEach((row) => {
+        String(row.tags || "").split(/[;,|]+/).map((value) => value.trim()).filter(Boolean).forEach((value) => values.push(value));
+      });
+      return values;
+    }
+
+    function cardKeywordTags(card) {
+      const topic = topicDefinition(card.fieldTopic);
+      const subtopicId = classifyCardSubtopic(card);
+      const subtopic = subtopicDefinition(card.fieldTopic, subtopicId);
+      const text = cardSearchText(card);
+      const matchedKeywords = subtopic.keywords.filter((keyword) => text.includes(keyword)).slice(0, 2);
+      const values = [topic.label, subtopic.label, ...matchedKeywords, ...rawTagValues(card), ...card.actionTypes];
+      const seen = new Set();
+      return values.filter((value) => {
+        const clean = String(value || "").trim();
+        const key = clean.toLowerCase();
+        if (!clean || seen.has(key) || clean.length > 48) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 7);
+    }
+
     function cardMarkup(card) {
       const topic = topicDefinition(card.fieldTopic);
       const sourceRows = uniqueSourceRows(card.contributingRows);
-      const orgs = uniqueSorted(sourceRows.map(sourceOrganization));
       const proofLinks = sourceRows.map(sourceButtonMarkup).join("");
+      const tags = cardKeywordTags(card);
 
       return `
         <article class="requirement-card">
@@ -2222,10 +2624,8 @@
             <div class="proof-links">${proofLinks || '<span class="mini-chip">Source link needs review</span>'}</div>
           </div>
 
-          <div class="card-chips">
-            <span class="mini-chip">${escapeHtml(topic.label)}</span>
-            ${orgs.map((org) => `<span class="mini-chip">${escapeHtml(org)}</span>`).join("")}
-            ${card.actionTypes.slice(0, 2).map((type) => `<span class="mini-chip">${escapeHtml(type)}</span>`).join("")}
+          <div class="keyword-tags" aria-label="Search keywords">
+            ${tags.map((tag) => `<button class="keyword-tag" type="button" data-keyword="${escapeHtml(tag)}" title="Search this keyword">${escapeHtml(tag)}</button>`).join("")}
           </div>
         </article>`;
     }
@@ -2233,25 +2633,38 @@
     function renderResults() {
       renderQuickFilters();
       renderTopicGrid();
+      renderSubtopicGrid();
 
       if (!state.activeTopic) {
-        els.topicResults.classList.remove("show");
+        els.topicStage.hidden = false;
+        els.subtopicStage.classList.remove("show");
+        els.requirementResults.classList.remove("show");
         els.cards.innerHTML = "";
         return;
       }
 
-      const topic = topicDefinition(state.activeTopic);
-      const rows = topicCards(state.activeTopic).sort((a, b) => (
+      els.topicStage.hidden = true;
+
+      if (!state.activeSubtopic) {
+        els.subtopicStage.classList.add("show");
+        els.requirementResults.classList.remove("show");
+        els.cards.innerHTML = "";
+        return;
+      }
+
+      els.subtopicStage.classList.remove("show");
+      const subtopic = subtopicDefinition(state.activeTopic, state.activeSubtopic);
+      const rows = subtopicCards(state.activeTopic, state.activeSubtopic).sort((a, b) => (
         priorityRank(a.priority) - priorityRank(b.priority)
         || String(a.title || "").localeCompare(String(b.title || ""))
       ));
 
-      els.topicResults.classList.add("show");
-      els.activeTopicTitle.textContent = topic.label;
-      els.activeTopicCount.innerHTML = `<strong>${rows.length.toLocaleString()}</strong> governing cards`;
+      els.requirementResults.classList.add("show");
+      els.activeSubtopicTitle.textContent = subtopic.label;
+      els.activeSubtopicCount.innerHTML = `<strong>${rows.length.toLocaleString()}</strong> governing answers`;
       els.cards.innerHTML = rows.map(cardMarkup).join("");
       els.emptyState.classList.toggle("show", rows.length === 0);
-      els.resultsCount.textContent = `${rows.length.toLocaleString()} governing field ${rows.length === 1 ? "card" : "cards"} visible in ${topic.label}.`;
+      els.resultsCount.textContent = `${rows.length.toLocaleString()} governing field ${rows.length === 1 ? "answer" : "answers"} visible in ${subtopic.label}.`;
     }
 
     function csvEscape(value) {
@@ -2265,7 +2678,11 @@
         "Field Topic", "Governing Statement", "Priority", "Contributing Sources", "Source Requirement IDs",
         "Source References", "Source Links", "Suppressed Weaker Requirement IDs"
       ];
-      const cards = state.activeTopic ? topicCards(state.activeTopic) : state.governingCards.filter(advancedCardMatches);
+      const cards = state.activeTopic && state.activeSubtopic
+        ? subtopicCards(state.activeTopic, state.activeSubtopic)
+        : state.activeTopic
+          ? topicCards(state.activeTopic)
+          : state.governingCards.filter(advancedCardMatches);
       const rows = cards.map((card) => [
         topicDefinition(card.fieldTopic).label,
         card.statement,
@@ -2300,18 +2717,42 @@
       els.buildStackButton.addEventListener("click", buildStack);
       els.resultSearch.addEventListener("input", renderResults);
       els.clearResultFilters.addEventListener("click", clearResultFilters);
+
+      [els.cooperToggle, els.stateSelect, els.gcSelect, els.ownerSelect].forEach((control) => {
+        control.addEventListener("change", refreshBuildAvailability);
+      });
+
       els.backToTopicsButton.addEventListener("click", () => {
         state.activeTopic = "";
+        state.activeSubtopic = "";
         state.quickFilter = "all";
         renderResults();
         els.topicStage.scrollIntoView({ behavior: "smooth", block: "start" });
       });
+
+      els.backToSubtopicsButton.addEventListener("click", () => {
+        state.activeSubtopic = "";
+        state.quickFilter = "all";
+        renderResults();
+        els.subtopicStage.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
       els.quickFilterButtons.forEach((button) => {
         button.addEventListener("click", () => {
           state.quickFilter = button.dataset.quickFilter || "all";
           renderResults();
         });
       });
+
+      els.cards.addEventListener("click", (event) => {
+        const tag = event.target.closest(".keyword-tag");
+        if (!tag) return;
+        els.resultSearch.value = tag.dataset.keyword || tag.textContent || "";
+        state.quickFilter = "all";
+        renderResults();
+        els.requirementResults.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
       els.printStackButton.addEventListener("click", () => window.print());
       els.exportCsvButton.addEventListener("click", exportStackCsv);
     }
