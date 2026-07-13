@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111112">
   <title>Cooper Steel Project Requirement Stack Builder</title>
-  <!-- Phase 2.0.1 integrity revision: source-faithful answers, safer clustering, support-only authority suppression, operational titles -->
+  <!-- Phase 3.0 project intelligence: saved profiles, snapshots, field-facing change intelligence, action matrix, readiness summary -->
   <link rel="icon" href="data:;base64,=">
 
   <style>
@@ -1229,6 +1229,390 @@
     }
 
 
+
+
+    /* ---------- Phase 3: Project memory & field intelligence ---------- */
+    .project-library,
+    .phase3-panel {
+      width: min(1180px, calc(100% - 12px));
+      margin: 0 auto 20px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: var(--radius-lg);
+      background: rgba(17, 17, 18, .88);
+      box-shadow: var(--shadow-md);
+    }
+
+    .project-library[hidden],
+    .phase3-panel[hidden],
+    .phase3-detail[hidden] { display: none !important; }
+
+    .project-library-head,
+    .phase3-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+    }
+
+    .phase3-kicker {
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    .project-library h2,
+    .phase3-panel h3 {
+      margin: 5px 0 0;
+      font-family: var(--font-condensed);
+      font-size: 24px;
+      line-height: 1.05;
+      text-transform: uppercase;
+    }
+
+    .saved-project-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .saved-project-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 14px;
+      border: 1px solid rgba(93, 92, 90, .72);
+      border-radius: 14px;
+      background: rgba(40, 40, 40, .72);
+    }
+
+    .saved-project-card.active {
+      border-color: rgba(159, 28, 31, .92);
+      box-shadow: inset 0 0 0 1px rgba(159, 28, 31, .18);
+    }
+
+    .saved-project-name {
+      display: block;
+      color: var(--cream);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .saved-project-context {
+      display: block;
+      margin-top: 4px;
+      color: rgba(242, 239, 235, .58);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .saved-project-actions {
+      display: flex;
+      gap: 7px;
+      flex: 0 0 auto;
+    }
+
+    .project-mini-btn {
+      min-height: 36px;
+      padding: 7px 10px;
+      border: 1px solid rgba(93, 92, 90, .86);
+      border-radius: 10px;
+      background: rgba(17, 17, 18, .9);
+      color: var(--cream);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .project-mini-btn:hover { background: rgba(93, 92, 90, .62); }
+    .project-mini-btn.danger:hover { background: var(--burgundy); }
+
+    .builder-primary-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .save-project-btn {
+      min-height: 56px;
+      padding: 12px 18px;
+      border: 1px solid rgba(93, 92, 90, .9);
+      border-radius: 14px;
+      background: rgba(40, 40, 40, .94);
+      color: var(--cream);
+      font-family: var(--font-condensed);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .save-project-btn:disabled {
+      cursor: not-allowed;
+      opacity: .42;
+    }
+
+    .phase3-panel {
+      overflow: hidden;
+      background:
+        radial-gradient(680px 260px at 0% 0%, rgba(159, 28, 31, .20), transparent 62%),
+        linear-gradient(145deg, rgba(17, 17, 18, .98), rgba(40, 40, 40, .86));
+    }
+
+    .phase3-panel-head {
+      align-items: flex-end;
+      border-bottom: 1px solid rgba(93, 92, 90, .58);
+    }
+
+    .phase3-summary-text {
+      margin: 7px 0 0;
+      color: rgba(242, 239, 235, .66);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .phase3-review-btn {
+      min-height: 40px;
+      padding: 9px 12px;
+      border: 1px solid rgba(159, 28, 31, .8);
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--cooper-red), var(--burgundy));
+      color: var(--cream);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .phase3-command-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px 16px 16px;
+    }
+
+    .phase3-command {
+      min-height: 92px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 14px 16px;
+      border: 1px solid rgba(93, 92, 90, .78);
+      border-radius: 14px;
+      background: rgba(40, 40, 40, .72);
+      color: var(--cream);
+      text-align: left;
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+
+    .phase3-command:hover,
+    .phase3-command.active {
+      border-color: rgba(159, 28, 31, .92);
+      background: rgba(104, 12, 25, .48);
+      transform: translateY(-1px);
+    }
+
+    .phase3-command-number {
+      min-width: 48px;
+      color: var(--cream);
+      font-family: var(--font-condensed);
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .phase3-command-label {
+      display: block;
+      font-family: var(--font-condensed);
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.05;
+      text-transform: uppercase;
+    }
+
+    .phase3-command-copy {
+      display: block;
+      margin-top: 4px;
+      color: rgba(242, 239, 235, .58);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .phase3-detail {
+      margin: 0 16px 16px;
+      padding: 16px;
+      border: 1px solid rgba(93, 92, 90, .64);
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, .22);
+    }
+
+    .phase3-detail-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .phase3-detail-title {
+      margin: 0;
+      font-family: var(--font-condensed);
+      font-size: 22px;
+      text-transform: uppercase;
+    }
+
+    .phase3-empty {
+      padding: 20px;
+      border: 1px dashed rgba(93, 92, 90, .68);
+      border-radius: 12px;
+      color: var(--cloud);
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .phase3-group {
+      margin-top: 14px;
+    }
+
+    .phase3-group:first-child { margin-top: 0; }
+
+    .phase3-group-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 8px;
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .phase3-item-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .phase3-item {
+      padding: 13px 14px;
+      border: 1px solid rgba(93, 92, 90, .62);
+      border-radius: 12px;
+      background: rgba(40, 40, 40, .58);
+    }
+
+    .phase3-item-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .phase3-item-title {
+      margin: 0;
+      color: var(--cream);
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .phase3-item-statement {
+      margin: 7px 0 0;
+      color: rgba(242, 239, 235, .82);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .phase3-item-proof {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .phase3-badge {
+      min-height: 25px;
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border: 1px solid rgba(242, 239, 235, .12);
+      border-radius: 999px;
+      background: rgba(159, 28, 31, .62);
+      color: var(--cream);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .phase3-badge.info { background: rgba(59, 111, 150, .72); }
+    .phase3-badge.warning { background: rgba(171, 116, 22, .72); }
+    .phase3-badge.success { background: rgba(47, 143, 98, .72); }
+
+    .phase3-change-before {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(93, 92, 90, .48);
+      color: rgba(242, 239, 235, .52);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .project-dialog {
+      width: min(520px, calc(100% - 24px));
+      padding: 0;
+      border: 1px solid rgba(93, 92, 90, .9);
+      border-radius: var(--radius-lg);
+      background: #171718;
+      color: var(--cream);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .project-dialog::backdrop { background: rgba(0, 0, 0, .72); }
+
+    .project-dialog-body { padding: 20px; }
+
+    .project-dialog h3 {
+      margin: 5px 0 14px;
+      font-family: var(--font-condensed);
+      font-size: 28px;
+      text-transform: uppercase;
+    }
+
+    .project-dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 760px) {
+      .saved-project-list,
+      .phase3-command-grid { grid-template-columns: 1fr; }
+      .saved-project-card,
+      .project-library-head,
+      .phase3-panel-head,
+      .phase3-detail-head,
+      .phase3-item-top {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .saved-project-actions { width: 100%; }
+      .project-mini-btn { flex: 1; }
+      .builder-primary-actions { width: 100%; }
+      .builder-primary-actions > * { width: 100%; }
+      .phase3-command { min-height: 78px; }
+    }
+
+
     @media (max-width: 980px) {
       .topic-grid,
       .subtopic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1287,7 +1671,7 @@
 
     @media print {
       body { background: #fff; color: #111; }
-      .brand-header, .topbar, .status-panel, .builder-panel, .layer-tabs, .footer-note { display: none !important; }
+      .brand-header, .topbar, .status-panel, .builder-panel, .project-library, .phase3-panel, .layer-tabs, .footer-note { display: none !important; }
       .results { display: block !important; }
       .stack-hero, .summary-card, .requirement-card {
         color: #111;
@@ -1353,6 +1737,18 @@
       </div>
     </details>
 
+
+
+    <section id="projectLibrary" class="project-library" aria-label="Saved project profiles" hidden>
+      <div class="project-library-head">
+        <div>
+          <div class="phase3-kicker">My Projects</div>
+          <h2>Open a Saved Project</h2>
+        </div>
+      </div>
+      <div id="savedProjectList" class="saved-project-list"></div>
+    </section>
+
     <div id="errorBanner" class="error-banner" role="alert"></div>
 
     <section class="builder-panel" aria-label="Project stack builder controls">
@@ -1403,7 +1799,10 @@
         </div>
 
         <div class="builder-actions">
-          <button id="buildStackButton" class="build-btn" type="button" disabled>Show My Governing Requirements</button>
+          <div class="builder-primary-actions">
+            <button id="buildStackButton" class="build-btn" type="button" disabled>Show My Governing Requirements</button>
+            <button id="saveProjectButton" class="save-project-btn" type="button" disabled>Save Project</button>
+          </div>
           <div id="builderMessage" class="builder-message">Waiting for all four requirement feeds.</div>
         </div>
       </div>
@@ -1413,6 +1812,45 @@
       <section class="stack-hero">
         <div class="stack-kicker">Project Requirement Stack</div>
         <h2 id="stackTitle">Project Requirements</h2>
+      </section>
+
+
+
+      <section id="phase3Panel" class="phase3-panel" aria-label="Project intelligence" hidden>
+        <div class="phase3-panel-head">
+          <div>
+            <div class="phase3-kicker">Project Intelligence</div>
+            <h3 id="phase3ProjectName">Current Project</h3>
+            <p id="phase3SummaryText" class="phase3-summary-text"></p>
+          </div>
+          <button id="phase3ReviewButton" class="phase3-review-btn" type="button" hidden>Mark Changes Reviewed</button>
+        </div>
+
+        <div class="phase3-command-grid" aria-label="Project intelligence views">
+          <button class="phase3-command" type="button" data-phase3-view="changes">
+            <span id="phase3ChangeCount" class="phase3-command-number">0</span>
+            <span>
+              <span class="phase3-command-label">What Changed</span>
+              <span class="phase3-command-copy">Only field-impacting changes.</span>
+            </span>
+          </button>
+          <button class="phase3-command" type="button" data-phase3-view="actions">
+            <span id="phase3ActionCount" class="phase3-command-number">0</span>
+            <span>
+              <span class="phase3-command-label">What Must I Do</span>
+              <span class="phase3-command-copy">Timed actions before and during work.</span>
+            </span>
+          </button>
+          <button class="phase3-command" type="button" data-phase3-view="attention">
+            <span id="phase3AttentionCount" class="phase3-command-number">0</span>
+            <span>
+              <span class="phase3-command-label">Needs Attention</span>
+              <span class="phase3-command-copy">Critical changes and no-go rules.</span>
+            </span>
+          </button>
+        </div>
+
+        <div id="phase3Detail" class="phase3-detail" hidden></div>
       </section>
 
       <section class="field-search-row" aria-label="Field search controls">
@@ -1470,6 +1908,24 @@
       </section>
 
     </section>
+
+
+
+    <dialog id="saveProjectDialog" class="project-dialog" aria-labelledby="saveProjectDialogTitle">
+      <form id="saveProjectForm" method="dialog" class="project-dialog-body">
+        <div class="phase3-kicker">Save Project Profile</div>
+        <h3 id="saveProjectDialogTitle">Name This Project</h3>
+        <div class="field">
+          <label for="projectNameInput">Project Name</label>
+          <input id="projectNameInput" class="search-input" type="text" maxlength="80" autocomplete="off" placeholder="Example: IAD-204" required>
+        </div>
+        <div class="project-dialog-actions">
+          <button id="cancelSaveProject" class="ghost-btn" type="button">Cancel</button>
+          <button class="build-btn" type="submit">Save Project</button>
+        </div>
+      </form>
+    </dialog>
+
 
     <p class="footer-note">
       Playground prototype. Source buttons use stored source URLs, hosted PDF filename mappings, and the first page number found in the source reference. Operational guidance generated from later comparison or conflict features must remain clearly distinguishable from legal authority and source requirements.
@@ -1689,6 +2145,14 @@
       priorityRank: { critical: 0, high: 1, medium: 2, low: 3, "state difference": 4, "": 5 }
     });
 
+
+
+    const PHASE3 = Object.freeze({
+      version: "3.0.0",
+      storageKey: "cooperSteelProjectIntelligenceV1",
+      maxSnapshotsPerProject: 12
+    });
+
     const state = {
       data: { cooper: [], osha: [], gc: [], owner: [] },
       loaded: { cooper: false, osha: false, gc: false, owner: false },
@@ -1706,7 +2170,16 @@
       activeTopic: "",
       activeSubtopic: "",
       quickFilter: "all",
-      currentSelection: null
+      currentSelection: null,
+      savedProjects: [],
+      activeProjectId: "",
+      phase3View: "",
+      phase3Changes: [],
+      phase3ActionGroups: {},
+      phase3AttentionItems: [],
+      phase3CurrentSnapshot: null,
+      phase3PreviousSnapshot: null,
+      phase3Diagnostics: []
     };
 
     const els = {
@@ -1745,7 +2218,23 @@
       emptyState: document.getElementById("emptyState"),
       cards: document.getElementById("cards"),
       printStackButton: document.getElementById("printStackButton"),
-      exportCsvButton: document.getElementById("exportCsvButton")
+      exportCsvButton: document.getElementById("exportCsvButton"),
+      projectLibrary: document.getElementById("projectLibrary"),
+      savedProjectList: document.getElementById("savedProjectList"),
+      saveProjectButton: document.getElementById("saveProjectButton"),
+      phase3Panel: document.getElementById("phase3Panel"),
+      phase3ProjectName: document.getElementById("phase3ProjectName"),
+      phase3SummaryText: document.getElementById("phase3SummaryText"),
+      phase3ReviewButton: document.getElementById("phase3ReviewButton"),
+      phase3ChangeCount: document.getElementById("phase3ChangeCount"),
+      phase3ActionCount: document.getElementById("phase3ActionCount"),
+      phase3AttentionCount: document.getElementById("phase3AttentionCount"),
+      phase3Commands: Array.from(document.querySelectorAll(".phase3-command")),
+      phase3Detail: document.getElementById("phase3Detail"),
+      saveProjectDialog: document.getElementById("saveProjectDialog"),
+      saveProjectForm: document.getElementById("saveProjectForm"),
+      projectNameInput: document.getElementById("projectNameInput"),
+      cancelSaveProject: document.getElementById("cancelSaveProject")
     };
 
     function parseCsv(text) {
@@ -4209,6 +4698,627 @@
       return finalCards;
     }
 
+
+
+    /* ---------- Phase 3: Saved projects, snapshots, changes, actions, readiness ---------- */
+    function phase3NowIso() {
+      return new Date().toISOString();
+    }
+
+    function phase3ProjectId() {
+      return `PRJ-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function phase3SnapshotId() {
+      return `SNAP-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function phase3LoadProjects() {
+      try {
+        const raw = localStorage.getItem(PHASE3.storageKey);
+        const parsed = raw ? JSON.parse(raw) : [];
+        state.savedProjects = Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.warn("Phase 3 project memory could not be loaded.", error);
+        state.savedProjects = [];
+      }
+    }
+
+    function phase3PersistProjects() {
+      try {
+        localStorage.setItem(PHASE3.storageKey, JSON.stringify(state.savedProjects));
+        return true;
+      } catch (error) {
+        console.warn("Phase 3 project memory could not be saved.", error);
+        try {
+          state.savedProjects.forEach((project) => {
+            if (Array.isArray(project.snapshots) && project.snapshots.length > 5) {
+              project.snapshots = project.snapshots.slice(-5);
+            }
+          });
+          localStorage.setItem(PHASE3.storageKey, JSON.stringify(state.savedProjects));
+          return true;
+        } catch (retryError) {
+          console.error("Phase 3 project memory retry failed.", retryError);
+          els.builderMessage.textContent = "Project memory could not be saved in this browser.";
+          return false;
+        }
+      }
+    }
+
+    function phase3ActiveProject() {
+      return state.savedProjects.find((project) => project.id === state.activeProjectId) || null;
+    }
+
+    function phase3SelectionKey(selection) {
+      if (!selection) return "";
+      return JSON.stringify({
+        includeCooper: Boolean(selection.includeCooper),
+        state: selection.state || "",
+        gc: selection.gc || "",
+        owner: selection.owner || "",
+        scopes: [...(selection.scopes || [])].sort()
+      });
+    }
+
+    function phase3ProjectContext(selection) {
+      if (!selection) return "";
+      const sources = [
+        selection.state,
+        selection.includeCooper ? "Cooper Steel" : "",
+        selection.gc,
+        selection.owner
+      ].filter(Boolean);
+      const scopes = scopeLabels(selection.scopes || []);
+      const sourceText = sources.join(" / ") || "Project requirements";
+      return scopes.length ? `${sourceText} • ${scopes.join(", ")}` : sourceText;
+    }
+
+    function phase3FormatDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+
+    function phase3NormalizeTitle(value) {
+      return normalizeComparisonText(value)
+        .replace(/\b\d+(?:\.\d+)?\b/g, "#")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function phase3SnapshotMatchKey(card) {
+      const subtopicId = classifyCardSubtopic(card);
+      const knownSubjects = (card.subjectKeys || [])
+        .filter((key) => key && !String(key).startsWith("fallback:"))
+        .sort();
+      const subject = card.primarySubjectKey && !String(card.primarySubjectKey).startsWith("fallback:")
+        ? card.primarySubjectKey
+        : knownSubjects[0] || phase3NormalizeTitle(card.title || card.statement);
+      return `${card.fieldTopic}|${subtopicId}|${subject}`;
+    }
+
+    function phase3SnapshotCard(card) {
+      const sourceRows = uniqueSourceRows(card.contributingRows || []);
+      const constraints = (card.signatures || [])
+        .flatMap((signature) => signature.numericConstraints || [])
+        .map(phase2NormalizedConstraint)
+        .filter(Boolean)
+        .map((constraint) => ({
+          dimension: constraint.dimension,
+          baseUnit: constraint.baseUnit,
+          baseValue: Number(constraint.baseValue),
+          comparator: phase2ConstraintComparator(constraint),
+          context: constraint.context || ""
+        }));
+      const polarities = uniqueSorted((card.signatures || []).map((signature) => signature.polarity).filter(Boolean));
+      const sourceOrganizations = uniqueSorted(sourceRows.map(sourceOrganization));
+      const sourceLinks = sourceRows.map(resolveSourceLink);
+      const matchKey = phase3SnapshotMatchKey(card);
+      const fieldFingerprint = normalizeComparisonText([
+        card.title,
+        card.statement,
+        card.priority,
+        ...(card.actionTypes || []),
+        ...(card.subjectKeys || []),
+        ...constraints.map((constraint) => `${constraint.dimension}:${constraint.baseValue}:${constraint.comparator}`),
+        ...polarities
+      ].join(" | "));
+      const sourceFingerprint = normalizeComparisonText([
+        ...sourceRows.map((row) => row.id),
+        ...sourceLinks,
+        ...sourceOrganizations
+      ].join(" | "));
+      return {
+        id: card.id,
+        matchKey,
+        fieldFingerprint,
+        sourceFingerprint,
+        fieldTopic: card.fieldTopic,
+        subtopicId: classifyCardSubtopic(card),
+        title: card.title,
+        statement: card.statement,
+        priority: card.priority,
+        actionTypes: [...(card.actionTypes || [])],
+        primarySubjectKey: card.primarySubjectKey || "",
+        subjectKeys: [...(card.subjectKeys || [])],
+        constraints,
+        polarities,
+        sourceOrganizations,
+        sourceRowIds: sourceRows.map((row) => row.id),
+        sourceReferences: sourceRows.map((row) => row.sourceReference || row.citation || ""),
+        sourceLinks,
+        sources: sourceRows.map((row) => ({
+          organization: sourceOrganization(row) || "Source",
+          rowId: row.id || "",
+          reference: row.sourceReference || row.citation || "",
+          link: resolveSourceLink(row) || ""
+        })),
+        relationshipType: card.relationshipType || "independent"
+      };
+    }
+
+    function phase3BuildSnapshot() {
+      return {
+        id: phase3SnapshotId(),
+        version: PHASE3.version,
+        createdAt: phase3NowIso(),
+        selectionKey: phase3SelectionKey(state.currentSelection),
+        cards: state.governingCards.map(phase3SnapshotCard)
+      };
+    }
+
+    function phase3SnapshotFingerprint(snapshot) {
+      return (snapshot?.cards || [])
+        .map((card) => `${card.matchKey}|${card.fieldFingerprint}`)
+        .sort()
+        .join("||");
+    }
+
+    function phase3CardSimilarity(a, b) {
+      return textSimilarity(`${a.title} ${a.statement}`, `${b.title} ${b.statement}`);
+    }
+
+    function phase3StringencyChange(previous, current) {
+      const previousProhibit = (previous.polarities || []).includes("prohibit");
+      const currentProhibit = (current.polarities || []).includes("prohibit");
+      const previousPermit = (previous.polarities || []).some((value) => value === "permit" || value === "conditional-permit");
+      const currentPermit = (current.polarities || []).some((value) => value === "permit" || value === "conditional-permit");
+      if (currentProhibit && previousPermit) return "more-stringent";
+      if (previousProhibit && currentPermit) return "less-stringent";
+
+      for (const currentConstraint of current.constraints || []) {
+        const previousConstraint = (previous.constraints || []).find((item) => item.dimension === currentConstraint.dimension);
+        if (!previousConstraint || !Number.isFinite(previousConstraint.baseValue) || !Number.isFinite(currentConstraint.baseValue)) continue;
+        if (Math.abs(previousConstraint.baseValue - currentConstraint.baseValue) < 1e-9) continue;
+
+        let direction = "unknown";
+        const subject = current.primarySubjectKey === previous.primarySubjectKey ? current.primarySubjectKey : "";
+        if (subject === "fall:trigger") direction = "lower";
+        else if (subject === "crane:power-line" && currentConstraint.dimension === "length") direction = "higher";
+        else if (currentConstraint.comparator === "minimum" && previousConstraint.comparator === "minimum") direction = "higher";
+        else if (currentConstraint.comparator === "maximum" && previousConstraint.comparator === "maximum") direction = "lower";
+        else if (currentConstraint.comparator === "frequency-interval" && previousConstraint.comparator === "frequency-interval") direction = "lower";
+
+        if (direction === "higher") {
+          return currentConstraint.baseValue > previousConstraint.baseValue ? "more-stringent" : "less-stringent";
+        }
+        if (direction === "lower") {
+          return currentConstraint.baseValue < previousConstraint.baseValue ? "more-stringent" : "less-stringent";
+        }
+      }
+      return "changed";
+    }
+
+    function phase3CompareSnapshots(previousSnapshot, currentSnapshot) {
+      if (!previousSnapshot || !Array.isArray(previousSnapshot.cards)) return [];
+      const previousByKey = new Map();
+      previousSnapshot.cards.forEach((card) => {
+        if (!previousByKey.has(card.matchKey)) previousByKey.set(card.matchKey, []);
+        previousByKey.get(card.matchKey).push(card);
+      });
+      const matchedPrevious = new Set();
+      const changes = [];
+      state.phase3Diagnostics = [];
+
+      (currentSnapshot.cards || []).forEach((current) => {
+        const candidates = (previousByKey.get(current.matchKey) || []).filter((candidate) => !matchedPrevious.has(candidate));
+        const previous = candidates
+          .map((candidate) => ({ candidate, score: phase3CardSimilarity(candidate, current) }))
+          .sort((a, b) => b.score - a.score)[0]?.candidate;
+
+        if (!previous) {
+          changes.push({ type: "new", current, previous: null });
+          return;
+        }
+
+        matchedPrevious.add(previous);
+        if (previous.fieldFingerprint === current.fieldFingerprint) {
+          if (previous.sourceFingerprint !== current.sourceFingerprint) {
+            state.phase3Diagnostics.push({ type: "source-changed-field-same", current, previous });
+          }
+          return;
+        }
+
+        changes.push({
+          type: phase3StringencyChange(previous, current),
+          current,
+          previous
+        });
+      });
+
+      previousSnapshot.cards.forEach((previous) => {
+        if (!matchedPrevious.has(previous)) {
+          changes.push({ type: "no-longer-governing", current: null, previous });
+        }
+      });
+
+      const order = { "more-stringent": 0, new: 1, changed: 2, "less-stringent": 3, "no-longer-governing": 4 };
+      return changes.sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9));
+    }
+
+    function phase3ActionCategory(card) {
+      const text = cardSearchText(card);
+      const actions = new Set(card.actionTypes || []);
+      if (actions.has("Pre-Mobilization") || /pre-mobil|before mobil|prior to mobil|before arrival|prior to arrival/.test(text)) {
+        return "before-mobilization";
+      }
+      if (actions.has("Daily / Shift") || /daily|each shift|per shift|before each shift|start of shift/.test(text)) {
+        return "today-shift";
+      }
+      if (actions.has("Per Lift / Task") || /per lift|each lift|before lifting|pre-task|before each use|before use|prior to use|before operation|before entry/.test(text)) {
+        return "specific-operation";
+      }
+      if (actions.has("Plan Required") || actions.has("Permit Required") || actions.has("Training / Qualification") || actions.has("Submit / Document")
+        || /before work|prior to work|before beginning|before starting|prior to starting|before elevated work/.test(text)) {
+        return "before-work";
+      }
+      if (actions.has("Inspection") && /inspect|inspection/.test(text)) return "specific-operation";
+      return "";
+    }
+
+    function phase3BuildActionGroups(cards) {
+      const groups = {
+        "before-mobilization": [],
+        "before-work": [],
+        "today-shift": [],
+        "specific-operation": []
+      };
+      cards.forEach((card) => {
+        const key = phase3ActionCategory(card);
+        if (key) groups[key].push(card);
+      });
+      Object.values(groups).forEach((items) => items.sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority) || String(a.title).localeCompare(String(b.title))));
+      return groups;
+    }
+
+    function phase3IsNoGoCard(card) {
+      const text = cardSearchText(card);
+      const polarity = (card.signatures || []).some((signature) => signature.polarity === "prohibit");
+      return polarity || /\bprohibit(?:ed|s)?\b|\bnot permitted\b|\bnot allowed\b|\bshall not\b|\bmust not\b|\bno[- ]go\b/.test(text);
+    }
+
+    function phase3BuildAttentionItems(cards, changes) {
+      const items = [];
+      const seen = new Set();
+      const add = (key, reason, card, change = null) => {
+        if (!key || seen.has(key)) return;
+        seen.add(key);
+        items.push({ key, reason, card, change });
+      };
+
+      changes.forEach((change) => {
+        if (change.type === "more-stringent" && change.current) {
+          add(change.current.matchKey, "More Stringent", change.current, change);
+        } else if (change.type === "new" && change.current && String(change.current.priority).toLowerCase() === "critical") {
+          add(change.current.matchKey, "New Critical Rule", change.current, change);
+        }
+      });
+
+      cards.forEach((card) => {
+        const snapshotCard = phase3SnapshotCard(card);
+        if (phase3IsNoGoCard(card)) add(snapshotCard.matchKey, "No-Go Rule", snapshotCard);
+        else if (String(card.priority || "").toLowerCase() === "critical") add(snapshotCard.matchKey, "Critical Requirement", snapshotCard);
+      });
+      return items;
+    }
+
+    function phase3SavedSourceButtons(snapshotCard) {
+      const sources = Array.isArray(snapshotCard?.sources) && snapshotCard.sources.length
+        ? snapshotCard.sources
+        : (snapshotCard?.sourceLinks || []).map((link, index) => ({
+            organization: snapshotCard?.sourceOrganizations?.[index] || snapshotCard?.sourceOrganizations?.[0] || "Source",
+            link
+          }));
+      const seen = new Set();
+      return sources.map((source) => {
+        const link = source?.link || "";
+        if (!link || seen.has(link)) return "";
+        seen.add(link);
+        const org = source?.organization || "Source";
+        return `<a class="source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Show ${escapeHtml(org)} Source</a>`;
+      }).filter(Boolean).join("");
+    }
+
+    function phase3LiveSourceButtons(card) {
+      return uniqueSourceRows(card.contributingRows || []).map(sourceButtonMarkup).join("");
+    }
+
+    function phase3ChangeLabel(type) {
+      return {
+        "more-stringent": "More Stringent",
+        new: "New",
+        changed: "Changed",
+        "less-stringent": "Less Stringent",
+        "no-longer-governing": "No Longer Governing"
+      }[type] || "Changed";
+    }
+
+    function phase3ChangeBadgeClass(type) {
+      if (type === "more-stringent" || type === "new") return "";
+      if (type === "no-longer-governing" || type === "less-stringent") return "success";
+      return "warning";
+    }
+
+    function phase3ChangeItemMarkup(change) {
+      const card = change.current || change.previous;
+      if (!card) return "";
+      const before = change.previous && change.current && change.previous.statement !== change.current.statement
+        ? `<div class="phase3-change-before"><strong>Previously:</strong> ${escapeHtml(change.previous.statement)}</div>`
+        : "";
+      const proof = phase3SavedSourceButtons(card);
+      return `
+        <article class="phase3-item">
+          <div class="phase3-item-top">
+            <h5 class="phase3-item-title">${escapeHtml(card.title)}</h5>
+            <span class="phase3-badge ${phase3ChangeBadgeClass(change.type)}">${escapeHtml(phase3ChangeLabel(change.type))}</span>
+          </div>
+          <p class="phase3-item-statement">${escapeHtml(card.statement)}</p>
+          ${before}
+          ${proof ? `<div class="phase3-item-proof">${proof}</div>` : ""}
+        </article>`;
+    }
+
+    function phase3ActionItemMarkup(card) {
+      const proof = phase3LiveSourceButtons(card);
+      return `
+        <article class="phase3-item">
+          <div class="phase3-item-top">
+            <h5 class="phase3-item-title">${escapeHtml(card.title)}</h5>
+            <span class="phase3-badge ${String(card.priority).toLowerCase() === "critical" ? "" : "info"}">${escapeHtml(card.priority || "Field Requirement")}</span>
+          </div>
+          <p class="phase3-item-statement">${escapeHtml(card.statement)}</p>
+          ${proof ? `<div class="phase3-item-proof">${proof}</div>` : ""}
+        </article>`;
+    }
+
+    function phase3AttentionItemMarkup(item) {
+      const card = item.card;
+      const proof = phase3SavedSourceButtons(card);
+      return `
+        <article class="phase3-item">
+          <div class="phase3-item-top">
+            <h5 class="phase3-item-title">${escapeHtml(card.title)}</h5>
+            <span class="phase3-badge">${escapeHtml(item.reason)}</span>
+          </div>
+          <p class="phase3-item-statement">${escapeHtml(card.statement)}</p>
+          ${proof ? `<div class="phase3-item-proof">${proof}</div>` : ""}
+        </article>`;
+    }
+
+    function phase3RenderChanges() {
+      const project = phase3ActiveProject();
+      if (!project) {
+        return `<div class="phase3-empty">Save this project once, and this view will show only field-impacting changes the next time the governing stack changes.</div>`;
+      }
+      if (!state.phase3PreviousSnapshot) {
+        return `<div class="phase3-empty">This project now has a baseline snapshot. Future changes to governing field answers will appear here.</div>`;
+      }
+      if (!state.phase3Changes.length) {
+        return `<div class="phase3-empty">No field-impacting changes were found since the last reviewed snapshot.</div>`;
+      }
+      return `<div class="phase3-item-list">${state.phase3Changes.map(phase3ChangeItemMarkup).join("")}</div>`;
+    }
+
+    function phase3RenderActions() {
+      const labels = {
+        "before-mobilization": "Before Mobilization",
+        "before-work": "Before Work Starts",
+        "today-shift": "Today / Each Shift",
+        "specific-operation": "Before a Specific Operation"
+      };
+      const groups = Object.entries(state.phase3ActionGroups).filter(([, cards]) => cards.length);
+      if (!groups.length) return `<div class="phase3-empty">No timed field actions were identified for the current governing stack.</div>`;
+      return groups.map(([key, cards]) => `
+        <section class="phase3-group">
+          <h4 class="phase3-group-title"><span>${escapeHtml(labels[key])}</span><span>${cards.length}</span></h4>
+          <div class="phase3-item-list">${cards.map(phase3ActionItemMarkup).join("")}</div>
+        </section>`).join("");
+    }
+
+    function phase3RenderAttention() {
+      if (!state.phase3AttentionItems.length) {
+        return `<div class="phase3-empty">No critical no-go rules or unreviewed more-stringent changes were found.</div>`;
+      }
+      return `<div class="phase3-item-list">${state.phase3AttentionItems.map(phase3AttentionItemMarkup).join("")}</div>`;
+    }
+
+    function phase3RenderDetail() {
+      const view = state.phase3View;
+      els.phase3Commands.forEach((button) => button.classList.toggle("active", button.dataset.phase3View === view));
+      if (!view) {
+        els.phase3Detail.hidden = true;
+        els.phase3Detail.innerHTML = "";
+        return;
+      }
+      const titles = { changes: "What Changed", actions: "What Must I Do", attention: "Needs Attention" };
+      let body = "";
+      if (view === "changes") body = phase3RenderChanges();
+      else if (view === "actions") body = phase3RenderActions();
+      else body = phase3RenderAttention();
+      els.phase3Detail.innerHTML = `
+        <div class="phase3-detail-head">
+          <h4 class="phase3-detail-title">${escapeHtml(titles[view] || "Project Intelligence")}</h4>
+        </div>
+        ${body}`;
+      els.phase3Detail.hidden = false;
+    }
+
+    function phase3RenderPanel() {
+      if (!state.governingCards.length || !state.currentSelection) {
+        els.phase3Panel.hidden = true;
+        return;
+      }
+      const project = phase3ActiveProject();
+      const actionCount = Object.values(state.phase3ActionGroups).reduce((sum, cards) => sum + cards.length, 0);
+      els.phase3Panel.hidden = false;
+      els.phase3ProjectName.textContent = project?.name || "Current Project Stack";
+      els.phase3SummaryText.textContent = `${state.governingCards.length.toLocaleString()} governing answers • ${actionCount.toLocaleString()} timed field actions • ${state.phase3AttentionItems.length.toLocaleString()} needing attention`;
+      els.phase3ChangeCount.textContent = String(state.phase3Changes.length);
+      els.phase3ActionCount.textContent = String(actionCount);
+      els.phase3AttentionCount.textContent = String(state.phase3AttentionItems.length);
+      els.phase3ReviewButton.hidden = !(project && state.phase3PreviousSnapshot && state.phase3Changes.length);
+      phase3RenderDetail();
+    }
+
+    function phase3RefreshCurrentProjectIntelligence() {
+      state.phase3CurrentSnapshot = phase3BuildSnapshot();
+      const project = phase3ActiveProject();
+      state.phase3PreviousSnapshot = project?.snapshots?.length ? project.snapshots[project.snapshots.length - 1] : null;
+      state.phase3Changes = project ? phase3CompareSnapshots(state.phase3PreviousSnapshot, state.phase3CurrentSnapshot) : [];
+      state.phase3ActionGroups = phase3BuildActionGroups(state.governingCards);
+      state.phase3AttentionItems = phase3BuildAttentionItems(state.governingCards, state.phase3Changes);
+      state.phase3View = "";
+      phase3RenderPanel();
+      phase3RenderSavedProjectLibrary();
+      els.saveProjectButton.disabled = false;
+      els.saveProjectButton.textContent = project ? "Update Saved Project" : "Save Project";
+    }
+
+    function phase3AppendSnapshot(project, snapshot) {
+      if (!project || !snapshot) return;
+      const latest = project.snapshots?.[project.snapshots.length - 1];
+      if (latest && phase3SnapshotFingerprint(latest) === phase3SnapshotFingerprint(snapshot)
+        && latest.selectionKey === snapshot.selectionKey) return;
+      project.snapshots = [...(project.snapshots || []), snapshot].slice(-PHASE3.maxSnapshotsPerProject);
+      project.updatedAt = phase3NowIso();
+    }
+
+    function phase3SaveNewProject(name) {
+      const cleanName = String(name || "").trim();
+      if (!cleanName || !state.currentSelection || !state.phase3CurrentSnapshot) return;
+      const project = {
+        id: phase3ProjectId(),
+        name: cleanName,
+        createdAt: phase3NowIso(),
+        updatedAt: phase3NowIso(),
+        selection: JSON.parse(JSON.stringify(state.currentSelection)),
+        snapshots: [state.phase3CurrentSnapshot]
+      };
+      state.savedProjects.push(project);
+      state.activeProjectId = project.id;
+      phase3PersistProjects();
+      state.phase3PreviousSnapshot = project.snapshots[project.snapshots.length - 1];
+      state.phase3Changes = [];
+      state.phase3AttentionItems = phase3BuildAttentionItems(state.governingCards, state.phase3Changes);
+      phase3RenderSavedProjectLibrary();
+      phase3RenderPanel();
+      els.saveProjectButton.textContent = "Update Saved Project";
+    }
+
+    function phase3UpdateActiveProject({ markReviewed = false } = {}) {
+      const project = phase3ActiveProject();
+      if (!project || !state.currentSelection || !state.phase3CurrentSnapshot) return;
+      project.selection = JSON.parse(JSON.stringify(state.currentSelection));
+      project.updatedAt = phase3NowIso();
+      phase3AppendSnapshot(project, state.phase3CurrentSnapshot);
+      phase3PersistProjects();
+      state.phase3PreviousSnapshot = project.snapshots[project.snapshots.length - 1] || null;
+      state.phase3Changes = [];
+      state.phase3AttentionItems = phase3BuildAttentionItems(state.governingCards, state.phase3Changes);
+      if (markReviewed) state.phase3View = "changes";
+      phase3RenderSavedProjectLibrary();
+      phase3RenderPanel();
+    }
+
+    function phase3OpenSaveDialog() {
+      const project = phase3ActiveProject();
+      if (project) {
+        phase3UpdateActiveProject();
+        els.builderMessage.textContent = `${project.name} was updated with the current project stack.`;
+        return;
+      }
+      const defaultName = state.currentSelection
+        ? [state.currentSelection.owner, state.currentSelection.gc, state.currentSelection.state].filter(Boolean).join(" - ")
+        : "";
+      els.projectNameInput.value = defaultName;
+      if (typeof els.saveProjectDialog.showModal === "function") {
+        els.saveProjectDialog.showModal();
+        requestAnimationFrame(() => els.projectNameInput.focus());
+      } else {
+        const name = window.prompt("Project name", defaultName);
+        if (name) phase3SaveNewProject(name);
+      }
+    }
+
+    function phase3SetSelection(selection) {
+      els.cooperToggle.checked = Boolean(selection.includeCooper);
+      els.stateSelect.value = selection.state || "";
+      els.gcSelect.value = selection.gc || "";
+      els.ownerSelect.value = selection.owner || "";
+      const selected = new Set(selection.scopes || []);
+      els.scopeGrid.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+        checkbox.checked = selected.has(checkbox.value);
+      });
+      refreshBuildAvailability();
+    }
+
+    function phase3OpenProject(projectId) {
+      const project = state.savedProjects.find((item) => item.id === projectId);
+      if (!project) return;
+      state.activeProjectId = project.id;
+      phase3SetSelection(project.selection || {});
+      buildStack();
+      phase3RenderSavedProjectLibrary();
+    }
+
+    function phase3DeleteProject(projectId) {
+      const project = state.savedProjects.find((item) => item.id === projectId);
+      if (!project) return;
+      if (!window.confirm(`Delete saved project "${project.name}" from this browser?`)) return;
+      state.savedProjects = state.savedProjects.filter((item) => item.id !== projectId);
+      if (state.activeProjectId === projectId) {
+        state.activeProjectId = "";
+        state.phase3Changes = [];
+        state.phase3PreviousSnapshot = null;
+        if (state.governingCards.length) phase3RefreshCurrentProjectIntelligence();
+      }
+      phase3PersistProjects();
+      phase3RenderSavedProjectLibrary();
+    }
+
+    function phase3RenderSavedProjectLibrary() {
+      const projects = [...state.savedProjects].sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+      els.projectLibrary.hidden = projects.length === 0;
+      els.savedProjectList.innerHTML = projects.map((project) => {
+        const latest = project.snapshots?.[project.snapshots.length - 1];
+        const reviewed = latest ? `Reviewed ${phase3FormatDate(latest.createdAt)}` : "No snapshot yet";
+        return `
+          <article class="saved-project-card ${project.id === state.activeProjectId ? "active" : ""}">
+            <div>
+              <span class="saved-project-name">${escapeHtml(project.name)}</span>
+              <span class="saved-project-context">${escapeHtml(phase3ProjectContext(project.selection))}<br>${escapeHtml(reviewed)}</span>
+            </div>
+            <div class="saved-project-actions">
+              <button class="project-mini-btn" type="button" data-open-project="${escapeHtml(project.id)}">Open</button>
+              <button class="project-mini-btn danger" type="button" data-delete-project="${escapeHtml(project.id)}">Delete</button>
+            </div>
+          </article>`;
+      }).join("");
+    }
+
+
     function buildStack() {
       const selection = {
         includeCooper: els.cooperToggle.checked,
@@ -4255,6 +5365,7 @@
 
       renderStackHeader();
       renderResults();
+      phase3RefreshCurrentProjectIntelligence();
 
       els.results.classList.add("show");
       els.printStackButton.disabled = false;
@@ -4578,7 +5689,42 @@
     }
 
     function bindEvents() {
-      els.buildStackButton.addEventListener("click", buildStack);
+      els.buildStackButton.addEventListener("click", () => buildStack());
+      els.saveProjectButton.addEventListener("click", phase3OpenSaveDialog);
+
+      els.phase3Commands.forEach((button) => {
+        button.addEventListener("click", () => {
+          const view = button.dataset.phase3View || "";
+          state.phase3View = state.phase3View === view ? "" : view;
+          phase3RenderDetail();
+          if (state.phase3View) els.phase3Detail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+      });
+
+      els.phase3ReviewButton.addEventListener("click", () => phase3UpdateActiveProject({ markReviewed: true }));
+
+      els.savedProjectList.addEventListener("click", (event) => {
+        const openButton = event.target.closest("[data-open-project]");
+        if (openButton) {
+          phase3OpenProject(openButton.dataset.openProject);
+          return;
+        }
+        const deleteButton = event.target.closest("[data-delete-project]");
+        if (deleteButton) phase3DeleteProject(deleteButton.dataset.deleteProject);
+      });
+
+      els.saveProjectForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = String(els.projectNameInput.value || "").trim();
+        if (!name) {
+          els.projectNameInput.focus();
+          return;
+        }
+        phase3SaveNewProject(name);
+        els.saveProjectDialog.close();
+      });
+
+      els.cancelSaveProject.addEventListener("click", () => els.saveProjectDialog.close());
       els.resultSearch.addEventListener("input", renderResults);
       els.clearResultFilters.addEventListener("click", clearResultFilters);
 
@@ -4622,6 +5768,7 @@
     }
 
     async function init() {
+      phase3LoadProjects();
       renderScopeChips();
       bindEvents();
       await Promise.allSettled([
@@ -4631,6 +5778,7 @@
         loadFeed("owner")
       ]);
       updateReadyState();
+      phase3RenderSavedProjectLibrary();
     }
 
     init();
