@@ -9,6 +9,13 @@
   <link rel="icon" href="data:;base64,=">
 
   <style>
+
+    @font-face {
+      font-family: "DharmaGothicE-Bold";
+      src: local("DharmaGothicE-Bold");
+      font-display: swap;
+    }
+
     :root {
       --cream: #f2efeb;
       --cloud: #cfcdca;
@@ -26,7 +33,7 @@
       --radius-sm: 12px;
       --shadow-lg: 0 18px 40px rgba(0, 0, 0, .45);
       --shadow-md: 0 10px 28px rgba(0, 0, 0, .28);
-      --font-display: Impact, "Arial Narrow", sans-serif;
+      --font-display: "DharmaGothicE-Bold", Impact, "Arial Narrow", sans-serif;
       --font-body: Arial, Helvetica, sans-serif;
       --font-condensed: "Arial Narrow", Arial, sans-serif;
     }
@@ -173,9 +180,10 @@
       margin: 0 auto;
       color: var(--cream);
       font-family: var(--font-display);
-      font-size: clamp(40px, 5vw, 74px);
+      font-size: clamp(44px, 6vw, 88px);
       line-height: .92;
       letter-spacing: 0;
+      font-weight: 400;
     }
 
     .hero p {
@@ -1329,9 +1337,6 @@
     <section class="hero">
       <div class="hero-eyebrow">Cooper Steel Field Safety</div>
       <h1>Project Requirement Stack Builder</h1>
-      <p>
-        Select the project sources and work scope you want included. The engine compares applicable requirements in the background and delivers only the governing field answers.
-      </p>
     </section>
 
     <details class="status-panel system-status" aria-label="Data feed status">
