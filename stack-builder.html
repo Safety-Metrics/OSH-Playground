@@ -1696,6 +1696,9 @@
       governingCards: [],
       relationshipDiagnostics: [],
       signatureStats: {},
+      phase2Clusters: [],
+      phase2Diagnostics: [],
+      phase2Stats: {},
       activeTopic: "",
       activeSubtopic: "",
       quickFilter: "all",
@@ -2271,7 +2274,7 @@
     }
 
     function hasConditionalPermission(text) {
-      return /\b(?:may|permitted|allowed)\b.{0,80}\b(?:only if|only when|provided that|subject to|with (?:prior |written )?approval|upon approval|unless)\b/i.test(text)
+      return /\b(?:may|permitted|allowed)\b.{0,80}\b(?:only if|only when|provided that|subject to|(?:only\s+)?with (?:(?:prior|written)\s+){0,2}approval|upon approval|unless)\b/i.test(text)
         || /\b(?:only if|only when|provided that|subject to|upon approval)\b.{0,80}\b(?:may|permitted|allowed)\b/i.test(text);
     }
 
@@ -2288,7 +2291,7 @@
         if (/safety monitor(?:ing)?/.test(text)) return "fall:safety-monitoring";
         if (/fall protection plan/.test(text)) return "fall:plan";
         if (/fall.{0,80}(rescue|recovery)|(rescue|recovery).{0,80}fall/.test(text)) return "fall:rescue";
-        if (/(fall protection|fall exposure|work at height|working at height).{0,120}(feet|foot|\bft\b)|(?:feet|foot|\bft\b).{0,120}(fall protection|fall exposure|work at height|working at height)/.test(text)) return "fall:trigger";
+        if (/(fall protection|fall exposure|work at height|working at height).{0,120}(feet|foot|\bft\b|inches|inch|\bin\.\b)|(?:feet|foot|\bft\b|inches|inch|\bin\.\b).{0,120}(fall protection|fall exposure|work at height|working at height)/.test(text)) return "fall:trigger";
       }
 
       if (topic === "cranes-hoisting") {
@@ -2902,17 +2905,51 @@
         return acc;
       }, {});
 
+      const phase2Counts = state.phase2Diagnostics.reduce((acc, item) => {
+        acc[item.type] = (acc[item.type] || 0) + 1;
+        return acc;
+      }, {});
+
       console.info("[Phase 1.8] Requirement signatures generated", state.signatureStats);
       console.info("[Phase 1.9] Relationship engine summary", counts);
+      console.info("[Phase 2.0] Governing requirement engine", state.phase2Stats);
+      console.info("[Phase 2.0] Resolved relationship summary", phase2Counts);
 
-      const reviewItems = state.relationshipDiagnostics.filter((item) => ["conflicts", "human-review"].includes(item.type));
+      const reviewItems = state.phase2Diagnostics.filter((item) => ["conflicts", "human-review"].includes(item.type) && item.reviewNeeded);
       if (reviewItems.length) {
-        console.warn(`[Relationship review] ${reviewItems.length} conflict/human-review relationship${reviewItems.length === 1 ? "" : "s"} detected.`, reviewItems);
+        console.warn(`[Phase 2 review] ${reviewItems.length} unresolved conflict/human-review relationship${reviewItems.length === 1 ? "" : "s"} detected.`, reviewItems);
       }
 
       window.__COOPER_STACK_DEV__ = {
+        phase: "2.0",
         signatures: state.generatedRows.map((row) => ({ id: row.id, source: sourceOrganization(row), signature: row.signature })),
         relationships: state.relationshipDiagnostics,
+        phase2: {
+          stats: state.phase2Stats,
+          clusters: state.phase2Clusters.map((cluster) => ({
+            id: cluster.id,
+            fieldTopic: cluster.fieldTopic,
+            primarySubjectKey: cluster.primarySubjectKey,
+            rowIds: cluster.rows.map((row) => row.id),
+            sources: uniqueSorted(cluster.rows.map(sourceOrganization)),
+            confidence: cluster.confidence
+          })),
+          relationships: state.phase2Diagnostics,
+          governingCards: state.governingCards.map((card) => ({
+            id: card.id,
+            fieldTopic: card.fieldTopic,
+            title: card.title,
+            statement: card.statement,
+            relationshipType: card.relationshipType,
+            resolutionConfidence: card.resolutionConfidence,
+            confidenceBand: card.confidenceBand,
+            clusterId: card.clusterId,
+            sourceIds: card.contributingRows.map((row) => row.id),
+            suppressedIds: card.weakerRows.map((row) => row.id),
+            clauses: card.clauses || [],
+            lineage: card.lineage || []
+          }))
+        },
         governingCards: state.governingCards
       };
     }
@@ -2933,6 +2970,904 @@
         || priorityRank(a.priority) - priorityRank(b.priority)
         || String(a.title || "").localeCompare(String(b.title || ""))
       ));
+    }
+
+
+    /* ---------- Phase 2.0: operational clustering + governing resolution + clause lineage ---------- */
+
+    const PHASE2 = Object.freeze({
+      version: "2.0",
+      clusterMergeThreshold: 64,
+      autoResolveConfidence: 0.86,
+      highConfidence: 0.90,
+      moderateConfidence: 0.78,
+      maxClausesPerCard: 3,
+      knownSupplementPairs: Object.freeze([
+        ["fall:plan", "fall:trigger"],
+        ["fall:rescue", "fall:trigger"],
+        ["crane:critical-lift", "crane:lift-plan"],
+        ["hotwork:fire-watch", "hotwork:permit"],
+        ["confined-space:atmospheric-testing", "confined-space:permit"],
+        ["confined-space:entry-team-rescue", "confined-space:permit"]
+      ])
+    });
+
+    const PHASE2_GENERIC_TOKENS = new Set([
+      ...SIGNATURE_STOP_WORDS,
+      "action", "activities", "activity", "applicable", "apply", "approval", "authorized", "company",
+      "daily", "document", "documentation", "field", "general", "inspection", "manual", "plan", "permit",
+      "person", "personnel", "policy", "procedure", "program", "record", "review", "rule", "rules", "safety",
+      "site", "source", "submit", "task", "training"
+    ]);
+
+    const PHASE2_SUBJECT_LABELS = Object.freeze({
+      "fall:trigger": "Fall Protection Trigger",
+      "fall:cdz": "Controlled Decking Zones",
+      "fall:safety-monitoring": "Safety Monitoring",
+      "fall:plan": "Fall Protection Planning",
+      "fall:rescue": "Fall Rescue & Recovery",
+      "crane:critical-lift": "Critical Lifts",
+      "crane:multiple-lift": "Multiple & Dual Lifts",
+      "crane:personnel-platform": "Personnel Hoisting",
+      "crane:lift-plan": "Lift Planning",
+      "crane:power-line": "Crane Power-Line Clearance",
+      "crane:daily-inspection": "Crane Inspections",
+      "rigging:qualified-rigger": "Qualified Riggers",
+      "rigging:signal-person": "Signal Persons",
+      "rigging:inspection": "Rigging Inspection",
+      "rigging:hook-latch": "Rigging Hooks & Latches",
+      "ppe:type-ii-helmet": "Type II Head Protection",
+      "ppe:chin-strap": "Helmet Chin Straps",
+      "ppe:eye-protection": "Eye Protection",
+      "ppe:hi-vis": "High-Visibility Apparel",
+      "hotwork:permit": "Hot Work Permits",
+      "hotwork:fire-watch": "Fire Watch",
+      "hotwork:extinguisher": "Fire Extinguishers",
+      "electrical:loto": "Lockout / Tagout",
+      "electrical:gfci": "GFCI Protection",
+      "confined-space:permit": "Confined Space Entry Permits",
+      "confined-space:atmospheric-testing": "Confined Space Atmospheric Testing",
+      "confined-space:entry-team-rescue": "Confined Space Entry Team & Rescue"
+    });
+
+    function phase2RowKey(row) {
+      return [row.sourceType, sourceOrganization(row), row.state, row.id].map((value) => String(value || "")).join("|");
+    }
+
+    function phase2KnownSubject(subjectKey) {
+      return Boolean(subjectKey)
+        && !subjectKey.startsWith("subject:")
+        && !subjectKey.startsWith("exact:")
+        && !subjectKey.startsWith("unique:");
+    }
+
+    function phase2KnownSupplementPair(subjectA, subjectB) {
+      const pair = [subjectA, subjectB].sort().join("|");
+      return PHASE2.knownSupplementPairs.some((items) => [...items].sort().join("|") === pair);
+    }
+
+    function phase2RowSubtopic(row) {
+      return classifyCardSubtopic({
+        title: row.topic || row.category || "",
+        statement: row.requirement || row.action || "",
+        fieldTopic: row.fieldTopic,
+        allRows: [row]
+      });
+    }
+
+    function phase2CoreTokenScores(row) {
+      const fields = [
+        [row.topic, 6],
+        [row.dashboardGroup, 5],
+        [row.category, 4],
+        [row.requirement, 3],
+        [row.action, 2],
+        [row.trigger, 1]
+      ];
+      const scores = new Map();
+      fields.forEach(([value, weight]) => {
+        meaningfulSubjectTokens(value).forEach((token) => {
+          if (PHASE2_GENERIC_TOKENS.has(token)) return;
+          scores.set(token, (scores.get(token) || 0) + weight);
+        });
+      });
+      return scores;
+    }
+
+    function phase2WeightedTokenSimilarity(rowA, rowB) {
+      const a = phase2CoreTokenScores(rowA);
+      const b = phase2CoreTokenScores(rowB);
+      const keys = new Set([...a.keys(), ...b.keys()]);
+      if (!keys.size) return 0;
+      let intersection = 0;
+      let union = 0;
+      keys.forEach((key) => {
+        const av = a.get(key) || 0;
+        const bv = b.get(key) || 0;
+        intersection += Math.min(av, bv);
+        union += Math.max(av, bv);
+      });
+      return union ? intersection / union : 0;
+    }
+
+    function phase2NormalizedConstraint(constraint) {
+      if (!constraint) return null;
+      const value = Number(constraint.value);
+      if (!Number.isFinite(value)) return null;
+      const unit = constraint.unit;
+      const base = {
+        feet: { dimension: "length", baseUnit: "feet", factor: 1 },
+        inches: { dimension: "length", baseUnit: "feet", factor: 1 / 12 },
+        pounds: { dimension: "weight", baseUnit: "pounds", factor: 1 },
+        minutes: { dimension: "time", baseUnit: "hours", factor: 1 / 60 },
+        hours: { dimension: "time", baseUnit: "hours", factor: 1 },
+        days: { dimension: "time", baseUnit: "hours", factor: 24 },
+        months: { dimension: "calendar-time", baseUnit: "months", factor: 1 },
+        years: { dimension: "calendar-time", baseUnit: "months", factor: 12 },
+        percent: { dimension: "percent", baseUnit: "percent", factor: 1 },
+        volts: { dimension: "voltage", baseUnit: "volts", factor: 1 }
+      }[unit];
+      if (!base) return null;
+      return {
+        ...constraint,
+        dimension: base.dimension,
+        baseUnit: base.baseUnit,
+        baseValue: value * base.factor
+      };
+    }
+
+    function phase2ComparableNumeric(signatureA, signatureB) {
+      const aConstraints = signatureA.numericConstraints.map(phase2NormalizedConstraint).filter(Boolean);
+      const bConstraints = signatureB.numericConstraints.map(phase2NormalizedConstraint).filter(Boolean);
+      const preferred = ["length", "weight", "percent", "voltage", "time", "calendar-time"];
+      for (const dimension of preferred) {
+        const a = aConstraints.find((item) => item.dimension === dimension);
+        const b = bConstraints.find((item) => item.dimension === dimension);
+        if (a && b) return { a, b };
+      }
+      return null;
+    }
+
+    function phase2ConstraintComparator(constraint) {
+      if (!constraint) return "exact";
+      const context = String(constraint.context || "").toLowerCase();
+      if (constraint.comparator && constraint.comparator !== "exact") return constraint.comparator;
+      if (/\bwithin\b|\bno later than\b|\bnot exceed\b|\bno more than\b/.test(context)) return "maximum";
+      if (/\bat least\b|\bminimum\b|\bnot less than\b|\bor greater\b|\bor more\b/.test(context)) return "minimum";
+      if (/\bevery\b|\bonce per\b|\beach\b/.test(context) && ["time", "calendar-time"].includes(constraint.dimension)) return "frequency-interval";
+      return "exact";
+    }
+
+    function phase2StrictnessDirection(signatureA, signatureB, comparable) {
+      const subjectKey = signatureA.subjectKey === signatureB.subjectKey ? signatureA.subjectKey : "";
+      if (subjectKey === "fall:trigger") return "lower";
+      if (subjectKey === "crane:power-line" && comparable.a.dimension === "length") return "higher";
+
+      const aComparator = phase2ConstraintComparator(comparable.a);
+      const bComparator = phase2ConstraintComparator(comparable.b);
+      if (aComparator === "minimum" && bComparator === "minimum") return "higher";
+      if (aComparator === "maximum" && bComparator === "maximum") return "lower";
+      if (aComparator === "frequency-interval" && bComparator === "frequency-interval") return "lower";
+      return "unknown";
+    }
+
+    function phase2ClusterCompatibility(rowA, rowB) {
+      const a = signatureForRow(rowA);
+      const b = signatureForRow(rowB);
+      if (a.fieldTopic !== b.fieldTopic) return { score: 0, hardReject: true, reason: "Different field topics." };
+
+      const sameSubject = a.subjectKey === b.subjectKey;
+      const knownA = phase2KnownSubject(a.subjectKey);
+      const knownB = phase2KnownSubject(b.subjectKey);
+      if (sameSubject) return { score: 100, hardReject: false, reason: "Same signature subject." };
+      if (knownA && knownB) {
+        return { score: 0, hardReject: true, reason: "Different high-confidence operational subjects." };
+      }
+
+      const tokenSimilarity = phase2WeightedTokenSimilarity(rowA, rowB);
+      const canonicalSimilarity = textSimilarity(a.canonicalText, b.canonicalText);
+      const sameSubtopic = phase2RowSubtopic(rowA) === phase2RowSubtopic(rowB);
+      const samePrimaryKind = a.primaryKind === b.primaryKind;
+      const numeric = phase2ComparableNumeric(a, b);
+
+      let score = 0;
+      if (sameSubtopic) score += 18;
+      score += tokenSimilarity * 44;
+      score += canonicalSimilarity * 28;
+      if (samePrimaryKind) score += 7;
+      if (numeric) score += 6;
+
+      const hardReject = !sameSubtopic && tokenSimilarity < 0.32 && canonicalSimilarity < 0.52;
+      return {
+        score: Math.min(99, Math.round(score * 100) / 100),
+        hardReject,
+        reason: `Subtopic=${sameSubtopic}; token similarity=${tokenSimilarity.toFixed(2)}; text similarity=${canonicalSimilarity.toFixed(2)}.`
+      };
+    }
+
+    function buildOperationalClusters(rows) {
+      const ordered = [...rows].sort((a, b) => (
+        Number(phase2KnownSubject(signatureForRow(b).subjectKey)) - Number(phase2KnownSubject(signatureForRow(a).subjectKey)
+        ) || signatureForRow(b).confidence - signatureForRow(a).confidence
+        || priorityRank(a.priority) - priorityRank(b.priority)
+        || phase2RowKey(a).localeCompare(phase2RowKey(b))
+      ));
+
+      const clusters = [];
+      ordered.forEach((row) => {
+        const signature = signatureForRow(row);
+        let best = null;
+
+        clusters.forEach((cluster) => {
+          if (cluster.fieldTopic !== row.fieldTopic) return;
+          const comparisons = cluster.rows.map((member) => phase2ClusterCompatibility(row, member));
+          if (comparisons.some((item) => item.hardReject && item.score === 0)) return;
+          const bestScore = Math.max(...comparisons.map((item) => item.score));
+          const averageScore = comparisons.reduce((sum, item) => sum + item.score, 0) / comparisons.length;
+          if (bestScore < PHASE2.clusterMergeThreshold || averageScore < PHASE2.clusterMergeThreshold - 12) return;
+          const candidate = { cluster, bestScore, averageScore };
+          if (!best || candidate.bestScore > best.bestScore || (candidate.bestScore === best.bestScore && candidate.averageScore > best.averageScore)) {
+            best = candidate;
+          }
+        });
+
+        if (best) {
+          best.cluster.rows.push(row);
+          best.cluster.compatibilityScores.push(best.bestScore);
+          best.cluster.subjectKeys.add(signature.subjectKey);
+          best.cluster.subtopics.add(phase2RowSubtopic(row));
+          return;
+        }
+
+        const seedKey = `${row.fieldTopic}|${signature.subjectKey}|${phase2RowSubtopic(row)}|${phase2RowKey(row)}`;
+        clusters.push({
+          id: `P2-CLUSTER-${Math.abs(hashString(seedKey))}`,
+          fieldTopic: row.fieldTopic,
+          rows: [row],
+          subjectKeys: new Set([signature.subjectKey]),
+          subtopics: new Set([phase2RowSubtopic(row)]),
+          compatibilityScores: [signature.confidence * 100]
+        });
+      });
+
+      clusters.forEach((cluster) => {
+        const subjectCounts = new Map();
+        cluster.rows.forEach((row) => {
+          const key = signatureForRow(row).subjectKey;
+          subjectCounts.set(key, (subjectCounts.get(key) || 0) + 1);
+        });
+        cluster.primarySubjectKey = [...subjectCounts.entries()].sort((a, b) => (
+          Number(phase2KnownSubject(b[0])) - Number(phase2KnownSubject(a[0]))
+          || b[1] - a[1]
+          || a[0].localeCompare(b[0])
+        ))[0]?.[0] || "";
+        cluster.confidence = Math.max(0.45, Math.min(0.99,
+          cluster.compatibilityScores.reduce((sum, value) => sum + value, 0) / cluster.compatibilityScores.length / 100
+        ));
+      });
+
+      return clusters.sort((a, b) => (
+        CONFIG.fieldTopics.findIndex((topic) => topic.id === a.fieldTopic) - CONFIG.fieldTopics.findIndex((topic) => topic.id === b.fieldTopic)
+        || a.id.localeCompare(b.id)
+      ));
+    }
+
+    function classifyPhase2Relationship(rowA, rowB) {
+      const a = signatureForRow(rowA);
+      const b = signatureForRow(rowB);
+      const sameTopic = a.fieldTopic === b.fieldTopic;
+      const sameSubject = a.subjectKey === b.subjectKey;
+      const similarity = textSimilarity(a.canonicalText, b.canonicalText);
+      const rowAKey = phase2RowKey(rowA);
+      const rowBKey = phase2RowKey(rowB);
+
+      if (!sameTopic) {
+        return { type: "independent", confidence: 0.99, reason: "Different field topics." };
+      }
+
+      const polarities = new Set([a.polarity, b.polarity]);
+      const oneProhibits = polarities.has("prohibit");
+      const onePermits = polarities.has("permit") || polarities.has("permit-conditional");
+      if (sameSubject && oneProhibits && onePermits) {
+        const governing = a.polarity === "prohibit" ? rowA : rowB;
+        const suppressed = governing === rowA ? rowB : rowA;
+        return {
+          type: "conflicts",
+          confidence: 0.98,
+          reason: "The same operational subject is prohibited by one source and permitted by another; the prohibition governs the field answer.",
+          governingRowKey: phase2RowKey(governing),
+          suppressedRowKey: phase2RowKey(suppressed),
+          reviewNeeded: false
+        };
+      }
+
+      if (sameSubject) {
+        const numeric = phase2ComparableNumeric(a, b);
+        if (numeric) {
+          const direction = phase2StrictnessDirection(a, b, numeric);
+          const equal = Math.abs(numeric.a.baseValue - numeric.b.baseValue) < 1e-9;
+          if (equal) {
+            return {
+              type: "duplicates",
+              confidence: Math.max(0.90, similarity),
+              reason: `Equivalent ${numeric.a.dimension} threshold on the same operational subject.`
+            };
+          }
+          if (direction !== "unknown") {
+            const aStricter = direction === "lower"
+              ? numeric.a.baseValue < numeric.b.baseValue
+              : numeric.a.baseValue > numeric.b.baseValue;
+            return {
+              type: "supersedes",
+              confidence: 0.96,
+              reason: `Comparable ${numeric.a.dimension} thresholds; the ${direction} normalized value is more stringent for this subject.`,
+              governingRowKey: aStricter ? rowAKey : rowBKey,
+              suppressedRowKey: aStricter ? rowBKey : rowAKey,
+              reviewNeeded: false
+            };
+          }
+        }
+
+        if (a.canonicalText && a.canonicalText === b.canonicalText) {
+          return { type: "duplicates", confidence: 1, reason: "Exact canonical requirement match on the same operational subject." };
+        }
+
+        if (similarity >= 0.88 && a.polarity === b.polarity) {
+          return { type: "duplicates", confidence: similarity, reason: "Near-identical normalized language on the same operational subject." };
+        }
+
+        const sharedKinds = a.kinds.filter((kind) => b.kinds.includes(kind));
+        const uniqueKindsA = a.kinds.filter((kind) => !b.kinds.includes(kind));
+        const uniqueKindsB = b.kinds.filter((kind) => !a.kinds.includes(kind));
+        if (!sharedKinds.length || (uniqueKindsA.length && uniqueKindsB.length)) {
+          return {
+            type: "supplements",
+            confidence: Math.max(0.86, Math.min(0.95, (a.confidence + b.confidence) / 2)),
+            reason: "Same operational subject with distinct compatible obligation types."
+          };
+        }
+
+        if ((uniqueKindsA.length || uniqueKindsB.length) && similarity >= 0.58) {
+          return {
+            type: "supplements",
+            confidence: 0.84,
+            reason: "Closely related requirements where one adds a distinct timing, documentation, approval, or implementation obligation."
+          };
+        }
+
+        return {
+          type: "human-review",
+          confidence: 0.68,
+          reason: "Same operational subject, but automatic consolidation would risk deleting a distinct obligation.",
+          reviewNeeded: true
+        };
+      }
+
+      if (phase2KnownSupplementPair(a.subjectKey, b.subjectKey)) {
+        return {
+          type: "supplements",
+          confidence: 0.95,
+          reason: "Known compatible governing obligations within the same operational subject family."
+        };
+      }
+
+      const compatibility = phase2ClusterCompatibility(rowA, rowB);
+      if (!compatibility.hardReject && compatibility.score >= PHASE2.clusterMergeThreshold) {
+        if (similarity >= 0.88 && a.polarity === b.polarity) {
+          return { type: "duplicates", confidence: similarity, reason: "High-confidence equivalent language inside the same operational cluster." };
+        }
+        if (!a.kinds.some((kind) => b.kinds.includes(kind))) {
+          return { type: "supplements", confidence: 0.86, reason: "Same operational cluster with different compatible obligation types." };
+        }
+        return {
+          type: "human-review",
+          confidence: 0.66,
+          reason: "Related operational cluster, but there is not enough evidence to merge or suppress either requirement.",
+          reviewNeeded: true
+        };
+      }
+
+      return { type: "independent", confidence: 0.94, reason: "No safe shared governing subject." };
+    }
+
+    function phase2DisjointSet(keys) {
+      const parent = new Map(keys.map((key) => [key, key]));
+      const find = (key) => {
+        let root = key;
+        while (parent.get(root) !== root) root = parent.get(root);
+        let current = key;
+        while (parent.get(current) !== current) {
+          const next = parent.get(current);
+          parent.set(current, root);
+          current = next;
+        }
+        return root;
+      };
+      const union = (a, b) => {
+        const rootA = find(a);
+        const rootB = find(b);
+        if (rootA !== rootB) parent.set(rootB, rootA);
+      };
+      return { find, union };
+    }
+
+    function phase2PreferredObligationText(row) {
+      const action = cleanSentence(row.action);
+      const requirement = cleanSentence(row.requirement);
+      const topic = cleanSentence(row.topic);
+      const actionIsGeneric = /review and apply the state-specific requirement|this requirement applies|review source requirement/i.test(action);
+      if (action && !actionIsGeneric && action.length <= 360) return action;
+      if (requirement) return requirement;
+      return topic || "this field requirement applies";
+    }
+
+    function phase2StripOrganizationPrefix(value, row) {
+      const org = sourceOrganization(row);
+      if (!org) return value;
+      const escaped = org.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return String(value || "").replace(new RegExp(`^${escaped}\\s+(?:requires?|mandates?|prohibits?|allows?)\\s*[:\\-]?\\s*`, "i"), "").trim();
+    }
+
+    function phase2LowerFirst(value) {
+      const text = String(value || "").trim();
+      return text ? text.charAt(0).toLowerCase() + text.slice(1) : "";
+    }
+
+    function phase2ObligationPhrase(row) {
+      let text = phase2StripOrganizationPrefix(phase2PreferredObligationText(row), row)
+        .replace(/^[•\-–—]+\s*/, "")
+        .replace(/\s+/g, " ")
+        .replace(/[.!?]+$/, "")
+        .trim();
+      if (!text) return { mode: "direct", text: "this field requirement" };
+
+      let match = text.match(/^(workers|employees|crews|contractors|subcontractors|operators|riggers|personnel|persons?)\s+(?:must|shall|are required to)\s+(.+)$/i);
+      if (match) return { mode: "direct", text: `${match[1].toLowerCase()} to ${phase2LowerFirst(match[2])}` };
+
+      match = text.match(/^(?:must|shall|is required to|are required to|required to)\s+(.+)$/i);
+      if (match) return { mode: "direct", text: `crews to ${phase2LowerFirst(match[1])}` };
+
+      const imperativeVerbs = "complete|submit|inspect|provide|use|maintain|ensure|document|obtain|install|verify|perform|develop|prepare|conduct|review|keep|wear|remove|identify|establish|notify|report|train|designate|protect|secure|test|monitor|stop|prohibit";
+      match = text.match(new RegExp(`^(${imperativeVerbs})\\b(.+)$`, "i"));
+      if (match) return { mode: "direct", text: `crews to ${phase2LowerFirst(match[1] + match[2])}` };
+
+      text = text
+        .replace(/\b(?:is|are) required\b/gi, "")
+        .replace(/\brequired\s*:\s*/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return { mode: "direct", text: phase2LowerFirst(text) };
+    }
+
+    function phase2GenericWhoWhatStatement(rows) {
+      const sourceRows = rows.filter(Boolean);
+      const primary = [...sourceRows].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))[0] || sourceRows[0];
+      const orgs = uniqueSorted(sourceRows.map(sourceOrganization));
+      const subject = humanList(orgs);
+      const signature = signatureForRow(primary);
+      const phrase = phase2ObligationPhrase(primary).text;
+
+      if (signature.polarity === "prohibit") {
+        const cleaned = phrase
+          .replace(/^crews to prohibit\s+/i, "")
+          .replace(/^crews to do not\s+/i, "")
+          .replace(/^do not\s+/i, "")
+          .replace(/^crews to\s+/i, "")
+          .replace(/\b(?:is|are) prohibited\b/gi, "")
+          .replace(/^prohibit\s+/i, "")
+          .trim();
+        return `${subject} ${pluralVerb(orgs, "prohibits", "prohibit")} ${ensureSentencePunctuation(cleaned || "this practice")}`;
+      }
+
+      if (signature.polarity === "permit" || signature.polarity === "permit-conditional") {
+        const sourceText = ensureSentencePunctuation(phase2PreferredObligationText(primary));
+        return `${subject} ${pluralVerb(orgs, "allows", "allow")} the following practice under the stated conditions: ${sourceText}`;
+      }
+
+      return `${subject} ${pluralVerb(orgs, "requires", "require")} ${ensureSentencePunctuation(phrase)}`;
+    }
+
+    function phase2ClauseForUnit(unit, cluster, context) {
+      const rows = unit.rows;
+      const primary = unit.primary;
+      const subjectKey = signatureForRow(primary).subjectKey;
+      let text;
+
+      if (subjectKey === "fall:trigger") {
+        const constraints = rows
+          .flatMap((row) => signatureForRow(row).numericConstraints.map((constraint) => ({ row, constraint: phase2NormalizedConstraint(constraint) })))
+          .filter((item) => item.constraint?.dimension === "length");
+        if (constraints.length) {
+          const feet = Math.min(...constraints.map((item) => item.constraint.baseValue));
+          text = fallTriggerStatement(rows, Number.isInteger(feet) ? feet : Number(feet.toFixed(2)));
+        }
+      }
+
+      if (!text && rows.every((row) => signatureForRow(row).polarity === "prohibit")) {
+        text = prohibitionStatement(rows, subjectKey);
+      }
+
+      if (!text) text = phase2GenericWhoWhatStatement(rows);
+
+      const sourceRows = uniqueSourceRows(rows);
+      const confidence = Math.min(cluster.confidence, ...rows.map((row) => signatureForRow(row).confidence));
+      return {
+        id: `P2-CLAUSE-${Math.abs(hashString(`${cluster.id}|${rows.map(phase2RowKey).join("|")}`))}`,
+        text: ensureSentencePunctuation(text),
+        subjectKey,
+        requirementKinds: uniqueSorted(rows.flatMap((row) => signatureForRow(row).kinds)),
+        sourceRows,
+        sourceRowKeys: sourceRows.map(phase2RowKey),
+        sourceRowIds: sourceRows.map((row) => row.id),
+        sourceOrganizations: uniqueSorted(sourceRows.map(sourceOrganization)),
+        confidence,
+        duplicateGroup: rows.length > 1,
+        suppressedRows: context.suppressedRows.filter((item) => item.governingKeys.some((key) => rows.some((row) => phase2RowKey(row) === key))).map((item) => item.row)
+      };
+    }
+
+    function phase2ComposeClauseText(clauses) {
+      const clean = clauses.map((clause) => cleanSentence(clause.text).replace(/[.!?]+$/, "")).filter(Boolean);
+      if (!clean.length) return "";
+      if (clean.length === 1) return `${clean[0]}.`;
+      if (clean.length === 2) return `${clean[0]}, and ${clean[1]}.`;
+      return clean.map((value) => `${value}.`).join(" ");
+    }
+
+    function phase2ConfidenceBand(value) {
+      if (value >= PHASE2.highConfidence) return "high";
+      if (value >= PHASE2.moderateConfidence) return "moderate";
+      return "low";
+    }
+
+    function phase2TitleForCluster(cluster, units) {
+      const knownKeys = uniqueSorted(units.flatMap((unit) => unit.rows.map((row) => signatureForRow(row).subjectKey)).filter(phase2KnownSubject));
+      if (knownKeys.length === 1 && PHASE2_SUBJECT_LABELS[knownKeys[0]]) return PHASE2_SUBJECT_LABELS[knownKeys[0]];
+      const subtopics = uniqueSorted(units.flatMap((unit) => unit.rows.map(phase2RowSubtopic)));
+      if (subtopics.length === 1 && subtopics[0] !== "other") return subtopicDefinition(cluster.fieldTopic, subtopics[0]).label;
+      const primary = units[0]?.primary;
+      return primary?.topic || primary?.category || topicDefinition(cluster.fieldTopic).label;
+    }
+
+    function phase2UniqueRows(rows) {
+      const seen = new Set();
+      return rows.filter((row) => {
+        const key = phase2RowKey(row);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function phase2MakeCard(cluster, units, context, options = {}) {
+      const clauses = units.map((unit) => phase2ClauseForUnit(unit, cluster, context));
+      const contributingRows = phase2UniqueRows(units.flatMap((unit) => unit.rows));
+      const contributingKeys = new Set(contributingRows.map(phase2RowKey));
+      const weakerRows = phase2UniqueRows(context.suppressedRows
+        .filter((item) => item.governingKeys.some((key) => contributingKeys.has(key)))
+        .map((item) => item.row));
+
+      const relationshipTypes = new Set();
+      if (units.length > 1) relationshipTypes.add("supplements");
+      if (units.some((unit) => unit.rows.length > 1)) relationshipTypes.add("duplicates");
+      context.suppressedRows.forEach((item) => {
+        if (item.governingKeys.some((key) => contributingKeys.has(key))) relationshipTypes.add(item.type);
+      });
+      if (options.relationshipType) relationshipTypes.add(options.relationshipType);
+
+      const relationshipType = relationshipTypes.has("conflicts")
+        ? "conflicts"
+        : relationshipTypes.has("supersedes")
+          ? "supersedes"
+          : relationshipTypes.has("supplements")
+            ? "supplements"
+            : relationshipTypes.has("duplicates")
+              ? "duplicates"
+              : options.reviewNeeded
+                ? "human-review"
+                : "independent";
+
+      const relationConfidences = context.relationships
+        .filter((relation) => contributingRows.some((row) => [relation.rowAKey, relation.rowBKey].includes(phase2RowKey(row))))
+        .map((relation) => relation.confidence)
+        .filter(Number.isFinite);
+      const resolutionConfidence = Math.max(0.45, Math.min(0.99,
+        relationConfidences.length
+          ? Math.min(...relationConfidences, cluster.confidence)
+          : Math.min(cluster.confidence, ...contributingRows.map((row) => signatureForRow(row).confidence))
+      ));
+
+      const statement = phase2ComposeClauseText(clauses);
+      const card = makeCard(contributingRows, {
+        id: options.id || `P2-GOV-${Math.abs(hashString(`${cluster.id}|${contributingRows.map(phase2RowKey).join("|")}`))}`,
+        title: options.title || phase2TitleForCluster(cluster, units),
+        fieldTopic: cluster.fieldTopic,
+        statement,
+        contributingRows,
+        weakerRows,
+        relationshipType,
+        relationshipReason: options.relationshipReason || context.relationships
+          .filter((relation) => relation.type !== "independent")
+          .map((relation) => relation.reason)
+          .filter(Boolean)[0] || "Unique governing obligation preserved."
+      });
+
+      card.phase2Version = PHASE2.version;
+      card.clusterId = cluster.id;
+      card.primarySubjectKey = cluster.primarySubjectKey;
+      card.subjectKeys = uniqueSorted(contributingRows.map((row) => signatureForRow(row).subjectKey));
+      card.clauses = clauses.map((clause) => ({
+        id: clause.id,
+        text: clause.text,
+        subjectKey: clause.subjectKey,
+        requirementKinds: clause.requirementKinds,
+        sourceRowIds: clause.sourceRowIds,
+        sourceOrganizations: clause.sourceOrganizations,
+        confidence: clause.confidence
+      }));
+      card.lineage = clauses.map((clause) => ({
+        clauseId: clause.id,
+        sourceRowIds: clause.sourceRowIds,
+        sourceOrganizations: clause.sourceOrganizations,
+        sourceReferences: clause.sourceRows.map((row) => row.sourceReference || row.citation),
+        sourceLinks: clause.sourceRows.map(resolveSourceLink)
+      }));
+      card.resolutionConfidence = resolutionConfidence;
+      card.confidenceBand = phase2ConfidenceBand(resolutionConfidence);
+      card.reviewNeeded = Boolean(options.reviewNeeded) || card.confidenceBand === "low";
+      card.suppressedDetails = context.suppressedRows
+        .filter((item) => weakerRows.includes(item.row))
+        .map((item) => ({
+          rowId: item.row.id,
+          source: sourceOrganization(item.row),
+          type: item.type,
+          reason: item.reason,
+          governingRowIds: item.governingKeys.map((key) => context.rowByKey.get(key)?.id).filter(Boolean)
+        }));
+      return card;
+    }
+
+    function resolveOperationalCluster(cluster) {
+      const rows = cluster.rows;
+      const rowByKey = new Map(rows.map((row) => [phase2RowKey(row), row]));
+      const keys = [...rowByKey.keys()];
+      const duplicateSet = phase2DisjointSet(keys);
+      const relationships = [];
+      const suppressed = new Map();
+
+      for (let i = 0; i < rows.length; i += 1) {
+        for (let j = i + 1; j < rows.length; j += 1) {
+          const rowA = rows[i];
+          const rowB = rows[j];
+          const relation = classifyPhase2Relationship(rowA, rowB);
+          const diagnostic = {
+            ...relation,
+            clusterId: cluster.id,
+            fieldTopic: cluster.fieldTopic,
+            subjectKey: cluster.primarySubjectKey,
+            rowAKey: phase2RowKey(rowA),
+            rowBKey: phase2RowKey(rowB),
+            rowAId: rowA.id,
+            rowBId: rowB.id,
+            sourceA: sourceOrganization(rowA),
+            sourceB: sourceOrganization(rowB)
+          };
+          relationships.push(diagnostic);
+
+          if (relation.type === "duplicates" && relation.confidence >= PHASE2.autoResolveConfidence) {
+            duplicateSet.union(phase2RowKey(rowA), phase2RowKey(rowB));
+          }
+
+          if (["supersedes", "conflicts"].includes(relation.type)
+            && relation.confidence >= PHASE2.autoResolveConfidence
+            && relation.governingRowKey
+            && relation.suppressedRowKey) {
+            const existing = suppressed.get(relation.suppressedRowKey);
+            const detail = {
+              row: rowByKey.get(relation.suppressedRowKey),
+              type: relation.type,
+              reason: relation.reason,
+              confidence: relation.confidence,
+              governingKeys: [relation.governingRowKey]
+            };
+            if (existing) {
+              existing.governingKeys = uniqueSorted([...existing.governingKeys, relation.governingRowKey]);
+              existing.confidence = Math.max(existing.confidence, relation.confidence);
+            } else if (detail.row) {
+              suppressed.set(relation.suppressedRowKey, detail);
+            }
+          }
+        }
+      }
+
+      const survivorRows = rows.filter((row) => !suppressed.has(phase2RowKey(row)));
+      const duplicateGroups = new Map();
+      survivorRows.forEach((row) => {
+        const root = duplicateSet.find(phase2RowKey(row));
+        if (!duplicateGroups.has(root)) duplicateGroups.set(root, []);
+        duplicateGroups.get(root).push(row);
+      });
+
+      const units = [...duplicateGroups.values()].map((groupRows, index) => ({
+        id: `${cluster.id}-UNIT-${index + 1}`,
+        rows: groupRows,
+        primary: [...groupRows].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))[0]
+      }));
+
+      const unitSet = phase2DisjointSet(units.map((unit) => unit.id));
+      const pairRelation = new Map();
+      for (let i = 0; i < units.length; i += 1) {
+        for (let j = i + 1; j < units.length; j += 1) {
+          let best = null;
+          units[i].rows.forEach((rowA) => {
+            units[j].rows.forEach((rowB) => {
+              const relation = classifyPhase2Relationship(rowA, rowB);
+              if (!best || relation.confidence > best.confidence) best = relation;
+            });
+          });
+          pairRelation.set(`${units[i].id}|${units[j].id}`, best);
+          if (best?.type === "supplements" && best.confidence >= PHASE2.autoResolveConfidence) {
+            unitSet.union(units[i].id, units[j].id);
+          }
+        }
+      }
+
+      const components = new Map();
+      units.forEach((unit) => {
+        const root = unitSet.find(unit.id);
+        if (!components.has(root)) components.set(root, []);
+        components.get(root).push(unit);
+      });
+
+      const context = {
+        relationships,
+        suppressedRows: [...suppressed.values()],
+        rowByKey,
+        pairRelation
+      };
+
+      const cards = [];
+      components.forEach((componentUnits) => {
+        const chunks = [];
+        for (let i = 0; i < componentUnits.length; i += PHASE2.maxClausesPerCard) {
+          chunks.push(componentUnits.slice(i, i + PHASE2.maxClausesPerCard));
+        }
+        chunks.forEach((chunk) => {
+          const reviewNeeded = chunk.some((unit) => relationships.some((relation) => (
+            relation.type === "human-review"
+            && relation.reviewNeeded
+            && unit.rows.some((row) => [relation.rowAKey, relation.rowBKey].includes(phase2RowKey(row)))
+          )));
+          cards.push(phase2MakeCard(cluster, chunk, context, { reviewNeeded }));
+        });
+      });
+
+      return { cards, diagnostics: relationships, suppressedRows: [...suppressed.values()] };
+    }
+
+    function phase2CanMergeSupplementCards(cardA, cardB) {
+      if (cardA.fieldTopic !== cardB.fieldTopic) return false;
+      if (cardA.reviewNeeded || cardB.reviewNeeded) return false;
+      if (cardA.confidenceBand === "low" || cardB.confidenceBand === "low") return false;
+      return cardA.subjectKeys.some((keyA) => cardB.subjectKeys.some((keyB) => phase2KnownSupplementPair(keyA, keyB)));
+    }
+
+    function phase2MergeSupplementCards(cards) {
+      const keys = cards.map((card) => card.id);
+      const set = phase2DisjointSet(keys);
+      for (let i = 0; i < cards.length; i += 1) {
+        for (let j = i + 1; j < cards.length; j += 1) {
+          if (phase2CanMergeSupplementCards(cards[i], cards[j])) set.union(cards[i].id, cards[j].id);
+        }
+      }
+
+      const components = new Map();
+      cards.forEach((card) => {
+        const root = set.find(card.id);
+        if (!components.has(root)) components.set(root, []);
+        components.get(root).push(card);
+      });
+
+      const merged = [];
+      components.forEach((group) => {
+        if (group.length === 1) {
+          merged.push(group[0]);
+          return;
+        }
+
+        const sorted = [...group].sort((a, b) => a.id.localeCompare(b.id));
+        const chunks = [];
+        for (let i = 0; i < sorted.length; i += PHASE2.maxClausesPerCard) chunks.push(sorted.slice(i, i + PHASE2.maxClausesPerCard));
+        chunks.forEach((chunk) => {
+          if (chunk.length === 1) {
+            merged.push(chunk[0]);
+            return;
+          }
+          const contributingRows = phase2UniqueRows(chunk.flatMap((card) => card.contributingRows));
+          const weakerRows = phase2UniqueRows(chunk.flatMap((card) => card.weakerRows));
+          const clauses = chunk.flatMap((card) => card.clauses || []);
+          const subjectKeys = uniqueSorted(chunk.flatMap((card) => card.subjectKeys || []));
+          const fieldTopic = chunk[0].fieldTopic;
+          const title = subjectKeys.includes("fall:trigger") && subjectKeys.includes("fall:plan")
+            ? "Fall Protection"
+            : topicDefinition(fieldTopic).label;
+          const statement = phase2ComposeClauseText(clauses);
+          const card = makeCard(contributingRows, {
+            id: `P2-GOV-SUPPLEMENT-${Math.abs(hashString(chunk.map((item) => item.id).join("|")))}`,
+            title,
+            fieldTopic,
+            statement,
+            contributingRows,
+            weakerRows,
+            relationshipType: "supplements",
+            relationshipReason: "Known compatible governing obligations were composed into one field answer while preserving clause-level source lineage."
+          });
+          card.phase2Version = PHASE2.version;
+          card.clusterId = chunk.map((item) => item.clusterId).join("+");
+          card.primarySubjectKey = subjectKeys[0] || "";
+          card.subjectKeys = subjectKeys;
+          card.clauses = clauses;
+          card.lineage = chunk.flatMap((item) => item.lineage || []);
+          card.resolutionConfidence = Math.min(...chunk.map((item) => item.resolutionConfidence));
+          card.confidenceBand = phase2ConfidenceBand(card.resolutionConfidence);
+          card.reviewNeeded = false;
+          card.suppressedDetails = chunk.flatMap((item) => item.suppressedDetails || []);
+          merged.push(card);
+        });
+      });
+      return merged;
+    }
+
+    function phase2BuildStats(rows, clusters, cards, diagnostics) {
+      const relationshipCounts = diagnostics.reduce((acc, item) => {
+        acc[item.type] = (acc[item.type] || 0) + 1;
+        return acc;
+      }, {});
+      const suppressedKeys = new Set(cards.flatMap((card) => card.weakerRows.map(phase2RowKey)));
+      const sourceKeys = new Set(rows.map(phase2RowKey));
+      const finalClauseCount = cards.reduce((sum, card) => sum + (card.clauses?.length || 1), 0);
+      const reviewCards = cards.filter((card) => card.reviewNeeded);
+      const resolvedConflicts = diagnostics.filter((item) => item.type === "conflicts" && !item.reviewNeeded && item.suppressedRowKey).length;
+      return {
+        version: PHASE2.version,
+        rawRequirements: rows.length,
+        uniqueRawRequirementKeys: sourceKeys.size,
+        operationalClusters: clusters.length,
+        finalGoverningCards: cards.length,
+        finalGoverningClauses: finalClauseCount,
+        suppressedSourceRequirements: suppressedKeys.size,
+        compressionRatio: rows.length ? Number((cards.length / rows.length).toFixed(3)) : 0,
+        relationshipCounts,
+        resolvedConflicts,
+        humanReviewCards: reviewCards.length,
+        highConfidenceCards: cards.filter((card) => card.confidenceBand === "high").length,
+        moderateConfidenceCards: cards.filter((card) => card.confidenceBand === "moderate").length,
+        lowConfidenceCards: cards.filter((card) => card.confidenceBand === "low").length
+      };
+    }
+
+    function buildPhase2GoverningCards(rows) {
+      const clusters = buildOperationalClusters(rows);
+      const cards = [];
+      const diagnostics = [];
+
+      clusters.forEach((cluster) => {
+        const resolved = resolveOperationalCluster(cluster);
+        cards.push(...resolved.cards);
+        diagnostics.push(...resolved.diagnostics);
+      });
+
+      let finalCards = phase2MergeSupplementCards(cards);
+      finalCards = finalCards.sort((a, b) => (
+        CONFIG.fieldTopics.findIndex((topic) => topic.id === a.fieldTopic) - CONFIG.fieldTopics.findIndex((topic) => topic.id === b.fieldTopic)
+        || priorityRank(a.priority) - priorityRank(b.priority)
+        || String(a.title || "").localeCompare(String(b.title || ""))
+      ));
+
+      state.phase2Clusters = clusters;
+      state.phase2Diagnostics = diagnostics;
+      state.phase2Stats = phase2BuildStats(rows, clusters, finalCards, diagnostics);
+      return finalCards;
     }
 
     function buildStack() {
@@ -2968,7 +3903,7 @@
 
       state.signatureStats = summarizeSignatures(state.generatedRows);
       state.relationshipDiagnostics = analyzeRequirementRelationships(state.generatedRows);
-      state.governingCards = buildGoverningCards(state.generatedRows);
+      state.governingCards = buildPhase2GoverningCards(state.generatedRows);
       logRelationshipDiagnostics();
       state.currentSelection = selection;
       state.activeTopic = "";
@@ -3257,8 +4192,9 @@
     function exportStackCsv() {
       if (!state.governingCards.length) return;
       const headers = [
-        "Field Topic", "Governing Statement", "Priority", "Contributing Sources", "Source Requirement IDs",
-        "Source References", "Source Links", "Suppressed Weaker Requirement IDs"
+        "Field Topic", "Operational Subtopic", "Governing Statement", "Priority", "Resolution Type", "Resolution Confidence",
+        "Contributing Sources", "Source Requirement IDs", "Source References", "Source Links",
+        "Suppressed Weaker Requirement IDs", "Operational Cluster ID", "Clause Source Lineage"
       ];
       const cards = state.activeTopic && state.activeSubtopic
         ? subtopicCards(state.activeTopic, state.activeSubtopic)
@@ -3267,13 +4203,18 @@
           : state.governingCards.filter(advancedCardMatches);
       const rows = cards.map((card) => [
         topicDefinition(card.fieldTopic).label,
+        subtopicDefinition(card.fieldTopic, classifyCardSubtopic(card)).label,
         card.statement,
         card.priority,
+        card.relationshipType || "independent",
+        Number.isFinite(card.resolutionConfidence) ? card.resolutionConfidence.toFixed(2) : "",
         uniqueSorted(card.contributingRows.map(sourceOrganization)).join(" | "),
         card.contributingRows.map((row) => row.id).join(" | "),
         card.contributingRows.map((row) => row.sourceReference || row.citation).join(" | "),
         uniqueSorted(card.contributingRows.map(resolveSourceLink)).join(" | "),
-        card.weakerRows.map((row) => row.id).join(" | ")
+        card.weakerRows.map((row) => row.id).join(" | "),
+        card.clusterId || "",
+        (card.lineage || []).map((item) => `${item.clauseId}: ${item.sourceOrganizations.join(" + ")} -> ${item.sourceRowIds.join(" + ")}`).join(" || ")
       ]);
       const csv = [headers, ...rows].map((row) => row.map(csvEscape).join(",")).join("\r\n");
       const blob = new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" });
