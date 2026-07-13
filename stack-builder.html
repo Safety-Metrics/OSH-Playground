@@ -430,17 +430,9 @@
     .scope-head {
       display: flex;
       align-items: end;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 14px;
       margin-bottom: 12px;
-    }
-
-    .scope-note {
-      max-width: 680px;
-      color: rgba(242, 239, 235, .6);
-      font-size: 12px;
-      line-height: 1.45;
-      text-align: right;
     }
 
     .scope-grid {
@@ -502,6 +494,10 @@
       font-size: 13px;
       line-height: 1.4;
       text-align: right;
+    }
+
+    .builder-message:empty {
+      display: none;
     }
 
     .results { display: none; }
@@ -1159,19 +1155,10 @@
       transition: transform 150ms ease, border-color 150ms ease;
     }
 
-    .subtopic-tile::before {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      content: "";
-      background: rgba(159, 28, 31, .82);
-    }
-
     .subtopic-tile:hover,
     .subtopic-tile:focus-visible {
-      border-color: rgba(159, 28, 31, .92);
+      border-color: var(--cooper-red);
+      box-shadow: 0 0 0 2px rgba(159, 28, 31, .34), var(--shadow-md);
       transform: translateY(-2px);
       outline: none;
     }
@@ -1293,7 +1280,7 @@
       .nav-link, .export-btn, .ghost-btn { flex: 1; }
       .selector-grid, .feed-grid, .cards, .field-search-row { grid-template-columns: 1fr; }
       .toolbar .clear-btn { grid-column: auto; }
-      .scope-note, .builder-message { text-align: left; }
+      .builder-message { text-align: left; }
       .build-btn { width: 100%; }
       .requirement-card { min-height: 340px; }
     }
@@ -1411,7 +1398,6 @@
         <div class="scope-section">
           <div class="scope-head">
             <div class="section-label">2. Tell Us What Work You Are Doing</div>
-            <div class="scope-note">Select every work activity that applies. Selected work topics are moved to the front when your project requirements are built.</div>
           </div>
           <div id="scopeGrid" class="scope-grid"></div>
         </div>
@@ -2008,7 +1994,7 @@
       } else if (!selectedLayersReady) {
         els.builderMessage.textContent = "A selected source feed is unavailable. Turn that source off or wait for the feed to recover.";
       } else {
-        els.builderMessage.textContent = "Ready. Select the project, select the work, and show what governs.";
+        els.builderMessage.textContent = "";
       }
     }
 
