@@ -142,27 +142,26 @@
 
     .hero {
       max-width: 1180px;
-      margin: 0 auto 24px;
-      padding: 18px 22px 8px;
+      margin: 0 auto 26px;
+      padding: 0 22px;
       text-align: center;
     }
 
     .hero-eyebrow {
       display: inline-flex;
-      align-items: center;
-      justify-content: center;
       gap: 10px;
-      margin-bottom: 12px;
+      align-items: center;
+      margin-bottom: 14px;
       color: var(--cloud);
       font-family: var(--font-condensed);
       font-size: 13px;
-      font-weight: 900;
-      line-height: 1.2;
+      font-weight: 950;
       letter-spacing: .18em;
       text-transform: uppercase;
     }
 
     .hero-eyebrow::before {
+      display: inline-block;
       width: 36px;
       height: 2px;
       content: "";
@@ -170,23 +169,27 @@
     }
 
     .hero h1 {
-      max-width: 980px;
+      max-width: 1180px;
       margin: 0 auto;
       color: var(--cream);
       font-family: var(--font-display);
-      font-size: clamp(44px, 6vw, 82px);
-      font-weight: 900;
+      font-size: clamp(40px, 5vw, 74px);
       line-height: .92;
-      letter-spacing: -.02em;
-      text-transform: none;
+      letter-spacing: 0;
     }
 
     .hero p {
-      max-width: 900px;
-      margin: 18px auto 0;
-      color: rgba(242, 239, 235, .76);
+      max-width: 860px;
+      margin: 16px auto 0;
+      color: rgba(242, 239, 235, .78);
       font-size: 15px;
-      line-height: 1.6;
+      line-height: 1.55;
+    }
+
+    @media (min-width: 900px) {
+      .hero h1 {
+        white-space: nowrap;
+      }
     }
 
     .status-panel {
@@ -344,28 +347,27 @@
       min-height: 52px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 0 12px 0 14px;
+      justify-content: center;
+      padding: 0;
       border: 1px solid rgba(93, 92, 90, .9);
       border-radius: 14px;
       background: rgba(40, 40, 40, .92);
       cursor: pointer;
       overflow: hidden;
+      transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
     }
 
-    .baseline-toggle-copy {
-      min-width: 0;
-      color: var(--cream);
-      font-size: 12px;
-      font-weight: 700;
-      line-height: 1.2;
-      white-space: nowrap;
+    .baseline-toggle-box:has(input:checked) {
+      border-color: rgba(159, 28, 31, .95);
+      background: linear-gradient(135deg, var(--cooper-red), var(--burgundy));
+      box-shadow: inset 0 0 0 1px rgba(242, 239, 235, .06);
     }
 
     .toggle-control {
       position: relative;
       flex: 0 0 auto;
+      display: grid;
+      place-items: center;
     }
 
     .toggle-control input {
@@ -397,8 +399,8 @@
     }
 
     .toggle-control input:checked + .toggle-track {
-      border-color: rgba(159, 28, 31, .95);
-      background: var(--cooper-red);
+      border-color: rgba(242, 239, 235, .35);
+      background: rgba(17, 17, 18, .55);
     }
 
     .toggle-control input:checked + .toggle-track .toggle-knob {
@@ -1378,10 +1380,9 @@
 
           <div class="field">
             <label for="cooperToggle">Include Cooper Steel Policy</label>
-            <label class="baseline-toggle-box" for="cooperToggle">
-              <span class="baseline-toggle-copy">Use Cooper Requirements In The Results</span>
+            <label class="baseline-toggle-box" for="cooperToggle" title="Toggle Cooper Steel policy requirements on or off">
               <span class="toggle-control">
-                <input id="cooperToggle" type="checkbox" checked>
+                <input id="cooperToggle" type="checkbox" checked aria-label="Include Cooper Steel policy requirements">
                 <span class="toggle-track"><span class="toggle-knob"></span></span>
               </span>
             </label>
