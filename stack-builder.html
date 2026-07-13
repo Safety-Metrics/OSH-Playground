@@ -1816,7 +1816,7 @@
 
 
 
-      <section id="phase3Panel" class="phase3-panel" aria-label="Project intelligence" hidden>
+      <section id="phase3Panel" class="phase3-panel" aria-label="Project intelligence engine" hidden style="display:none !important;" aria-hidden="true">
         <div class="phase3-panel-head">
           <div>
             <div class="phase3-kicker">Project Intelligence</div>
@@ -5166,20 +5166,14 @@
     }
 
     function phase3RenderPanel() {
-      if (!state.governingCards.length || !state.currentSelection) {
-        els.phase3Panel.hidden = true;
-        return;
-      }
-      const project = phase3ActiveProject();
-      const actionCount = Object.values(state.phase3ActionGroups).reduce((sum, cards) => sum + cards.length, 0);
-      els.phase3Panel.hidden = false;
-      els.phase3ProjectName.textContent = project?.name || "Current Project Stack";
-      els.phase3SummaryText.textContent = `${state.governingCards.length.toLocaleString()} governing answers • ${actionCount.toLocaleString()} timed field actions • ${state.phase3AttentionItems.length.toLocaleString()} needing attention`;
-      els.phase3ChangeCount.textContent = String(state.phase3Changes.length);
-      els.phase3ActionCount.textContent = String(actionCount);
-      els.phase3AttentionCount.textContent = String(state.phase3AttentionItems.length);
-      els.phase3ReviewButton.hidden = !(project && state.phase3PreviousSnapshot && state.phase3Changes.length);
-      phase3RenderDetail();
+      // Phase 3 intelligence remains active behind the scenes, but the field-facing
+      // dashboard panel is intentionally suppressed to avoid noisy or alarming counts.
+      // Saved projects, snapshots, change detection, action grouping, and attention
+      // logic continue to run for future use and developer inspection.
+      els.phase3Panel.hidden = true;
+      els.phase3Detail.hidden = true;
+      els.phase3Detail.innerHTML = "";
+      els.phase3ReviewButton.hidden = true;
     }
 
     function phase3RefreshCurrentProjectIntelligence() {
