@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111112">
   <title>Cooper Steel Project Requirement Stack Builder</title>
-  <!-- Phase 3.0 project intelligence: saved profiles, snapshots, field-facing change intelligence, action matrix, readiness summary -->
+  <!-- Phase 2.2 Atomic Governing Answer Engine + Phase 3 project memory; one visible card answers one operational field question -->
   <link rel="icon" href="data:;base64,=">
 
   <style>
@@ -2167,6 +2167,9 @@
       phase2Stats: {},
       phase2SupportRows: [],
       phase2CoverageDiagnostics: [],
+      phase2AtomicViolations: [],
+      phase2AtomicizationDiagnostics: [],
+      phase2FormNoiseViolations: [],
       reasoningValidation: null,
       integritySafeguardsApplied: [],
       activeTopic: "",
@@ -2722,6 +2725,19 @@
     }
 
     function classifyCardSubtopic(card) {
+      const knownSubjects = uniqueSorted([
+        card.primarySubjectKey,
+        ...(card.subjectKeys || []),
+        ...(card.signatures || []).map((signature) => signature.subjectKey)
+      ].filter(Boolean));
+
+      // Atomic routing: a known subject owns its subtopic. The final statement text is not allowed
+      // to drag a trigger card into rescue, PFAS, scaffold, or another unrelated bucket.
+      for (const subjectKey of knownSubjects) {
+        const mapped = PHASE2_SUBJECT_SUBTOPICS[subjectKey];
+        if (mapped && subtopicDefinitions(card.fieldTopic).some((subtopic) => subtopic.id === mapped)) return mapped;
+      }
+
       const definitions = subtopicDefinitions(card.fieldTopic);
       const candidates = definitions
         .filter((subtopic) => subtopic.id !== "other")
@@ -2808,8 +2824,17 @@
       unknown: 10
     });
 
+    function sourceObligationText(row) {
+      const primary = [row.topic, row.requirement].filter(Boolean).join(" ").trim();
+      if (primary.length >= 16) return primary;
+      const fallback = [primary, row.action].filter(Boolean).join(" ").trim();
+      return fallback || primary;
+    }
+
     function reasoningStrongText(row) {
-      return [row.category, row.topic, row.dashboardGroup, row.requirement, row.trigger]
+      // Reasoning context comes from the actual source obligation first. Broad applicability triggers
+      // and generic dashboard actions are deliberately excluded so they cannot hijack subject or scope.
+      return [row.category, row.topic, row.requirement, row.tags]
         .filter(Boolean).join(" ").toLowerCase();
     }
 
@@ -2821,7 +2846,7 @@
     }
 
     function extractExceptionProfile(row) {
-      const text = [row.requirement, row.trigger].filter(Boolean).join(" ");
+      const text = sourceObligationText(row);
       const clauses = [];
       const patterns = [
         /\bexcept(?: when| where| for)?\b[^.;]{0,220}/gi,
@@ -2843,7 +2868,7 @@
     }
 
     function extractConditionProfile(row) {
-      const text = [row.requirement, row.trigger].filter(Boolean).join(" ");
+      const text = sourceObligationText(row);
       const clauses = [];
       const pattern = /\b(?:if|when|where|only if|only when|provided that|subject to|during)\b[^.;]{0,180}/gi;
       let match;
@@ -2914,16 +2939,11 @@
     }
 
     function canonicalRequirementText(row) {
-      return normalizeComparisonText([
-        row.topic,
-        row.requirement,
-        row.action,
-        row.trigger
-      ].filter(Boolean).join(" "));
+      return normalizeComparisonText(sourceObligationText(row));
     }
 
     function primaryObligationFingerprint(row) {
-      return normalizeComparisonText([row.topic, row.requirement].filter(Boolean).join(" "));
+      return normalizeComparisonText(sourceObligationText(row));
     }
 
     function comparisonText(row) {
@@ -2934,10 +2954,10 @@
     // trigger/action fields. A generic crane trigger that mentions "critical lifts" must never
     // turn every crane inspection, signal-person, power-line, or assembly rule into a critical-lift rule.
     function subjectComparisonText(row) {
-      const primary = [row.topic, row.requirement].filter(Boolean).join(" ").trim();
+      const primary = sourceObligationText(row);
       // When actual source wording is available, broad category/dashboard/trigger language must not
-      // hijack the operational subject. Only use supporting taxonomy when the primary source text is
-      // genuinely too sparse to identify anything useful.
+      // hijack the operational subject. Only use supporting taxonomy when the source obligation itself
+      // is genuinely too sparse to identify anything useful.
       if (primary.length >= 24) return primary.toLowerCase();
       return [primary, row.tags, row.category, row.dashboardGroup].filter(Boolean).join(" ").toLowerCase();
     }
@@ -2946,7 +2966,7 @@
     // applicability triggers may contain "do not", "stop work", or "critical lift" language
     // that describes execution controls but does not change what the source requirement actually is.
     function polarityComparisonText(row) {
-      return [row.topic, row.requirement].filter(Boolean).join(" ").toLowerCase();
+      return sourceObligationText(row).toLowerCase();
     }
 
     function hasConditionalRestriction(text) {
@@ -2963,6 +2983,7 @@
       if (/\b(?:prohibit(?:ed|s)?|not permitted|not allowed|forbidden)\b/i.test(value)) return true;
       if (hasConditionalRestriction(value)) return false;
       if (/\b(?:shall not|must not)\b/i.test(value)) return true;
+      if (/\bcannot\s+(?:be\s+)?(?:use|used|operate|operated|perform|performed|enter|work|ride|stand|lift|hoist|connect|remove|modify|bypass|begin|start|continue|access|install)\b/i.test(value)) return true;
       return /\bmay not\s+(?:use|operate|perform|enter|work|ride|stand|lift|hoist|connect|remove|modify|bypass|begin|start|continue|access|install|be used|be operated|be performed|be permitted)\b/i.test(value);
     }
 
@@ -2995,6 +3016,8 @@
         if (mewp && /(?:harness|lanyard|tie[- ]?off|fall restraint|fall arrest)/.test(text)) return "fall:mewp-restraint";
         if (/leading edge/.test(text)) return "fall:leading-edge";
         if (/(?:floor|deck|roof) opening|hole cover|cover(?:s)?.{0,50}(?:secure|mark|label)/.test(text)) return "fall:openings-covers";
+        if (/warning line/.test(text)) return "fall:warning-lines";
+        if (/fall protection/.test(text) && /train(?:ed|ing)?/.test(text)) return "fall:training";
         if (/guardrail/.test(text)) return "fall:guardrails";
         if (/anchor(?:age)?|5,?000\s*(?:lb|pound)/.test(text)) return "fall:anchorage";
         if (scaffold && /inspect|inspection|tagged out|remove(?:d)? from service|damaged|weakened/.test(text)) return "fall:scaffold-inspection";
@@ -3206,7 +3229,7 @@
     }
 
     function extractNumericConstraints(row) {
-      const text = comparisonText(row);
+      const text = sourceObligationText(row).toLowerCase();
       const specs = [
         { unit: "feet", regex: /(\d+(?:\.\d+)?)\s*(?:feet|foot|ft\b)/gi },
         { unit: "inches", regex: /(\d+(?:\.\d+)?)\s*(?:inches|inch|in\b)/gi },
@@ -3266,7 +3289,7 @@
     }
 
     function detectRequirementKinds(row) {
-      const text = comparisonText(row);
+      const text = sourceObligationText(row).toLowerCase();
       const strongText = `${row.category || ""} ${row.topic || ""} ${row.requirement || ""}`.toLowerCase();
       const kinds = [];
       const add = (value) => { if (!kinds.includes(value)) kinds.push(value); };
@@ -3316,7 +3339,7 @@
       const authority = sourceAuthorityProfile(row);
 
       return {
-        version: "2.1-reasoning-core",
+        version: "2.2-atomic-reasoning-core",
         subjectKey,
         subjectFamily: subjectKey.includes(":") ? subjectKey.split(":")[0] : row.fieldTopic,
         fieldTopic: row.fieldTopic,
@@ -3510,6 +3533,232 @@
       const text = cleanSentence(value);
       if (!text) return "";
       return /[.!?]$/.test(text) ? text : `${text}.`;
+    }
+
+
+    /* ---------- Phase 2.2 Atomic Source Cleanup: forms, checklists, and one-question-per-card ---------- */
+
+    function phase22NormalizeOcrText(value) {
+      return String(value || "")
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+        .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+        .replace(/[\u00B4\u0060]/g, "'")
+        .replace(/\bshall\s+b\s+taken\b/gi, "shall be taken")
+        .replace(/\bea\s+ch\b/gi, "each")
+        .replace(/\bDa\s+ta\b/g, "Data")
+        .replace(/\bHei\s+ght\b/g, "Height")
+        .replace(/\b3Danger\b/gi, "Danger")
+        .replace(/\b(\d+(?:\.\d+)?)\s*-\s*ft\b/gi, "$1 feet")
+        .replace(/\b(\d+(?:\.\d+)?)\s*'(?=\s|$|[.,;:)])/g, "$1 feet")
+        .replace(/\bproper distance height\b/gi, "proper distance and height")
+        .replace(/\bmust posted\b/gi, "must be posted")
+        .replace(/[☐☑☒□■]/g, " ")
+        .replace(/\[\s*\]/g, " ")
+        .replace(/_{3,}/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function phase22LooksLikeFormTemplate(row) {
+      const requirement = phase22NormalizeOcrText(row.requirement);
+      const context = phase22NormalizeOcrText(`${row.topic || ""} ${row.sourceReference || ""}`);
+      const yesNoCount = (requirement.match(/\bYES\s+NO(?:\s+N\/?A)?\b/gi) || []).length
+        + (requirement.match(/\bYes\s+No(?:\s+N\/?A)?\b/g) || []).length;
+      const questionCount = (requirement.match(/\?/g) || []).length;
+      return yesNoCount > 0
+        || /\bcircle\s+YES\b/i.test(requirement)
+        || /\bcompetent person initial here\b/i.test(requirement)
+        || /\brequired training\s+yes\s+no\b/i.test(requirement)
+        || /\bchecklist\b/i.test(context) && questionCount >= 2
+        || /\b(?:exhibit|permit|form)\b/i.test(context) && questionCount >= 3;
+    }
+
+    function phase22CleanBooleanAndFormNoise(value) {
+      return phase22NormalizeOcrText(value)
+        .replace(/\b(?:YES\s+NO(?:\s+N\/?A)?|YES\/?NO(?:\/?N\/?A)?|YES\s*\/\s*NO(?:\s*\/\s*N\/?A)?)\b/gi, " | ")
+        .replace(/\b(?:Yes\s+No(?:\s+N\/?A)?|Yes\/?No(?:\/?N\/?A)?)\b/g, " | ")
+        .replace(/\b(?:circle|mark|check)\s+(?:YES|NO|N\/?A)(?:\s*,?\s*(?:YES|NO|N\/?A))*\b/gi, " ")
+        .replace(/\s*\?\s*/g, "? | ")
+        .replace(/\)\s+(?=(?:Do|Does|Are|Is|Have|Has|Will|Was|Were|Can)\b)/g, ") | ")
+        .replace(/\s+\|\s+/g, " | ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function phase22StripFormLeadIn(value) {
+      let text = cleanSentence(value)
+        .replace(/^NOTE\s*:\s*/i, "")
+        .replace(/^the following protections shall be taken by (?:the )?contractor performing the work\s*:\s*/i, "")
+        .replace(/^the following protections shall be taken\s*:\s*/i, "")
+        .replace(/^answer the following when evaluating your work\s*[^:]*:\s*/i, "")
+        .replace(/^check ppe required\s*/i, "")
+        .replace(/^competent person initial here\s*/i, "")
+        .trim();
+
+      // Form labels by themselves are not field requirements. Remove them when they only prefix a real clause.
+      text = text.replace(/^(?:fall protection plan|required training|crane and\/?or hoisting equipment to be utilized|rated gross capacity|location of aed)\s*:\s*/i, "");
+      return cleanSentence(text);
+    }
+
+    function phase22CapFirst(value) {
+      const text = String(value || "").trim();
+      return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+    }
+
+    function phase22DeclarativizeChecklistQuestion(value, formContext = false) {
+      let text = cleanSentence(value).replace(/\?$/, "").trim();
+      if (!formContext || !text) return text;
+      let match;
+
+      match = text.match(/^Do\s+(.+?)\s+have\s+(.+)$/i);
+      if (match) return `${phase22CapFirst(match[1])} must have ${phase2LowerFirst(match[2])}`;
+
+      match = text.match(/^Does\s+(.+?)\s+have\s+(.+)$/i);
+      if (match) return `${phase22CapFirst(match[1])} must have ${phase2LowerFirst(match[2])}`;
+
+      match = text.match(/^Have\s+(.+?)\s+been\s+(.+)$/i);
+      if (match) return `${phase22CapFirst(match[1])} must be ${phase2LowerFirst(match[2])}`;
+
+      match = text.match(/^Has\s+(.+?)\s+been\s+(.+)$/i);
+      if (match) return `${phase22CapFirst(match[1])} must be ${phase2LowerFirst(match[2])}`;
+
+      match = text.match(/^Are\s+(.+?)\s+(protected\b.+|provided\b.+|trained\b.+|maintained\b.+|required\b.+|available\b.+|current\b.+|secured\b.+|posted\b.+)$/i);
+      if (match) return `${phase22CapFirst(match[1])} must be ${phase2LowerFirst(match[2])}`;
+
+      match = text.match(/^Is\s+(.+?)\s+(protected\b.+|provided\b.+|trained\b.+|maintained\b.+|required\b.+|available\b.+|current\b.+|secured\b.+|posted\b.+)$/i);
+      if (match) return `${phase22CapFirst(match[1])} must be ${phase2LowerFirst(match[2])}`;
+
+      match = text.match(/^Will\s+(.+?)\s+be\s+(.+)$/i);
+      if (match) return `${phase22CapFirst(match[1])} must be ${phase2LowerFirst(match[2])}`;
+
+      match = text.match(/^Can\s+(.+?)\s+be\s+(.+)$/i);
+      if (match) return `${phase22CapFirst(match[1])} must be ${phase2LowerFirst(match[2])}`;
+
+      return text;
+    }
+
+    function phase22SplitFormClauses(value) {
+      const cleaned = phase22CleanBooleanAndFormNoise(value);
+      if (!cleaned) return [];
+
+      const primarySegments = cleaned
+        .split(/\s*\|\s*|(?<=[.!])\s+(?=[A-Z0-9])/g)
+        .map(phase22StripFormLeadIn)
+        .filter(Boolean);
+
+      const clauses = [];
+      primarySegments.forEach((segment) => {
+        const nested = segment.split(/\s*;\s*(?=(?:All|Any|Each|Every|Contractor|Subcontractor|Employees?|Workers?|Personnel|Warning lines?|Guardrails?|Floor holes?|Roof holes?|Safety Monitoring|Tool tethering)\b)/i);
+        nested.map(phase22StripFormLeadIn).filter(Boolean).forEach((item) => clauses.push(item));
+      });
+      return clauses;
+    }
+
+    function phase22ClauseLooksActionable(value, formContext = false) {
+      const text = cleanSentence(value);
+      if (!text || text.length < 14) return false;
+      if (/^(?:yes|no|n\/?a|other|none|name|date|location|make\/?model|attachment|rated gross capacity|boom length|max fork height|pit capacity)\b/i.test(text)) return false;
+      if (/^(?:fall protection plan|required training|ppe required|competent person initial here)\s*:?$/i.test(text)) return false;
+      if (/\b(?:must|shall|required to|requires?|prohibit(?:ed|s)?|not permitted|not allowed|may not|must not|cannot|will be|will have|at least|minimum|maximum|prior to|before each|before use|before work|inspected|trained|provided|maintained|re-installed|reinstalled)\b/i.test(text)) return true;
+      if (formContext && /^(?:Do|Does|Are|Is|Have|Has|Will|Can)\b/i.test(text)) return true;
+      return false;
+    }
+
+    function phase22AtomicTopicForClause(clause, row) {
+      const text = cleanSentence(clause).toLowerCase();
+      if (/warning line/.test(text) && /15\s*[- ]?ft|15\s*feet|unprotected side|unprotected edge/.test(text)) return "Warning Line Setback";
+      if (/warning line/.test(text) && /flagging|signage|danger/.test(text)) return "Warning Line Flagging & Signage";
+      if (/warning line/.test(text)) return "Warning Line Requirements";
+      if (/floor hole|roof hole|shaft way|opening/.test(text) && /hard rail|guardrail|barricade|cover/.test(text)) return "Floor & Roof Opening Protection";
+      if (/guardrail/.test(text) && /re-?install/.test(text)) return "Guardrail Reinstallation";
+      if (/guardrail/.test(text) && /removal/.test(text) && /training/.test(text)) return "Fall Protection Training Before Guardrail Removal";
+      if (/other trades|all trades/.test(text) && /fall hazard/.test(text)) return "Protect Other Trades Before Guardrail Removal";
+      if (/perimeter cable/.test(text) && /inspect/.test(text)) return "Perimeter Cable Inspection";
+      if (/fall protection equipment/.test(text) && /inspect/.test(text)) return "Fall Protection Equipment Inspection";
+      if (/forklift operator/.test(text) && /certif|evaluat|train/.test(text)) return "Forklift Operator Qualification";
+      if (/cpr|first aid/.test(text) && /crew member|personnel|employee/.test(text)) return "CPR & First Aid Coverage";
+      if (/backup documentation/.test(text)) return "Required Documentation Availability";
+      return cleanSentence(row.topic || row.category || "Field Requirement");
+    }
+
+    function phase22AtomicizeFormRow(row) {
+      if (!phase22LooksLikeFormTemplate(row)) return { rows: [row], diagnostics: [] };
+
+      const rawClauses = phase22SplitFormClauses(row.requirement);
+      const formContext = true;
+      const clauses = [];
+      const seen = new Set();
+
+      rawClauses.forEach((rawClause) => {
+        const declarative = phase22DeclarativizeChecklistQuestion(rawClause, formContext)
+          .replace(/^\((.+)\)$/s, "$1")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (!phase22ClauseLooksActionable(declarative, formContext)) return;
+        const canonical = normalizeComparisonText(declarative);
+        if (!canonical || seen.has(canonical)) return;
+        seen.add(canonical);
+        clauses.push(declarative);
+      });
+
+      if (!clauses.length) {
+        return {
+          rows: [],
+          diagnostics: [{
+            type: "suppressed-form-template-noise",
+            parentId: row.id,
+            source: sourceOrganization(row),
+            reason: "Form/checklist row contained no safely extractable operational obligation; raw form text was kept out of the field UI."
+          }]
+        };
+      }
+
+      const derivedRows = clauses.map((clause, index) => ({
+        ...row,
+        id: `${row.id}-A${index + 1}`,
+        topic: phase22AtomicTopicForClause(clause, row),
+        requirement: ensureSentencePunctuation(clause),
+        action: "",
+        trigger: row.trigger,
+        parentSourceId: row.id,
+        atomicDerived: true,
+        atomicClauseIndex: index + 1,
+        atomicSourceRequirement: row.requirement
+      }));
+
+      return {
+        rows: derivedRows,
+        diagnostics: [{
+          type: "atomicized-form-template",
+          parentId: row.id,
+          source: sourceOrganization(row),
+          atomicRowIds: derivedRows.map((item) => item.id),
+          atomicCount: derivedRows.length
+        }]
+      };
+    }
+
+    function phase22AtomicizeSourceRows(rows) {
+      const output = [];
+      const diagnostics = [];
+      rows.forEach((row) => {
+        const result = phase22AtomicizeFormRow(row);
+        output.push(...result.rows);
+        diagnostics.push(...result.diagnostics);
+      });
+      state.phase2AtomicizationDiagnostics = diagnostics;
+      return output;
+    }
+
+    function phase22StatementHasFormNoise(value) {
+      const text = String(value || "");
+      return /\bYES\s+NO(?:\s+N\/?A)?\b/i.test(text)
+        || /\bYes\s+No(?:\s+N\/?A)?\b/.test(text)
+        || /\bcircle\s+YES\b/i.test(text)
+        || /[☐☑☒□■]/.test(text)
+        || /\bcompetent person initial here\b/i.test(text);
     }
 
     function genericRowStatement(row) {
@@ -3781,10 +4030,11 @@
 
       console.info("[Phase 1.8] Requirement signatures generated", state.signatureStats);
       console.info("[Phase 1.9] Relationship engine summary", counts);
-      console.info("[Phase 2.1 S-Tier] Governing requirement engine", state.phase2Stats);
-      console.info("[Phase 2.1 S-Tier] Resolved relationship summary", phase2Counts);
-      if (state.phase2SupportRows.length) console.info("[Phase 2.1 S-Tier] Support-only authority rows kept out of field cards", state.phase2SupportRows.map((row) => row.id));
+      console.info("[Phase 2.2 Atomic] Governing requirement engine", state.phase2Stats);
+      console.info("[Phase 2.2 Atomic] Resolved relationship summary", phase2Counts);
+      if (state.phase2SupportRows.length) console.info("[Phase 2.2 Atomic] Support-only authority rows kept out of field cards", state.phase2SupportRows.map((row) => row.id));
       if (state.phase2CoverageDiagnostics.length) console.warn("[Phase 2.1 S-Tier] Coverage integrity safeguards applied", state.phase2CoverageDiagnostics);
+      if (state.phase2AtomicizationDiagnostics.length) console.info("[Phase 2.2 Atomic] Form/checklist rows atomicized or suppressed", state.phase2AtomicizationDiagnostics);
 
       const reviewItems = state.phase2Diagnostics.filter((item) => ["conflicts", "human-review"].includes(item.type) && item.reviewNeeded);
       if (reviewItems.length) {
@@ -3808,6 +4058,9 @@
           relationships: state.phase2Diagnostics,
           supportOnlyRows: state.phase2SupportRows.map((row) => ({ id: row.id, source: sourceOrganization(row), requirement: row.requirement })),
           coverageDiagnostics: state.phase2CoverageDiagnostics,
+          atomicIntegrityViolations: state.phase2AtomicViolations,
+          atomicizationDiagnostics: state.phase2AtomicizationDiagnostics,
+          formNoiseViolations: state.phase2FormNoiseViolations,
           integritySafeguardsApplied: state.integritySafeguardsApplied,
           reasoningValidation: state.reasoningValidation,
           governingCards: state.governingCards.map((card) => ({
@@ -3851,12 +4104,14 @@
     /* ---------- Phase 2.0: operational clustering + governing resolution + clause lineage ---------- */
 
     const PHASE2 = Object.freeze({
-      version: "2.1-s-tier-reasoning",
+      version: "2.2-atomic-governing-answers",
       clusterMergeThreshold: 78,
       autoResolveConfidence: 0.90,
       highConfidence: 0.93,
       moderateConfidence: 0.82,
-      maxClausesPerCard: 3,
+      // Atomic field rule: one visible card answers one operational field question.
+      // Supplemental relationships remain diagnostic only and are never composed into Frankenstein cards.
+      maxClausesPerCard: 1,
       knownSupplementPairs: Object.freeze([
         ["fall:plan", "fall:trigger"],
         ["fall:rescue", "fall:trigger"],
@@ -3874,6 +4129,90 @@
         ["steel:temporary-bracing", "steel:column-stability"],
         ["joist:bridging", "joist:erection-connections"]
       ])
+    });
+
+
+    // Known operational subjects route deterministically to the field question they actually answer.
+    // Fuzzy keyword scoring remains only as a fallback for unknown subjects.
+    const PHASE2_SUBJECT_SUBTOPICS = Object.freeze({
+      "fall:trigger": "triggers-plans",
+      "fall:plan": "triggers-plans",
+      "fall:cdz": "cdz-decking-controls",
+      "fall:safety-monitoring": "other",
+      "fall:rescue": "rescue-recovery",
+      "fall:scaffold-trigger": "scaffolds-platforms",
+      "fall:scaffold-inspection": "scaffolds-platforms",
+      "fall:ladder-trigger": "ladders-access",
+      "fall:ladder-inspection": "ladders-access",
+      "fall:connector-trigger": "triggers-plans",
+      "fall:connector-equipment": "pfas-anchorages",
+      "fall:mewp-restraint": "pfas-anchorages",
+      "fall:leading-edge": "leading-edges-openings",
+      "fall:openings-covers": "leading-edges-openings",
+      "fall:guardrails": "leading-edges-openings",
+      "fall:warning-lines": "leading-edges-openings",
+      "fall:training": "inspection-training",
+      "fall:anchorage": "pfas-anchorages",
+      "fall:equipment-inspection": "inspection-training",
+
+      "crane:critical-lift": "lift-planning-critical",
+      "crane:multiple-lift": "lift-planning-critical",
+      "crane:lift-plan": "lift-planning-critical",
+      "crane:personnel-platform": "personnel-hoisting",
+      "crane:power-line": "power-lines",
+      "crane:daily-inspection": "inspections-docs",
+      "crane:annual-inspection": "inspections-docs",
+      "crane:operator-qualification": "operators-signals",
+      "crane:signal-person": "operators-signals",
+      "crane:ground-conditions": "setup-capacity",
+      "crane:assembly-disassembly": "setup-capacity",
+      "crane:swing-radius": "setup-capacity",
+      "crane:exclusion-zone": "setup-capacity",
+      "crane:weather-wind": "setup-capacity",
+
+      "rigging:qualified-rigger": "qualification-signals",
+      "rigging:signal-person": "qualification-signals",
+      "rigging:inspection": "inspection-removal",
+      "rigging:hook-latch": "slings-hardware",
+      "rigging:tag-line": "load-control",
+      "rigging:below-the-hook": "slings-hardware",
+      "rigging:sling-type": "slings-hardware",
+      "rigging:capacity": "slings-hardware",
+      "rigging:hardware": "slings-hardware",
+
+      "steel:column-stability": "bracing-stability",
+      "steel:anchor-rods": "columns-anchors",
+      "steel:temporary-bracing": "bracing-stability",
+      "steel:bolting-connections": "beams-connections",
+      "steel:connector-fall-protection": "beams-connections",
+      "steel:plumbing-alignment": "bracing-stability",
+      "steel:erection-plan": "erection-sequence",
+      "steel:structural-stability": "bracing-stability",
+
+      "deck:bundle-placement": "deck-installation",
+      "deck:openings": "deck-installation",
+      "deck:fastening": "deck-installation",
+      "deck:access": "access-fall",
+      "joist:bridging": "joists-bridging",
+      "joist:erection-connections": "joists-bridging",
+
+      "hotwork:permit": "permits-authorization",
+      "hotwork:fire-watch": "fire-watch",
+      "hotwork:extinguisher": "extinguishers",
+      "hotwork:cylinders": "other",
+      "hotwork:screens": "other",
+      "hotwork:ventilation": "other",
+      "hotwork:welder-qualification": "other",
+      "hotwork:combustibles": "fire-watch",
+
+      "confined-space:permit": "permits-entry",
+      "confined-space:atmospheric-testing": "atmospheric-testing",
+      "confined-space:entry-team-rescue": "entry-team-rescue",
+      "confined-space:attendant": "entry-team-rescue",
+      "confined-space:entry-supervisor": "entry-team-rescue",
+      "confined-space:rescue": "entry-team-rescue",
+      "confined-space:ventilation": "other",
+      "confined-space:isolation": "other"
     });
 
     const PHASE2_STRINGENCY_RULES = Object.freeze({
@@ -3931,6 +4270,8 @@
       "fall:leading-edge": "Leading-Edge Fall Protection",
       "fall:openings-covers": "Openings & Covers",
       "fall:guardrails": "Guardrails",
+      "fall:warning-lines": "Warning Lines",
+      "fall:training": "Fall Protection Training",
       "fall:anchorage": "Fall Protection Anchorage",
       "fall:equipment-inspection": "Fall Protection Equipment Inspection",
       "crane:ground-conditions": "Crane Ground Conditions",
@@ -4046,22 +4387,25 @@
     }
 
     function phase2RowSubtopic(row) {
+      const signature = signatureForRow(row);
       return classifyCardSubtopic({
         title: row.topic || row.category || "",
         statement: row.requirement || row.action || "",
         fieldTopic: row.fieldTopic,
-        allRows: [row]
+        allRows: [row],
+        primarySubjectKey: signature.subjectKey,
+        subjectKeys: [signature.subjectKey],
+        signatures: [signature]
       });
     }
 
     function phase2CoreTokenScores(row) {
       const fields = [
-        [row.topic, 6],
-        [row.dashboardGroup, 5],
-        [row.category, 4],
-        [row.requirement, 3],
-        [row.action, 2],
-        [row.trigger, 1]
+        [row.topic, 8],
+        [row.requirement, 6],
+        [row.category, 3],
+        [row.dashboardGroup, 2],
+        [row.tags, 1]
       ];
       const scores = new Map();
       fields.forEach(([value, weight]) => {
@@ -4182,6 +4526,11 @@
       }
       if (!knownA && !knownB && !sameCategory && tokenSimilarity < 0.62 && canonicalSimilarity < 0.88) {
         return { score: 0, hardReject: true, reason: "Unknown fallback subjects from different categories lack enough source-language similarity." };
+      }
+      if (!knownA && !knownB && a.subjectKey !== b.subjectKey
+        && canonicalSimilarity < 0.88
+        && !(sameCategory && tokenSimilarity >= 0.72 && !differentSections)) {
+        return { score: 0, hardReject: true, reason: "Atomic fallback gate: different inferred subjects require near-identical source language or strong same-section evidence." };
       }
 
       let score = 0;
@@ -4547,6 +4896,17 @@
         return { mode: "direct", text: `${phase2LowerFirst(match[1])} to ${phase2LowerFirst(match[2])}` };
       }
 
+
+      match = text.match(/^(.{1,140}?)\s+will\s+be\s+(.+)$/i);
+      if (match && !/[,:;]$/.test(match[1])) {
+        return { mode: "direct", text: `${phase2LowerFirst(match[1])} to be ${phase2LowerFirst(match[2])}` };
+      }
+
+      match = text.match(/^(.{1,140}?)\s+will\s+(.+)$/i);
+      if (match && !/[,:;]$/.test(match[1])) {
+        return { mode: "direct", text: `${phase2LowerFirst(match[1])} to ${phase2LowerFirst(match[2])}` };
+      }
+
       const imperativeVerbs = "complete|submit|inspect|provide|use|maintain|ensure|document|obtain|install|verify|perform|develop|prepare|conduct|review|keep|wear|remove|identify|establish|notify|report|train|designate|protect|secure|test|monitor|stop|prohibit";
       match = text.match(new RegExp(`^(${imperativeVerbs})\\b(.+)$`, "i"));
       if (match) return { mode: "direct", text: `crews to ${phase2LowerFirst(match[1] + match[2])}` };
@@ -4738,9 +5098,10 @@
     }
 
     function phase201OperationalTitleForRow(row) {
-      const text = comparisonText(row);
+      const text = sourceObligationText(row).toLowerCase();
       const context = `${row.category || ""} ${text}`.toLowerCase();
       const signature = signatureForRow(row);
+      if (row.atomicDerived && row.topic) return phase201TitleCaseWords(row.topic);
       const knownLabel = PHASE2_SUBJECT_LABELS[signature.subjectKey];
       if (knownLabel) return knownLabel;
 
@@ -4765,10 +5126,12 @@
     }
 
     function phase2TitleForCluster(cluster, units) {
+      const sourceRows = phase2UniqueRows(units.flatMap((unit) => unit.rows));
+      if (sourceRows.length === 1 && sourceRows[0].atomicDerived) return phase201OperationalTitleForRow(sourceRows[0]);
+
       const knownKeys = uniqueSorted(units.flatMap((unit) => unit.rows.map((row) => signatureForRow(row).subjectKey)).filter(phase2KnownSubject));
       if (knownKeys.length === 1 && PHASE2_SUBJECT_LABELS[knownKeys[0]]) return PHASE2_SUBJECT_LABELS[knownKeys[0]];
 
-      const sourceRows = phase2UniqueRows(units.flatMap((unit) => unit.rows));
       if (sourceRows.length === 1) return phase201OperationalTitleForRow(sourceRows[0]);
 
       const titles = uniqueSorted(sourceRows.map(phase201OperationalTitleForRow));
@@ -4827,7 +5190,11 @@
           : Math.min(cluster.confidence, ...contributingRows.map((row) => signatureForRow(row).confidence))
       ));
 
-      const statement = phase2ComposeClauseText(clauses);
+      let statement = phase2ComposeClauseText(clauses);
+      if (phase22StatementHasFormNoise(statement)) {
+        const safeClause = clauses.map((clause) => clause.text).find((value) => value && !phase22StatementHasFormNoise(value));
+        if (safeClause) statement = safeClause;
+      }
       const card = makeCard(contributingRows, {
         id: options.id || `P2-GOV-${Math.abs(hashString(`${cluster.id}|${contributingRows.map(phase2RowKey).join("|")}`))}`,
         title: options.title || phase2TitleForCluster(cluster, units),
@@ -4904,7 +5271,9 @@
           };
           relationships.push(diagnostic);
 
-          if (relation.type === "duplicates" && relation.confidence >= PHASE2.autoResolveConfidence) {
+          if (relation.type === "duplicates"
+            && relation.confidence >= PHASE2.autoResolveConfidence
+            && signatureForRow(rowA).subjectKey === signatureForRow(rowB).subjectKey) {
             duplicateSet.union(phase2RowKey(rowA), phase2RowKey(rowB));
           }
 
@@ -4956,9 +5325,9 @@
             });
           });
           pairRelation.set(`${units[i].id}|${units[j].id}`, best);
-          if (best?.type === "supplements" && best.confidence >= PHASE2.autoResolveConfidence) {
-            unitSet.union(units[i].id, units[j].id);
-          }
+          // Phase 2.2 Atomic Governing Answer Model:
+          // Supplemental obligations remain related backstage, but NEVER become one visible card.
+          // Only duplicates are collapsed earlier; only same-subject superseding/conflict rules are suppressed.
         }
       }
 
@@ -5003,69 +5372,45 @@
     }
 
     function phase2MergeSupplementCards(cards) {
-      const keys = cards.map((card) => card.id);
-      const set = phase2DisjointSet(keys);
-      for (let i = 0; i < cards.length; i += 1) {
-        for (let j = i + 1; j < cards.length; j += 1) {
-          if (phase2CanMergeSupplementCards(cards[i], cards[j])) set.union(cards[i].id, cards[j].id);
-        }
-      }
+      // Intentionally disabled in Phase 2.2.
+      // Compatible obligations may be related diagnostically, but each distinct operational subject
+      // remains its own field-facing governing answer.
+      return [...cards];
+    }
 
-      const components = new Map();
+    function phase22AtomicIntegrityAudit(cards) {
+      const violations = [];
       cards.forEach((card) => {
-        const root = set.find(card.id);
-        if (!components.has(root)) components.set(root, []);
-        components.get(root).push(card);
-      });
-
-      const merged = [];
-      components.forEach((group) => {
-        if (group.length === 1) {
-          merged.push(group[0]);
-          return;
-        }
-
-        const sorted = [...group].sort((a, b) => a.id.localeCompare(b.id));
-        const chunks = [];
-        for (let i = 0; i < sorted.length; i += PHASE2.maxClausesPerCard) chunks.push(sorted.slice(i, i + PHASE2.maxClausesPerCard));
-        chunks.forEach((chunk) => {
-          if (chunk.length === 1) {
-            merged.push(chunk[0]);
-            return;
-          }
-          const contributingRows = phase2UniqueRows(chunk.flatMap((card) => card.contributingRows));
-          const weakerRows = phase2UniqueRows(chunk.flatMap((card) => card.weakerRows));
-          const clauses = chunk.flatMap((card) => card.clauses || []);
-          const subjectKeys = uniqueSorted(chunk.flatMap((card) => card.subjectKeys || []));
-          const fieldTopic = chunk[0].fieldTopic;
-          const title = subjectKeys.includes("fall:trigger") && subjectKeys.includes("fall:plan")
-            ? "Fall Protection"
-            : topicDefinition(fieldTopic).label;
-          const statement = phase2ComposeClauseText(clauses);
-          const card = makeCard(contributingRows, {
-            id: `P2-GOV-SUPPLEMENT-${Math.abs(hashString(chunk.map((item) => item.id).join("|")))}`,
-            title,
-            fieldTopic,
-            statement,
-            contributingRows,
-            weakerRows,
-            relationshipType: "supplements",
-            relationshipReason: "Known compatible governing obligations were composed into one field answer while preserving clause-level source lineage."
+        const subjects = uniqueSorted((card.subjectKeys || []).filter(Boolean));
+        const clauses = card.clauses || [];
+        if (subjects.length > 1) {
+          violations.push({
+            cardId: card.id,
+            type: "multi-subject-card",
+            subjects,
+            statement: card.statement
           });
-          card.phase2Version = PHASE2.version;
-          card.clusterId = chunk.map((item) => item.clusterId).join("+");
-          card.primarySubjectKey = subjectKeys[0] || "";
-          card.subjectKeys = subjectKeys;
-          card.clauses = clauses;
-          card.lineage = chunk.flatMap((item) => item.lineage || []);
-          card.resolutionConfidence = Math.min(...chunk.map((item) => item.resolutionConfidence));
-          card.confidenceBand = phase2ConfidenceBand(card.resolutionConfidence);
-          card.reviewNeeded = false;
-          card.suppressedDetails = chunk.flatMap((item) => item.suppressedDetails || []);
-          merged.push(card);
-        });
+        }
+        if (clauses.length > 1) {
+          violations.push({
+            cardId: card.id,
+            type: "multi-clause-card",
+            clauseCount: clauses.length,
+            statement: card.statement
+          });
+        }
+        if (phase22StatementHasFormNoise(card.statement)) {
+          violations.push({
+            cardId: card.id,
+            type: "form-template-noise-visible",
+            statement: card.statement
+          });
+        }
       });
-      return merged;
+      if (violations.length) {
+        console.error("[Phase 2.2 Atomic Integrity] Visible-card violations detected.", violations);
+      }
+      return violations;
     }
 
     function phase2BuildStats(rows, clusters, cards, diagnostics, supportRows = []) {
@@ -5187,6 +5532,7 @@
       });
 
       let finalCards = phase2MergeSupplementCards(cards);
+      state.phase2AtomicViolations = phase22AtomicIntegrityAudit(finalCards);
       finalCards = finalCards.sort((a, b) => (
         CONFIG.fieldTopics.findIndex((topic) => topic.id === a.fieldTopic) - CONFIG.fieldTopics.findIndex((topic) => topic.id === b.fieldTopic)
         || priorityRank(a.priority) - priorityRank(b.priority)
@@ -5200,7 +5546,13 @@
       state.phase2Clusters = clusters;
       state.phase2Diagnostics = diagnostics;
       state.phase2SupportRows = supportRows;
+      state.phase2FormNoiseViolations = finalCards
+        .filter((card) => phase22StatementHasFormNoise(card.statement))
+        .map((card) => ({ cardId: card.id, title: card.title, statement: card.statement }));
       state.phase2Stats = phase2BuildStats(operationalRows, clusters, finalCards, diagnostics, supportRows);
+      state.phase2Stats.atomicizedFormRows = state.phase2AtomicizationDiagnostics.filter((item) => item.type === "atomicized-form-template").length;
+      state.phase2Stats.suppressedFormNoiseRows = state.phase2AtomicizationDiagnostics.filter((item) => item.type === "suppressed-form-template-noise").length;
+      state.phase2Stats.visibleFormNoiseViolations = state.phase2FormNoiseViolations.length;
       return finalCards;
     }
 
@@ -5254,7 +5606,7 @@
       add("Different exception language blocks automatic suppression", rel(exceptionA, exceptionB).type === "human-review");
 
       const liftPlan = makeTestRow("T-LIFT-PLAN", "cranes-hoisting", "A written lift plan is required before a critical lift.", { sourceType: "gc", organization: "Clayco" });
-      add("Critical lift rule and lift plan supplement each other", rel(criticalProhibit, liftPlan).type === "supplements");
+      add("Critical lift rule and lift plan remain diagnostically supplemental", rel(criticalProhibit, liftPlan).type === "supplements");
 
       const power10 = makeTestRow("T-POWER-10", "cranes-hoisting", "Maintain at least 10 feet clearance from energized power lines.");
       const power20 = makeTestRow("T-POWER-20", "cranes-hoisting", "Maintain at least 20 feet clearance from energized power lines.", { sourceType: "owner", organization: "Amazon" });
@@ -5262,7 +5614,7 @@
 
       const hotPermit = makeTestRow("T-HOT-PERMIT", "welding-hot-work", "A hot work permit is required before hot work begins.");
       const fireWatch = makeTestRow("T-FIRE-WATCH", "welding-hot-work", "A fire watch is required during hot work and for 30 minutes after completion.", { sourceType: "gc", organization: "Clayco" });
-      add("Hot work permit and fire watch supplement each other", rel(hotPermit, fireWatch).type === "supplements");
+      add("Hot work permit and fire watch remain diagnostically supplemental", rel(hotPermit, fireWatch).type === "supplements");
 
       const dupA = makeTestRow("T-DUP-A", "ppe", "Safety glasses with side shields are required.");
       const dupB = makeTestRow("T-DUP-B", "ppe", "Safety glasses with side shields are required.", { sourceType: "owner", organization: "Amazon" });
@@ -5282,7 +5634,7 @@
 
       const brace = makeTestRow("T-BRACE", "steel-erection-stability", "Temporary bracing shall remain in place until the structure is stable.");
       const column = makeTestRow("T-COLUMN", "steel-erection-stability", "Columns shall be stabilized before releasing the hoisting line.");
-      add("Temporary bracing and column stability supplement each other", rel(brace, column).type === "supplements");
+      add("Temporary bracing and column stability remain diagnostically supplemental", rel(brace, column).type === "supplements");
 
       const deckBundle = makeTestRow("T-DECK-BUNDLE", "decking-joists", "Deck bundles shall be placed only at approved locations.");
       const joistBridge = makeTestRow("T-JOIST-BRIDGE", "decking-joists", "Required joist bridging shall be installed before releasing the hoisting line.");
@@ -5322,6 +5674,50 @@
       });
       add("Exact same-source rule repeated under different broad triggers collapses as one governing answer", rel(repeatedSignalA, repeatedSignalB).type === "duplicates");
 
+      const fallPlan = makeTestRow("T-FALL-PLAN", "fall-protection", "A written fall protection plan is required before elevated work begins.", { sourceType: "gc", organization: "Clayco" });
+      const fallRescue = makeTestRow("T-FALL-RESCUE", "fall-protection", "A documented rescue plan is required before work begins whenever personal fall arrest systems are used.");
+      const atomicCards = buildPhase2GoverningCards([fall4, fall6, fallPlan, fallRescue, scaffold10]);
+      const atomicTriggerCards = atomicCards.filter((card) => (card.subjectKeys || []).includes("fall:trigger"));
+      const atomicPlanCards = atomicCards.filter((card) => (card.subjectKeys || []).includes("fall:plan"));
+      const atomicRescueCards = atomicCards.filter((card) => (card.subjectKeys || []).includes("fall:rescue"));
+      const atomicScaffoldCards = atomicCards.filter((card) => (card.subjectKeys || []).includes("fall:scaffold-trigger"));
+      add("Atomic pipeline keeps trigger, plan, rescue, and scaffold obligations as separate visible cards",
+        atomicTriggerCards.length === 1 && atomicPlanCards.length === 1 && atomicRescueCards.length === 1 && atomicScaffoldCards.length === 1
+        && atomicCards.every((card) => (card.subjectKeys || []).length <= 1 && (card.clauses || []).length <= 1));
+      add("Atomic pipeline still resolves the stricter 4-foot trigger over the 6-foot trigger",
+        atomicTriggerCards.length === 1
+        && atomicTriggerCards[0].statement.includes("4 feet")
+        && atomicTriggerCards[0].weakerRows.some((row) => row.id === "T-FALL-6"));
+      add("Known atomic subjects route to deterministic subtopics",
+        atomicTriggerCards.length === 1 && classifyCardSubtopic(atomicTriggerCards[0]) === "triggers-plans"
+        && atomicScaffoldCards.length === 1 && classifyCardSubtopic(atomicScaffoldCards[0]) === "scaffolds-platforms"
+        && atomicRescueCards.length === 1 && classifyCardSubtopic(atomicRescueCards[0]) === "rescue-recovery");
+      add("Atomic integrity audit reports zero multi-subject or multi-clause field cards", phase22AtomicIntegrityAudit(atomicCards).length === 0);
+
+
+      const ryanForm = makeTestRow("T-RYAN-FORM", "fall-protection",
+        "The following protections shall b taken by the contractor performing the work: Fall Protection Plan: Yes No Warning lines will be erected at a minimum of 15-ft from any unprotected sides or edges prior to removal of the guardrail system(s)? (Warning lines must meet OSHA Subpart M requirements and State Plan OSHA Requirements) Do warning lines have flagging and safety signage posted (Danger Fall Protection Beyond This Point Restricted/Controlled Access Zone)?",
+        {
+          sourceType: "gc",
+          organization: "Ryan Companies",
+          topic: "Fall Protection Planning",
+          sourceReference: "Ryan Test, PDF p. 116",
+          sourcePdf: "Ryan Companies 2026(3).pdf"
+        }
+      );
+      const ryanAtomicized = phase22AtomicizeFormRow(ryanForm).rows;
+      add("Ryan-style Yes/No form text atomicizes into separate field obligations",
+        ryanAtomicized.length >= 3
+        && ryanAtomicized.every((row) => !phase22StatementHasFormNoise(row.requirement)));
+      add("Warning-line form obligations receive a known operational subject",
+        ryanAtomicized.some((row) => /15\s*[- ]?ft|15\s*feet/i.test(row.requirement) && highConfidenceComparisonKey({ ...row, fieldTopic: "fall-protection" }) === "fall:warning-lines"));
+
+      const duplicateSourceRows = [
+        { ...ryanForm, id: "SRC-1", sourceReference: "Ryan Test, PDF p. 116", sourcePdf: "Ryan Companies 2026(3).pdf" },
+        { ...ryanForm, id: "SRC-2", sourceReference: "Ryan Test alternate citation, PDF p. 116", sourcePdf: "Ryan Companies 2026(3).pdf" }
+      ];
+      add("Identical source buttons are deduplicated even when source-reference text differs", uniqueSourceRows(duplicateSourceRows).length === 1);
+
       const result = {
         version: PHASE2.version,
         passed: tests.filter((test) => test.pass).length,
@@ -5330,8 +5726,8 @@
         tests
       };
       state.reasoningValidation = result;
-      if (result.failures.length) console.warn("[S-Tier reasoning validation] Regression failures detected", result);
-      else console.info(`[S-Tier reasoning validation] ${result.passed}/${result.total} deterministic regression tests passed.`);
+      if (result.failures.length) console.warn("[Phase 2.2 atomic reasoning validation] Regression failures detected", result);
+      else console.info(`[Phase 2.2 atomic reasoning validation] ${result.passed}/${result.total} deterministic regression tests passed.`);
       return result;
     }
 
@@ -5969,8 +6365,9 @@
       if (selection.owner) rows.push(...state.data.owner.filter((row) => row.organization === selection.owner));
 
       const safeguardedRows = applyPhase201IntegritySafeguards(rows, selection);
+      const atomicSourceRows = phase22AtomicizeSourceRows(safeguardedRows);
 
-      state.generatedRows = safeguardedRows.map((row) => {
+      state.generatedRows = atomicSourceRows.map((row) => {
         const enriched = {
           ...row,
           actionType: classifyAction(row),
@@ -6165,7 +6562,11 @@
     function uniqueSourceRows(rows) {
       const seen = new Set();
       return rows.filter((row) => {
-        const key = `${sourceOrganization(row)}|${resolveSourceLink(row)}|${row.sourceReference || row.citation}`;
+        const org = sourceOrganization(row) || "Source";
+        const link = resolveSourceLink(row);
+        const key = link
+          ? `${org}|${link}`
+          : `${org}|${row.sourceReference || row.citation || row.id}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
