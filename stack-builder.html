@@ -2922,13 +2922,47 @@
       ].filter(Boolean).join(" "));
     }
 
+    function primaryObligationFingerprint(row) {
+      return normalizeComparisonText([row.topic, row.requirement].filter(Boolean).join(" "));
+    }
+
     function comparisonText(row) {
       return `${row.topic} ${row.requirement} ${row.action} ${row.trigger}`.toLowerCase();
     }
 
+    // Subject recognition must be driven by the actual requirement, not broad boilerplate
+    // trigger/action fields. A generic crane trigger that mentions "critical lifts" must never
+    // turn every crane inspection, signal-person, power-line, or assembly rule into a critical-lift rule.
+    function subjectComparisonText(row) {
+      const primary = [row.topic, row.requirement].filter(Boolean).join(" ").trim();
+      // When actual source wording is available, broad category/dashboard/trigger language must not
+      // hijack the operational subject. Only use supporting taxonomy when the primary source text is
+      // genuinely too sparse to identify anything useful.
+      if (primary.length >= 24) return primary.toLowerCase();
+      return [primary, row.tags, row.category, row.dashboardGroup].filter(Boolean).join(" ").toLowerCase();
+    }
+
+    // Polarity is sourced from the source obligation itself. Generic field-action text and broad
+    // applicability triggers may contain "do not", "stop work", or "critical lift" language
+    // that describes execution controls but does not change what the source requirement actually is.
+    function polarityComparisonText(row) {
+      return [row.topic, row.requirement].filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function hasConditionalRestriction(text) {
+      const value = String(text || "");
+      return /\b(?:must|shall|may|can|cannot|can not)\s+not\s+(?:begin|start|proceed|continue|resume|be used|be operated|be performed|be placed|be installed|be energized)\b.{0,180}\b(?:until|unless|without|except when|except where)\b/i.test(value)
+        || /\b(?:do not|cannot|can not)\s+(?:begin|start|proceed|continue|resume|use|operate|perform)\b.{0,180}\b(?:until|unless|without)\b/i.test(value);
+    }
+
     function hasProhibition(text) {
       const value = String(text || "");
-      if (/\b(?:prohibit(?:ed|s)?|not permitted|not allowed|shall not|must not|forbidden)\b/i.test(value)) return true;
+      // Explicit blanket bans remain prohibitions. Conditional prerequisites (for example,
+      // "operations must not begin unless safety devices are working") are requirements,
+      // not a prohibition of the entire operational subject.
+      if (/\b(?:prohibit(?:ed|s)?|not permitted|not allowed|forbidden)\b/i.test(value)) return true;
+      if (hasConditionalRestriction(value)) return false;
+      if (/\b(?:shall not|must not)\b/i.test(value)) return true;
       return /\bmay not\s+(?:use|operate|perform|enter|work|ride|stand|lift|hoist|connect|remove|modify|bypass|begin|start|continue|access|install|be used|be operated|be performed|be permitted)\b/i.test(value);
     }
 
@@ -2942,7 +2976,7 @@
     }
 
     function highConfidenceComparisonKey(row) {
-      const text = comparisonText(row);
+      const text = subjectComparisonText(row);
       const topic = row.fieldTopic;
 
       if (topic === "fall-protection") {
@@ -2952,6 +2986,10 @@
         const numericFallTrigger = /(fall protection|fall exposure|work at height|working at height|height exposure|heights? (?:greater than|above|at|of)|tied off|tie off).{0,160}(feet|foot|\bft\b|inches|inch|\bin\.\b)|(?:feet|foot|\bft\b|inches|inch|\bin\.\b).{0,160}(fall protection|fall exposure|work at height|working at height|tied off|tie off)/.test(text);
         if (/controlled decking zone|\bcdz\b/.test(text)) return "fall:cdz";
         if (/safety monitor(?:ing)?/.test(text)) return "fall:safety-monitoring";
+        // Connector rules are not all the same obligation. Keep the trigger separate from the
+        // requirement to provide/wear tie-off equipment so the field never sees duplicate generic cards.
+        if (/\bconnector(?:s)?\b/.test(text) && /(?:equipment requirement|provided with|must wear|wear the equipment|able to tie off|necessary to be able to tie off)/.test(text)) return "fall:connector-equipment";
+        if (/\bconnector(?:s)?\b/.test(text) && /(?:connector fall protection trigger|protected from fall hazards|fall hazards? of)/.test(text)) return "fall:connector-trigger";
         if (scaffold && numericFallTrigger) return "fall:scaffold-trigger";
         if (ladder && numericFallTrigger) return "fall:ladder-trigger";
         if (mewp && /(?:harness|lanyard|tie[- ]?off|fall restraint|fall arrest)/.test(text)) return "fall:mewp-restraint";
@@ -3057,14 +3095,15 @@
       }
 
       if (topic === "electrical-loto") {
-        if (/lockout|tagout|\bloto\b|energy control/.test(text)) return "electrical:loto";
+        // Specific subjects beat broad electrical/LOTO language.
+        if (/live service|live services|electrical drawing|source and field end|identify.*service/.test(text)) return "electrical:live-services-identification";
         if (/gfci|ground fault/.test(text)) return "electrical:gfci";
         if (/temporary power|temporary electrical/.test(text)) return "electrical:temporary-power";
         if (/extension cord|flexible cord/.test(text)) return "electrical:extension-cords";
         if (/energized work|live work|arc flash/.test(text)) return "electrical:energized-work";
-        if (/live service|live services|electrical drawing|source and field end|identify.*service/.test(text)) return "electrical:live-services-identification";
         if (/panel|distribution board|breaker/.test(text)) return "electrical:panels";
         if (/grounding|grounded/.test(text)) return "electrical:grounding";
+        if (/lockout|tagout|\bloto\b|energy control/.test(text)) return "electrical:loto";
       }
 
       if (topic === "confined-space") {
@@ -3253,7 +3292,7 @@
     }
 
     function buildRequirementSignature(row) {
-      const text = comparisonText(row);
+      const text = polarityComparisonText(row);
       const subjectKey = signatureSubjectKey(row);
       const kinds = detectRequirementKinds(row);
       const numericConstraints = extractNumericConstraints(row);
@@ -3498,7 +3537,20 @@
         "crane:multiple-lift": "multiple or dual lifts",
         "crane:personnel-platform": "personnel-platform crane lifts except where a source-specific exception is met"
       };
-      if (labels[key]) return `${subject} ${verb} ${labels[key]} on this project.`;
+      const subjectPatterns = {
+        "fall:cdz": /controlled decking zone|\bcdz\b/i,
+        "fall:safety-monitoring": /safety monitor(?:ing)?/i,
+        "crane:critical-lift": /critical lift/i,
+        "crane:multiple-lift": /multiple lift|dual pick|dual lift|tandem lift/i,
+        "crane:personnel-platform": /personnel platform|personnel basket|hoisting personnel/i
+      };
+      const canUseGenericSubjectBan = Boolean(labels[key] && subjectPatterns[key])
+        && rows.every((row) => subjectPatterns[key].test(subjectComparisonText(row)) && hasProhibition(polarityComparisonText(row)));
+
+      if (canUseGenericSubjectBan) return `${subject} ${verb} ${labels[key]} on this project.`;
+
+      // Integrity fallback: never transform a prohibition about one thing into a prohibition of an
+      // entirely different clustered subject. Preserve the actual source wording instead.
       const sourceText = cleanSentence(rows[0]?.requirement || rows[0]?.topic || rows[0]?.category || "");
       return `${subject} ${verb} the following: ${ensureSentencePunctuation(sourceText)}`;
     }
@@ -3828,6 +3880,7 @@
       "fall:trigger": "lower",
       "fall:scaffold-trigger": "lower",
       "fall:ladder-trigger": "lower",
+      "fall:connector-trigger": "lower",
       "crane:power-line": "higher",
       "crane:weather-wind": "lower"
     });
@@ -3848,6 +3901,8 @@
       "fall:rescue": "Fall Rescue & Recovery",
       "fall:scaffold-trigger": "Scaffold Fall Protection Trigger",
       "fall:ladder-trigger": "Ladder Fall Protection Trigger",
+      "fall:connector-trigger": "Connector Fall Protection Trigger",
+      "fall:connector-equipment": "Connector Fall Protection Equipment",
       "fall:scaffold-inspection": "Scaffold Condition & Inspection",
       "fall:ladder-inspection": "Ladder Pre-Use Inspection",
       "crane:critical-lift": "Critical Lifts",
@@ -4229,6 +4284,16 @@
 
       const exceptionMatch = reasoningExceptionCompatibility(a, b);
       const conditionMatch = reasoningConditionCompatibility(a, b);
+      const primaryFingerprintA = primaryObligationFingerprint(rowA);
+      const primaryFingerprintB = primaryObligationFingerprint(rowB);
+      const sameOrganization = sourceOrganization(rowA) === sourceOrganization(rowB);
+
+      // The same organization may repeat the exact same operational rule in multiple manual sections
+      // with different broad applicability metadata. Collapse the duplicate field answer while retaining
+      // every source row/page behind it. Metadata differences must not create duplicate cards.
+      if (sameSubject && sameOrganization && primaryFingerprintA.length >= 32 && primaryFingerprintA === primaryFingerprintB) {
+        return { type: "duplicates", confidence: 1, reason: "Exact same-source operational obligation repeated in multiple source sections." };
+      }
 
       if (sameSubject && !exceptionMatch.compatible) {
         return {
@@ -4592,6 +4657,16 @@
         const orgs = uniqueSorted(sourceRows.map(sourceOrganization));
         const subject = humanList(orgs);
         const sourceText = phase201SpecificSourceText(primary);
+        text = `${subject} ${pluralVerb(orgs, "requires", "require")} ${ensureSentencePunctuation(phase2ObligationPhrase(primary).text || phase2LowerFirst(sourceText))}`;
+      }
+
+      if (!text && subjectKey === "fall:connector-trigger") {
+        const sourceRows = uniqueSourceRows(rows);
+        const orgs = uniqueSorted(sourceRows.map(sourceOrganization));
+        const subject = humanList(orgs);
+        const sourceText = phase201SpecificSourceText(primary);
+        // Preserve connector-specific exceptions and scope exactly instead of flattening the rule
+        // into a generic "100% fall protection at X feet" statement.
         text = `${subject} ${pluralVerb(orgs, "requires", "require")} ${ensureSentencePunctuation(phase2ObligationPhrase(primary).text || phase2LowerFirst(sourceText))}`;
       }
 
@@ -5220,6 +5295,32 @@
       const heatInfo = makeTestRow("T-HEAT", "general-site-rules", "While working in hot conditions, the human body may not be able to maintain a normal temperature just by sweating. Heat-related illnesses may occur.", { category: "Heat / Cold / Severe Weather", topic: "Heat-Related Illnesses - Signs and Treatment" });
       add("Descriptive 'may not be able' language is not misread as a prohibition", signatureForRow(heatInfo).polarity !== "prohibit");
       add("Heat-related illness routes to weather/environment logic", highConfidenceComparisonKey(heatInfo) === "site:heat-illness");
+
+      const craneInspectionWithBroadTrigger = makeTestRow("T-CRANE-INSPECT-BROAD", "cranes-hoisting", "Mobile cranes shall be inspected before each shift.", {
+        topic: "Mobile Crane Inspections - Daily (Each Shift)",
+        trigger: "Use of cranes, hoists, lifting equipment, critical lifts, assembly/disassembly, and signaling"
+      });
+      add("Broad crane trigger text cannot hijack the operational subject", highConfidenceComparisonKey(craneInspectionWithBroadTrigger) === "crane:daily-inspection");
+
+      const conditionalSafetyDeviceRule = makeTestRow("T-CRANE-SAFETY-DEVICE", "cranes-hoisting", "Operations must not begin unless all safety devices are in proper working order.", {
+        topic: "Crane safety devices"
+      });
+      add("Conditional no-start prerequisite is not treated as a blanket prohibition", signatureForRow(conditionalSafetyDeviceRule).polarity !== "prohibit");
+
+      const connectorTrigger = makeTestRow("T-CONNECTOR-TRIGGER", "fall-protection", "Connector fall protection trigger: connectors must be protected from fall hazards of 10 feet or more above a lower level.");
+      const connectorEquipment = makeTestRow("T-CONNECTOR-EQUIP", "fall-protection", "Connector equipment requirement: connectors at or above 10 feet and up to 30 feet must be provided with fall protection equipment and must wear the equipment necessary to be able to tie off.");
+      add("Connector trigger and connector equipment are distinct operational subjects", highConfidenceComparisonKey(connectorTrigger) === "fall:connector-trigger" && highConfidenceComparisonKey(connectorEquipment) === "fall:connector-equipment");
+      add("Connector trigger and connector equipment do not collapse as duplicates", rel(connectorTrigger, connectorEquipment).type === "independent");
+
+      const repeatedSignalA = makeTestRow("T-SIGNAL-A", "cranes-hoisting", "Signal persons must be trained and qualified before signaling crane operations.", {
+        topic: "Signal person qualification",
+        trigger: "Steel erection operations"
+      });
+      const repeatedSignalB = makeTestRow("T-SIGNAL-B", "cranes-hoisting", "Signal persons must be trained and qualified before signaling crane operations.", {
+        topic: "Signal person qualification",
+        trigger: "Use of cranes, hoists, lifting equipment, critical lifts, assembly/disassembly, and signaling"
+      });
+      add("Exact same-source rule repeated under different broad triggers collapses as one governing answer", rel(repeatedSignalA, repeatedSignalB).type === "duplicates");
 
       const result = {
         version: PHASE2.version,
