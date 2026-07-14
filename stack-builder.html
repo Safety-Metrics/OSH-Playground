@@ -1933,6 +1933,7 @@
   </div>
 
   <script>
+
     "use strict";
 
     const CONFIG = Object.freeze({
@@ -2166,6 +2167,7 @@
       phase2Stats: {},
       phase2SupportRows: [],
       phase2CoverageDiagnostics: [],
+      reasoningValidation: null,
       integritySafeguardsApplied: [],
       activeTopic: "",
       activeSubtopic: "",
@@ -2634,7 +2636,8 @@
     function explicitFieldTopicOverride(row) {
       const strongText = `${row.category || ""} ${row.topic || ""} ${row.requirement || ""}`.toLowerCase();
 
-      // Phase 2.0.1 specificity gate: a named fall-protection system beats the broader decking subject.
+      // S-tier specificity gates: precise environmental and fall systems beat broad keyword collisions.
+      if (/\b(?:heat[- ]related illness|heat stress|heat stroke|heat exhaustion|hot conditions|cold[- ]related illness|cold stress|hypothermia|frostbite)\b/.test(strongText)) return "general-site-rules";
       if (/controlled decking zone|\bcdz\b|safety monitor(?:ing)?/.test(strongText)) return "fall-protection";
 
       const operationalSignals = [
@@ -2762,7 +2765,7 @@
       return uniqueSorted(values).length > 1 ? plural : singular;
     }
 
-    /* ---------- Phase 1.8 / 1.9: requirement signatures + relationship engine ---------- */
+    /* ---------- S-Tier Reasoning Core: signatures, ontology, scope, exceptions, authority + relationships ---------- */
 
     const SIGNATURE_STOP_WORDS = new Set([
       "a", "an", "and", "are", "as", "at", "be", "been", "before", "by", "can", "for", "from",
@@ -2771,6 +2774,134 @@
       "shall", "should", "steel", "erection", "specific", "stringent", "than", "that", "the", "their", "this",
       "to", "use", "used", "using", "when", "where", "which", "with", "work", "working"
     ]);
+
+    const REASONING_CONTEXT_RULES = Object.freeze([
+      ["scaffold", /\bscaffold(?:s|ing)?\b/i],
+      ["ladder", /\bladder(?:s)?\b/i],
+      ["mewp", /\b(?:mewp|aerial lift|boom lift|scissor lift|mobile elevated work platform)\b/i],
+      ["telehandler", /\b(?:telehandler|rough terrain forklift|forklift|powered industrial truck)\b/i],
+      ["crane", /\b(?:crane|derrick|hoist(?:ing)?|load chart|outrigger)\b/i],
+      ["rigging", /\b(?:rigging|sling|shackle|hook|below[- ]the[- ]hook|tag ?line)\b/i],
+      ["decking", /\b(?:metal deck|decking|deck bundle|controlled decking zone|\bcdz\b)\b/i],
+      ["joist", /\b(?:joist|bridging|\bsji\b)\b/i],
+      ["steel-erection", /\b(?:steel erection|structural steel|column|beam|anchor rod|temporary bracing|bolt[- ]?up|connector)\b/i],
+      ["hot-work", /\b(?:hot work|weld(?:ing)?|cutting|burning|torch|fire watch)\b/i],
+      ["confined-space", /\b(?:confined space|entry permit|entry supervisor|atmospheric test|attendant)\b/i],
+      ["electrical", /\b(?:electrical|energized|lockout|tagout|\bloto\b|gfci|ground fault|temporary power)\b/i],
+      ["fall-protection", /\b(?:fall protection|fall arrest|fall restraint|tie[- ]?off|lifeline|harness|lanyard|leading edge|floor opening)\b/i],
+      ["ppe", /\b(?:ppe|personal protective equipment|hard hat|helmet|safety glasses|eye protection|gloves|hearing protection|respirator)\b/i],
+      ["incident-response", /\b(?:incident|injury|near miss|first aid|medical|emergency response|evacuation)\b/i],
+      ["material-handling", /\b(?:material handling|staging|storage|unloading|delivery|laydown|housekeeping|debris)\b/i]
+    ]);
+
+    const REASONING_GENERIC_CONTEXTS = new Set([
+      "fall-protection", "crane", "rigging", "steel-erection", "hot-work", "electrical", "ppe", "incident-response", "material-handling"
+    ]);
+
+    const REASONING_AUTHORITY_TIERS = Object.freeze({
+      state: 50,
+      owner: 40,
+      gc: 35,
+      cooper: 30,
+      contract: 45,
+      subcontractor: 20,
+      unknown: 10
+    });
+
+    function reasoningStrongText(row) {
+      return [row.category, row.topic, row.dashboardGroup, row.requirement, row.trigger]
+        .filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function detectOperationalContexts(row) {
+      const text = reasoningStrongText(row);
+      return REASONING_CONTEXT_RULES
+        .filter(([, pattern]) => pattern.test(text))
+        .map(([label]) => label);
+    }
+
+    function extractExceptionProfile(row) {
+      const text = [row.requirement, row.trigger].filter(Boolean).join(" ");
+      const clauses = [];
+      const patterns = [
+        /\bexcept(?: when| where| for)?\b[^.;]{0,220}/gi,
+        /\bunless\b[^.;]{0,220}/gi,
+        /\bdoes not apply\b[^.;]{0,220}/gi,
+        /\bnot applicable\b[^.;]{0,220}/gi,
+        /\bwith the exception of\b[^.;]{0,220}/gi
+      ];
+      patterns.forEach((pattern) => {
+        let match;
+        while ((match = pattern.exec(text)) !== null) clauses.push(match[0].trim());
+      });
+      const normalized = [...new Set(clauses.map((value) => normalizeComparisonText(value)).filter(Boolean))];
+      return {
+        hasException: normalized.length > 0,
+        clauses: [...new Set(clauses)],
+        fingerprint: normalized.sort().join("|")
+      };
+    }
+
+    function extractConditionProfile(row) {
+      const text = [row.requirement, row.trigger].filter(Boolean).join(" ");
+      const clauses = [];
+      const pattern = /\b(?:if|when|where|only if|only when|provided that|subject to|during)\b[^.;]{0,180}/gi;
+      let match;
+      while ((match = pattern.exec(text)) !== null) clauses.push(match[0].trim());
+      const normalized = [...new Set(clauses.map((value) => normalizeComparisonText(value)).filter(Boolean))];
+      return {
+        clauses: [...new Set(clauses)],
+        fingerprint: normalized.sort().join("|")
+      };
+    }
+
+    function sourceAuthorityProfile(row) {
+      const sourceType = String(row.sourceType || "unknown").toLowerCase();
+      return {
+        sourceType,
+        tier: REASONING_AUTHORITY_TIERS[sourceType] || REASONING_AUTHORITY_TIERS.unknown,
+        organization: sourceOrganization(row)
+      };
+    }
+
+    function reasoningSetOverlap(aValues, bValues) {
+      const a = new Set(aValues || []);
+      const b = new Set(bValues || []);
+      return [...a].some((value) => b.has(value));
+    }
+
+    function reasoningScopeCompatibility(signatureA, signatureB) {
+      const aAll = signatureA.contexts || [];
+      const bAll = signatureB.contexts || [];
+      const a = aAll.filter((value) => !REASONING_GENERIC_CONTEXTS.has(value));
+      const b = bAll.filter((value) => !REASONING_GENERIC_CONTEXTS.has(value));
+
+      if (!a.length && !b.length) return { compatible: true, specificityMismatch: false, reason: "No conflicting specific operational context." };
+      if (a.length && b.length && !reasoningSetOverlap(a, b)) {
+        return { compatible: false, specificityMismatch: false, reason: `Different specific operational contexts: ${a.join(", ")} vs ${b.join(", ")}.` };
+      }
+      return {
+        compatible: true,
+        specificityMismatch: Boolean(a.length !== b.length && (!a.length || !b.length)),
+        reason: "Specific operational contexts are compatible."
+      };
+    }
+
+    function reasoningExceptionCompatibility(signatureA, signatureB) {
+      const a = signatureA.exceptionProfile || { hasException: false, fingerprint: "" };
+      const b = signatureB.exceptionProfile || { hasException: false, fingerprint: "" };
+      if (!a.hasException && !b.hasException) return { compatible: true, exact: true, reason: "No exception language detected." };
+      if (a.fingerprint && a.fingerprint === b.fingerprint) return { compatible: true, exact: true, reason: "Matching exception language." };
+      return { compatible: false, exact: false, reason: "Exception language differs; automatic suppression is unsafe." };
+    }
+
+    function reasoningConditionCompatibility(signatureA, signatureB) {
+      const a = signatureA.conditionProfile?.fingerprint || "";
+      const b = signatureB.conditionProfile?.fingerprint || "";
+      if (!a && !b) return { compatible: true, exact: true, reason: "No material condition mismatch." };
+      if (a && b && a === b) return { compatible: true, exact: true, reason: "Matching condition language." };
+      return { compatible: false, exact: false, reason: "Different conditional scope detected." };
+    }
 
     function normalizeComparisonText(value) {
       return String(value || "")
@@ -2796,7 +2927,9 @@
     }
 
     function hasProhibition(text) {
-      return /\b(prohibit(?:ed|s)?|not permitted|not allowed|shall not|may not|must not|forbidden)\b/i.test(text);
+      const value = String(text || "");
+      if (/\b(?:prohibit(?:ed|s)?|not permitted|not allowed|shall not|must not|forbidden)\b/i.test(value)) return true;
+      return /\bmay not\s+(?:use|operate|perform|enter|work|ride|stand|lift|hoist|connect|remove|modify|bypass|begin|start|continue|access|install|be used|be operated|be performed|be permitted)\b/i.test(value);
     }
 
     function hasConditionalPermission(text) {
@@ -2813,19 +2946,25 @@
       const topic = row.fieldTopic;
 
       if (topic === "fall-protection") {
-        const scaffoldContext = /\bscaffold(?:s|ing)?\b/.test(text);
-        const ladderContext = /\bladder(?:s)?\b/.test(text);
-        const numericFallTrigger = /(fall protection|fall exposure|work at height|working at height|height exposure|heights? (?:greater than|above|at|of)|tied off|tie off).{0,140}(feet|foot|\bft\b|inches|inch|\bin\.\b)|(?:feet|foot|\bft\b|inches|inch|\bin\.\b).{0,140}(fall protection|fall exposure|work at height|working at height|tied off|tie off)/.test(text);
-
+        const scaffold = /\bscaffold(?:s|ing)?\b/.test(text);
+        const ladder = /\bladder(?:s)?\b/.test(text);
+        const mewp = /\b(?:mewp|aerial lift|boom lift|scissor lift)\b/.test(text);
+        const numericFallTrigger = /(fall protection|fall exposure|work at height|working at height|height exposure|heights? (?:greater than|above|at|of)|tied off|tie off).{0,160}(feet|foot|\bft\b|inches|inch|\bin\.\b)|(?:feet|foot|\bft\b|inches|inch|\bin\.\b).{0,160}(fall protection|fall exposure|work at height|working at height|tied off|tie off)/.test(text);
         if (/controlled decking zone|\bcdz\b/.test(text)) return "fall:cdz";
         if (/safety monitor(?:ing)?/.test(text)) return "fall:safety-monitoring";
-        if (scaffoldContext && numericFallTrigger) return "fall:scaffold-trigger";
-        if (ladderContext && numericFallTrigger) return "fall:ladder-trigger";
-        if (scaffoldContext && /inspect|inspection|tagged out|remove(?:d)? from service|damaged|weakened/.test(text)) return "fall:scaffold-inspection";
-        if (ladderContext && /inspect|inspection|before each use|pre-use/.test(text)) return "fall:ladder-inspection";
-        if (numericFallTrigger) return "fall:trigger";
+        if (scaffold && numericFallTrigger) return "fall:scaffold-trigger";
+        if (ladder && numericFallTrigger) return "fall:ladder-trigger";
+        if (mewp && /(?:harness|lanyard|tie[- ]?off|fall restraint|fall arrest)/.test(text)) return "fall:mewp-restraint";
+        if (/leading edge/.test(text)) return "fall:leading-edge";
+        if (/(?:floor|deck|roof) opening|hole cover|cover(?:s)?.{0,50}(?:secure|mark|label)/.test(text)) return "fall:openings-covers";
+        if (/guardrail/.test(text)) return "fall:guardrails";
+        if (/anchor(?:age)?|5,?000\s*(?:lb|pound)/.test(text)) return "fall:anchorage";
+        if (scaffold && /inspect|inspection|tagged out|remove(?:d)? from service|damaged|weakened/.test(text)) return "fall:scaffold-inspection";
+        if (ladder && /inspect|inspection|before each use|pre-use/.test(text)) return "fall:ladder-inspection";
         if (/fall protection plan/.test(text)) return "fall:plan";
         if (/fall.{0,80}(rescue|recovery)|(rescue|recovery).{0,80}fall/.test(text)) return "fall:rescue";
+        if (/inspect|inspection/.test(text) && /harness|lanyard|lifeline|fall protection equipment/.test(text)) return "fall:equipment-inspection";
+        if (numericFallTrigger) return "fall:trigger";
       }
 
       if (topic === "cranes-hoisting") {
@@ -2833,8 +2972,16 @@
         if (/multiple lift|dual pick|dual lift|tandem lift/.test(text)) return "crane:multiple-lift";
         if (/personnel platform|personnel basket|hoisting personnel/.test(text)) return "crane:personnel-platform";
         if (/lift plan/.test(text)) return "crane:lift-plan";
-        if (/power line|energized line/.test(text)) return "crane:power-line";
+        if (/power line|energized line|minimum approach distance/.test(text)) return "crane:power-line";
+        if (/ground condition|ground bearing|soil bearing|crane mat|outrigger support/.test(text)) return "crane:ground-conditions";
+        if (/assembly|disassembly|erecting the crane|dismantl/.test(text)) return "crane:assembly-disassembly";
+        if (/swing radius|counterweight clearance/.test(text)) return "crane:swing-radius";
+        if (/operator.{0,60}(certif|qualif)|certified crane operator/.test(text)) return "crane:operator-qualification";
+        if (/signal person/.test(text)) return "crane:signal-person";
+        if (/annual inspection|annual certification/.test(text)) return "crane:annual-inspection";
         if (/daily inspection|pre[- ]?shift inspection|before each shift/.test(text)) return "crane:daily-inspection";
+        if (/exclusion zone|fall zone|hoisting zone|suspended load/.test(text)) return "crane:exclusion-zone";
+        if (/wind speed|high wind|weather condition|lightning/.test(text)) return "crane:weather-wind";
       }
 
       if (topic === "rigging") {
@@ -2842,30 +2989,150 @@
         if (/signal person/.test(text)) return "rigging:signal-person";
         if (/rigging inspection|inspect.{0,50}(sling|rigging)|(?:sling|rigging).{0,50}inspect/.test(text)) return "rigging:inspection";
         if (/hook.{0,80}(latch|open)|open hook/.test(text)) return "rigging:hook-latch";
+        if (/tag ?line/.test(text)) return "rigging:tag-line";
+        if (/below[- ]the[- ]hook|lifting device|spreader beam|lifting beam/.test(text)) return "rigging:below-the-hook";
+        if (/synthetic sling|wire rope sling|chain sling/.test(text)) return "rigging:sling-type";
+        if (/capacity|working load limit|rated load|\bwll\b/.test(text)) return "rigging:capacity";
+        if (/shackle|eyebolt|rigging hardware/.test(text)) return "rigging:hardware";
+      }
+
+      if (topic === "steel-erection-stability") {
+        if (/column.{0,80}(stabil|secure|anchor)|stability.{0,80}column/.test(text)) return "steel:column-stability";
+        if (/anchor rod|anchor bolt/.test(text)) return "steel:anchor-rods";
+        if (/temporary bracing|guying|guy wire|plumb cable/.test(text)) return "steel:temporary-bracing";
+        if (/bolt[- ]?up|bolting|minimum bolts|connection bolts/.test(text)) return "steel:bolting-connections";
+        if (/connector/.test(text) && /fall protection|tie[- ]?off/.test(text)) return "steel:connector-fall-protection";
+        if (/plumb(?:ing)?|plumb-up|alignment/.test(text)) return "steel:plumbing-alignment";
+        if (/erection plan|ssep|site specific erection plan/.test(text)) return "steel:erection-plan";
+        if (/structural stability|collapse prevention|stability maintained/.test(text)) return "steel:structural-stability";
+      }
+
+      if (topic === "decking-joists") {
+        if (/deck bundle|bundle placement|bundled deck/.test(text)) return "deck:bundle-placement";
+        if (/deck opening|floor opening|hole cover/.test(text)) return "deck:openings";
+        if (/deck fastening|fasten(?:ed|ing)?.{0,60}deck|weld pattern|screw pattern/.test(text)) return "deck:fastening";
+        if (/joist.{0,80}bridging|bridging.{0,80}joist/.test(text)) return "joist:bridging";
+        if (/joist.{0,80}(seat|bolt|connection)|erect(?:ing|ion)?.{0,80}joist/.test(text)) return "joist:erection-connections";
+        if (/deck access|access.{0,50}deck/.test(text)) return "deck:access";
+      }
+
+      if (topic === "mewp-mobile-equipment") {
+        if (/mewp|aerial lift|boom lift|scissor lift/.test(text)) {
+          if (/operator.{0,60}(train|qualif|certif)|trained operator/.test(text)) return "mewp:operator-qualification";
+          if (/pre[- ]?use|daily inspection|before use|inspect/.test(text)) return "mewp:pre-use-inspection";
+          if (/harness|lanyard|tie[- ]?off|fall restraint|fall arrest/.test(text)) return "mewp:fall-protection";
+          if (/capacity|rated load|occupant limit/.test(text)) return "mewp:capacity";
+          if (/travel|drive|move.{0,40}elevated/.test(text)) return "mewp:travel";
+          if (/ground condition|slope|level surface|setup/.test(text)) return "mewp:setup-ground";
+        }
+        if (/telehandler|forklift|powered industrial truck|rough terrain forklift/.test(text)) {
+          if (/operator.{0,60}(train|qualif|certif)|trained operator/.test(text)) return "mobile:operator-qualification";
+          if (/pre[- ]?use|daily inspection|before use|inspect/.test(text)) return "mobile:pre-use-inspection";
+          if (/passenger|rider|personnel riding/.test(text)) return "mobile:passengers";
+          if (/capacity|load chart|rated load/.test(text)) return "mobile:capacity";
+          if (/seat belt|seatbelt/.test(text)) return "mobile:seat-belt";
+        }
       }
 
       if (topic === "ppe") {
         if (/type\s*ii|type 2/.test(text)) return "ppe:type-ii-helmet";
         if (/chin strap|chinstrap/.test(text)) return "ppe:chin-strap";
-        if (/safety glasses|eye protection|protective eyewear/.test(text)) return "ppe:eye-protection";
+        if (/safety glasses|eye protection|protective eyewear|face shield/.test(text)) return "ppe:eye-protection";
         if (/high visibility|hi-vis|high-vis/.test(text)) return "ppe:hi-vis";
+        if (/glove|hand protection/.test(text)) return "ppe:hand-protection";
+        if (/hearing protection|ear plug|earmuff/.test(text)) return "ppe:hearing-protection";
+        if (/respirator|respiratory protection/.test(text)) return "ppe:respiratory-protection";
+        if (/steel toe|safety toe|protective footwear/.test(text)) return "ppe:foot-protection";
       }
 
       if (topic === "welding-hot-work") {
         if (/hot work permit/.test(text)) return "hotwork:permit";
         if (/fire watch/.test(text)) return "hotwork:fire-watch";
         if (/fire extinguisher|extinguisher/.test(text)) return "hotwork:extinguisher";
+        if (/compressed gas|oxygen cylinder|acetylene cylinder|gas cylinder/.test(text)) return "hotwork:cylinders";
+        if (/welding screen|arc screen|flash screen/.test(text)) return "hotwork:screens";
+        if (/ventilation|fume extraction|welding fume/.test(text)) return "hotwork:ventilation";
+        if (/welder.{0,50}(qualified|certified)|welding certification/.test(text)) return "hotwork:welder-qualification";
+        if (/combustible|flammable material|spark containment/.test(text)) return "hotwork:combustibles";
       }
 
       if (topic === "electrical-loto") {
-        if (/lockout|tagout|\bloto\b/.test(text)) return "electrical:loto";
+        if (/lockout|tagout|\bloto\b|energy control/.test(text)) return "electrical:loto";
         if (/gfci|ground fault/.test(text)) return "electrical:gfci";
+        if (/temporary power|temporary electrical/.test(text)) return "electrical:temporary-power";
+        if (/extension cord|flexible cord/.test(text)) return "electrical:extension-cords";
+        if (/energized work|live work|arc flash/.test(text)) return "electrical:energized-work";
+        if (/live service|live services|electrical drawing|source and field end|identify.*service/.test(text)) return "electrical:live-services-identification";
+        if (/panel|distribution board|breaker/.test(text)) return "electrical:panels";
+        if (/grounding|grounded/.test(text)) return "electrical:grounding";
       }
 
       if (topic === "confined-space") {
         if (/entry permit|permit[- ]?to[- ]?work|permit required confined space/.test(text)) return "confined-space:permit";
         if (/atmospheric test|atmospheric monitor|gas monitor/.test(text)) return "confined-space:atmospheric-testing";
-        if (/attendant|entry supervisor|rescue|retrieval/.test(text)) return "confined-space:entry-team-rescue";
+        if (/attendant/.test(text)) return "confined-space:attendant";
+        if (/entry supervisor/.test(text)) return "confined-space:entry-supervisor";
+        if (/rescue|retrieval/.test(text)) return "confined-space:rescue";
+        if (/ventilat/.test(text)) return "confined-space:ventilation";
+        if (/isolat|blanking|blinding|lockout|energy control/.test(text)) return "confined-space:isolation";
+      }
+
+      if (topic === "material-housekeeping") {
+        if (/housekeeping|debris|trash/.test(text)) return "material:housekeeping";
+        if (/storage|staging|laydown/.test(text)) return "material:storage-staging";
+        if (/unloading|delivery|truck escort/.test(text)) return "material:unloading-delivery";
+        if (/access|egress|walkway|aisle/.test(text)) return "material:access-egress";
+      }
+
+      if (topic === "training-qualifications") {
+        if (/competent person/.test(text)) return "training:competent-person";
+        if (/operator.{0,60}(train|qualif|certif)|operator certification/.test(text)) return "training:operator-qualification";
+        if (/orientation|site orientation/.test(text)) return "training:orientation";
+        if (/training record|document.{0,40}training/.test(text)) return "training:records";
+      }
+
+      if (topic === "plans-permits-submittals") {
+        if (/ssep|site specific erection plan|erection plan/.test(text)) return "plans:ssep";
+        if (/sssp|site specific safety plan|site[- ]specific safety plan/.test(text)) return "plans:sssp";
+        if (/\bjha\b|\baha\b|job hazard analysis|activity hazard analysis|pre[- ]task plan|\bptp\b/.test(text)) return "plans:hazard-analysis";
+        if (/submittal|submit|submission/.test(text)) return "plans:submittal";
+        if (/permit/.test(text)) return "plans:permit";
+      }
+
+      if (topic === "inspections-documentation") {
+        if (/equipment|tool/.test(text) && /inspect|inspection/.test(text)) return "inspection:equipment-tools";
+        if (/documented inspection|inspection record|inspection log/.test(text)) return "inspection:documented";
+        if (/audit/.test(text)) return "inspection:audit";
+        if (/certification|certificate|record retention|required records/.test(text)) return "documentation:certifications-records";
+        if (/working alone/.test(text) && /hazard|inspect/.test(text)) return "inspection:working-alone-hazards";
+      }
+
+      if (topic === "emergency-incident") {
+        if (/incident|injury|near miss/.test(text) && /report|notify/.test(text)) return "incident:reporting";
+        if (/first aid|aed|medical/.test(text)) return "emergency:first-aid-medical";
+        if (/emergency action plan|emergency plan|evacuation/.test(text)) return "emergency:plan-evacuation";
+        if (/rescue/.test(text)) return "emergency:rescue";
+      }
+
+      if (topic === "general-site-rules") {
+        const titleText = `${row.category || ""} ${row.topic || ""}`.toLowerCase();
+        if (/heat[- ]related illnesses?.{0,80}signs and treatment/.test(titleText)) return "site:heat-illness";
+        if (/heat[- ]related illnesses?.{0,80}heat stroke|\bheat stroke\b/.test(titleText)) return "site:heat-stroke";
+        if (/heat[- ]related illnesses?.{0,80}heat exhaustion|\bheat exhaustion\b/.test(titleText)) return "site:heat-exhaustion";
+        if (/heat stroke/.test(text)) return "site:heat-stroke";
+        if (/heat exhaustion/.test(text)) return "site:heat-exhaustion";
+        if (/heat[- ]related illness|heat stress|hot conditions/.test(text) && /safe work practice|prevent|water|shade|acclimat/.test(text)) return "site:heat-safe-work";
+        if (/heat[- ]related illness|heat stress|hot conditions/.test(text)) return "site:heat-illness";
+        if (/hypothermia/.test(text)) return "site:hypothermia";
+        if (/frostbite/.test(text)) return "site:frostbite";
+        if (/cold[- ]related illness|cold stress/.test(text) && /safe work practice|prevent|warming|layer/.test(text)) return "site:cold-safe-work";
+        if (/cold[- ]related illness|cold stress/.test(text)) return "site:cold-illness";
+        if (/drug|alcohol|substance abuse/.test(text)) return "site:drug-alcohol";
+        if (/smoking|tobacco|vaping/.test(text)) return "site:smoking";
+        if (/cell phone|mobile phone/.test(text)) return "site:phones";
+        if (/barricade|controlled access|exclusion zone/.test(text)) return "site:barricades-access";
+        if (/toolbox talk|safety meeting|pre[- ]task meeting/.test(text)) return "site:meetings";
+        if (/weather|lightning|heat stress|cold stress/.test(text)) return "site:weather-environment";
       }
 
       const exact = normalizeComparisonText(row.requirement || row.action || row.topic);
@@ -2998,26 +3265,34 @@
             ? "permit"
             : "require";
       const confidence = subjectKey.startsWith("subject:")
-        ? 0.78
+        ? 0.76
         : subjectKey.startsWith("exact:")
-          ? 0.92
+          ? 0.88
           : subjectKey.startsWith("unique:")
-            ? 0.45
-            : 0.98;
+            ? 0.42
+            : 0.99;
+      const contexts = detectOperationalContexts(row);
+      const exceptionProfile = extractExceptionProfile(row);
+      const conditionProfile = extractConditionProfile(row);
+      const authority = sourceAuthorityProfile(row);
 
       return {
-        version: "1.8",
+        version: "2.1-reasoning-core",
         subjectKey,
         subjectFamily: subjectKey.includes(":") ? subjectKey.split(":")[0] : row.fieldTopic,
         fieldTopic: row.fieldTopic,
         primaryKind: kinds[0],
         kinds,
         polarity,
-        conditional: polarity === "permit-conditional" || /\b(?:if|when|unless|provided that|subject to)\b/i.test(text),
+        conditional: polarity === "permit-conditional" || Boolean(conditionProfile.fingerprint),
         requiresPriorApproval: kinds.includes("prior-approval"),
         timing: detectTimingSignals(text),
         numericConstraints,
         canonicalText: canonicalRequirementText(row),
+        contexts,
+        exceptionProfile,
+        conditionProfile,
+        authority,
         confidence
       };
     }
@@ -3454,10 +3729,10 @@
 
       console.info("[Phase 1.8] Requirement signatures generated", state.signatureStats);
       console.info("[Phase 1.9] Relationship engine summary", counts);
-      console.info("[Phase 2.0.1] Governing requirement engine", state.phase2Stats);
-      console.info("[Phase 2.0.1] Resolved relationship summary", phase2Counts);
-      if (state.phase2SupportRows.length) console.info("[Phase 2.0.1] Support-only authority rows kept out of field cards", state.phase2SupportRows.map((row) => row.id));
-      if (state.phase2CoverageDiagnostics.length) console.warn("[Phase 2.0.1] Coverage integrity safeguards applied", state.phase2CoverageDiagnostics);
+      console.info("[Phase 2.1 S-Tier] Governing requirement engine", state.phase2Stats);
+      console.info("[Phase 2.1 S-Tier] Resolved relationship summary", phase2Counts);
+      if (state.phase2SupportRows.length) console.info("[Phase 2.1 S-Tier] Support-only authority rows kept out of field cards", state.phase2SupportRows.map((row) => row.id));
+      if (state.phase2CoverageDiagnostics.length) console.warn("[Phase 2.1 S-Tier] Coverage integrity safeguards applied", state.phase2CoverageDiagnostics);
 
       const reviewItems = state.phase2Diagnostics.filter((item) => ["conflicts", "human-review"].includes(item.type) && item.reviewNeeded);
       if (reviewItems.length) {
@@ -3465,7 +3740,7 @@
       }
 
       window.__COOPER_STACK_DEV__ = {
-        phase: "2.0.1",
+        phase: PHASE2.version,
         signatures: state.generatedRows.map((row) => ({ id: row.id, source: sourceOrganization(row), signature: row.signature })),
         relationships: state.relationshipDiagnostics,
         phase2: {
@@ -3482,6 +3757,7 @@
           supportOnlyRows: state.phase2SupportRows.map((row) => ({ id: row.id, source: sourceOrganization(row), requirement: row.requirement })),
           coverageDiagnostics: state.phase2CoverageDiagnostics,
           integritySafeguardsApplied: state.integritySafeguardsApplied,
+          reasoningValidation: state.reasoningValidation,
           governingCards: state.governingCards.map((card) => ({
             id: card.id,
             fieldTopic: card.fieldTopic,
@@ -3523,20 +3799,37 @@
     /* ---------- Phase 2.0: operational clustering + governing resolution + clause lineage ---------- */
 
     const PHASE2 = Object.freeze({
-      version: "2.0.1",
-      clusterMergeThreshold: 72,
-      autoResolveConfidence: 0.86,
-      highConfidence: 0.90,
-      moderateConfidence: 0.78,
+      version: "2.1-s-tier-reasoning",
+      clusterMergeThreshold: 78,
+      autoResolveConfidence: 0.90,
+      highConfidence: 0.93,
+      moderateConfidence: 0.82,
       maxClausesPerCard: 3,
       knownSupplementPairs: Object.freeze([
         ["fall:plan", "fall:trigger"],
         ["fall:rescue", "fall:trigger"],
+        ["fall:equipment-inspection", "fall:trigger"],
         ["crane:critical-lift", "crane:lift-plan"],
+        ["crane:critical-lift", "crane:operator-qualification"],
+        ["crane:critical-lift", "crane:signal-person"],
         ["hotwork:fire-watch", "hotwork:permit"],
+        ["hotwork:extinguisher", "hotwork:permit"],
         ["confined-space:atmospheric-testing", "confined-space:permit"],
-        ["confined-space:entry-team-rescue", "confined-space:permit"]
+        ["confined-space:attendant", "confined-space:permit"],
+        ["confined-space:entry-supervisor", "confined-space:permit"],
+        ["confined-space:rescue", "confined-space:permit"],
+        ["rigging:qualified-rigger", "rigging:inspection"],
+        ["steel:temporary-bracing", "steel:column-stability"],
+        ["joist:bridging", "joist:erection-connections"]
       ])
+    });
+
+    const PHASE2_STRINGENCY_RULES = Object.freeze({
+      "fall:trigger": "lower",
+      "fall:scaffold-trigger": "lower",
+      "fall:ladder-trigger": "lower",
+      "crane:power-line": "higher",
+      "crane:weather-wind": "lower"
     });
 
     const PHASE2_GENERIC_TOKENS = new Set([
@@ -3578,7 +3871,107 @@
       "electrical:gfci": "GFCI Protection",
       "confined-space:permit": "Confined Space Entry Permits",
       "confined-space:atmospheric-testing": "Confined Space Atmospheric Testing",
-      "confined-space:entry-team-rescue": "Confined Space Entry Team & Rescue"
+      "confined-space:entry-team-rescue": "Confined Space Entry Team & Rescue",
+      "fall:mewp-restraint": "MEWP Fall Protection",
+      "fall:leading-edge": "Leading-Edge Fall Protection",
+      "fall:openings-covers": "Openings & Covers",
+      "fall:guardrails": "Guardrails",
+      "fall:anchorage": "Fall Protection Anchorage",
+      "fall:equipment-inspection": "Fall Protection Equipment Inspection",
+      "crane:ground-conditions": "Crane Ground Conditions",
+      "crane:assembly-disassembly": "Crane Assembly & Disassembly",
+      "crane:swing-radius": "Crane Swing Radius",
+      "crane:operator-qualification": "Crane Operator Qualifications",
+      "crane:signal-person": "Crane Signal Persons",
+      "crane:annual-inspection": "Annual Crane Inspection",
+      "crane:exclusion-zone": "Crane Exclusion & Fall Zones",
+      "crane:weather-wind": "Crane Weather & Wind Limits",
+      "rigging:tag-line": "Tag Lines",
+      "rigging:below-the-hook": "Below-the-Hook Devices",
+      "rigging:sling-type": "Rigging Sling Requirements",
+      "rigging:capacity": "Rigging Capacity & WLL",
+      "rigging:hardware": "Rigging Hardware",
+      "steel:column-stability": "Column Stability",
+      "steel:anchor-rods": "Anchor Rods",
+      "steel:temporary-bracing": "Temporary Bracing",
+      "steel:bolting-connections": "Bolting & Connections",
+      "steel:connector-fall-protection": "Connector Fall Protection",
+      "steel:plumbing-alignment": "Plumbing & Alignment",
+      "steel:erection-plan": "Steel Erection Plan",
+      "steel:structural-stability": "Structural Stability",
+      "deck:bundle-placement": "Deck Bundle Placement",
+      "deck:openings": "Deck Openings",
+      "deck:fastening": "Deck Fastening",
+      "deck:access": "Deck Access",
+      "joist:bridging": "Joist Bridging",
+      "joist:erection-connections": "Joist Erection & Connections",
+      "mewp:operator-qualification": "MEWP Operator Qualifications",
+      "mewp:pre-use-inspection": "MEWP Pre-Use Inspection",
+      "mewp:fall-protection": "MEWP Fall Protection",
+      "mewp:capacity": "MEWP Capacity",
+      "mewp:travel": "MEWP Travel",
+      "mewp:setup-ground": "MEWP Setup & Ground Conditions",
+      "mobile:operator-qualification": "Mobile Equipment Operator Qualifications",
+      "mobile:pre-use-inspection": "Mobile Equipment Pre-Use Inspection",
+      "mobile:passengers": "Mobile Equipment Passengers",
+      "mobile:capacity": "Mobile Equipment Capacity",
+      "mobile:seat-belt": "Mobile Equipment Seat Belts",
+      "ppe:hand-protection": "Hand Protection",
+      "ppe:hearing-protection": "Hearing Protection",
+      "ppe:respiratory-protection": "Respiratory Protection",
+      "ppe:foot-protection": "Protective Footwear",
+      "hotwork:cylinders": "Compressed Gas Cylinders",
+      "hotwork:screens": "Welding Screens",
+      "hotwork:ventilation": "Welding Ventilation & Fumes",
+      "hotwork:welder-qualification": "Welder Qualifications",
+      "hotwork:combustibles": "Hot Work Combustible Controls",
+      "electrical:temporary-power": "Temporary Power",
+      "electrical:extension-cords": "Extension Cords",
+      "electrical:energized-work": "Energized Electrical Work",
+      "electrical:live-services-identification": "Live Services, Drawings & Identification",
+      "electrical:panels": "Electrical Panels",
+      "electrical:grounding": "Electrical Grounding",
+      "confined-space:attendant": "Confined Space Attendant",
+      "confined-space:entry-supervisor": "Confined Space Entry Supervisor",
+      "confined-space:rescue": "Confined Space Rescue",
+      "confined-space:ventilation": "Confined Space Ventilation",
+      "confined-space:isolation": "Confined Space Isolation",
+      "material:housekeeping": "Housekeeping",
+      "material:storage-staging": "Material Storage & Staging",
+      "material:unloading-delivery": "Unloading & Deliveries",
+      "material:access-egress": "Access & Egress",
+      "training:competent-person": "Competent Person Qualifications",
+      "training:operator-qualification": "Operator Qualifications",
+      "training:orientation": "Site Orientation",
+      "training:records": "Training Records",
+      "plans:ssep": "Site-Specific Erection Plan",
+      "plans:sssp": "Site-Specific Safety Plan",
+      "plans:hazard-analysis": "JHA / AHA / Pre-Task Planning",
+      "plans:submittal": "Required Submittals",
+      "plans:permit": "Required Permits",
+      "inspection:equipment-tools": "Equipment & Tool Inspections",
+      "inspection:documented": "Documented Inspections",
+      "inspection:audit": "Safety Audits",
+      "inspection:working-alone-hazards": "Working Alone Hazard Inspection",
+      "documentation:certifications-records": "Certifications & Required Records",
+      "incident:reporting": "Incident & Near-Miss Reporting",
+      "emergency:first-aid-medical": "Medical & First Aid",
+      "emergency:plan-evacuation": "Emergency Planning & Evacuation",
+      "emergency:rescue": "Emergency Rescue",
+      "site:heat-stroke": "Heat Stroke Emergency Response",
+      "site:heat-exhaustion": "Heat Exhaustion Response",
+      "site:heat-illness": "Heat-Related Illness",
+      "site:heat-safe-work": "Heat Stress Safe Work Practices",
+      "site:hypothermia": "Hypothermia Response",
+      "site:frostbite": "Frostbite Response",
+      "site:cold-illness": "Cold-Related Illness",
+      "site:cold-safe-work": "Cold Stress Safe Work Practices",
+      "site:drug-alcohol": "Drug & Alcohol Rules",
+      "site:smoking": "Smoking & Vaping",
+      "site:phones": "Cell Phone Rules",
+      "site:barricades-access": "Barricades & Controlled Access",
+      "site:meetings": "Safety Meetings & Coordination",
+      "site:weather-environment": "Weather & Environmental Conditions"
     });
 
     function phase2RowKey(row) {
@@ -3691,8 +4084,7 @@
 
     function phase2StrictnessDirection(signatureA, signatureB, comparable) {
       const subjectKey = signatureA.subjectKey === signatureB.subjectKey ? signatureA.subjectKey : "";
-      if (subjectKey === "fall:trigger") return "lower";
-      if (subjectKey === "crane:power-line" && comparable.a.dimension === "length") return "higher";
+      if (subjectKey && PHASE2_STRINGENCY_RULES[subjectKey]) return PHASE2_STRINGENCY_RULES[subjectKey];
 
       const aComparator = phase2ConstraintComparator(comparable.a);
       const bComparator = phase2ConstraintComparator(comparable.b);
@@ -3707,10 +4099,13 @@
       const b = signatureForRow(rowB);
       if (a.fieldTopic !== b.fieldTopic) return { score: 0, hardReject: true, reason: "Different field topics." };
 
+      const scope = reasoningScopeCompatibility(a, b);
+      if (!scope.compatible) return { score: 0, hardReject: true, reason: scope.reason };
+
       const sameSubject = a.subjectKey === b.subjectKey;
       const knownA = phase2KnownSubject(a.subjectKey);
       const knownB = phase2KnownSubject(b.subjectKey);
-      if (sameSubject) return { score: 100, hardReject: false, reason: "Same signature subject." };
+      if (sameSubject) return { score: scope.specificityMismatch ? 88 : 100, hardReject: false, reason: scope.specificityMismatch ? "Same subject with general-vs-specific context; keep conservative." : "Same signature subject and compatible scope." };
       if (knownA && knownB) {
         return { score: 0, hardReject: true, reason: "Different high-confidence operational subjects." };
       }
@@ -3727,27 +4122,27 @@
       const sectionB = String(rowB.tags || "").match(/\bsection-\d+\b/i)?.[0]?.toLowerCase() || "";
       const differentSections = Boolean(sectionA && sectionB && sectionA !== sectionB);
 
-      if (!knownA && !knownB && !sameCategory && differentSections && canonicalSimilarity < 0.90) {
+      if (!knownA && !knownB && !sameCategory && differentSections && canonicalSimilarity < 0.93) {
         return { score: 0, hardReject: true, reason: "Different source sections and categories with no known shared operational subject." };
       }
-
-      if (!knownA && !knownB && !sameCategory && tokenSimilarity < 0.55 && canonicalSimilarity < 0.82) {
+      if (!knownA && !knownB && !sameCategory && tokenSimilarity < 0.62 && canonicalSimilarity < 0.88) {
         return { score: 0, hardReject: true, reason: "Unknown fallback subjects from different categories lack enough source-language similarity." };
       }
 
       let score = 0;
-      if (sameSubtopic) score += 8;
-      if (sameCategory) score += 12;
-      score += tokenSimilarity * 46;
-      score += canonicalSimilarity * 30;
-      if (samePrimaryKind) score += 5;
-      if (numeric && sameCategory) score += 4;
+      if (sameSubtopic) score += 6;
+      if (sameCategory) score += 10;
+      score += tokenSimilarity * 48;
+      score += canonicalSimilarity * 32;
+      if (samePrimaryKind) score += 4;
+      if (numeric && sameCategory) score += 3;
+      if (scope.specificityMismatch) score -= 10;
 
-      const hardReject = !sameSubtopic && !sameCategory && tokenSimilarity < 0.42 && canonicalSimilarity < 0.68;
+      const hardReject = !sameSubtopic && !sameCategory && tokenSimilarity < 0.48 && canonicalSimilarity < 0.74;
       return {
-        score: Math.min(99, Math.round(score * 100) / 100),
+        score: Math.min(99, Math.max(0, Math.round(score * 100) / 100)),
         hardReject,
-        reason: `Subtopic=${sameSubtopic}; category=${sameCategory}; token similarity=${tokenSimilarity.toFixed(2)}; text similarity=${canonicalSimilarity.toFixed(2)}.`
+        reason: `Subtopic=${sameSubtopic}; category=${sameCategory}; context=${scope.reason}; token similarity=${tokenSimilarity.toFixed(2)}; text similarity=${canonicalSimilarity.toFixed(2)}.`
       };
     }
 
@@ -3827,20 +4222,41 @@
       const rowAKey = phase2RowKey(rowA);
       const rowBKey = phase2RowKey(rowB);
 
-      if (!sameTopic) {
-        return { type: "independent", confidence: 0.99, reason: "Different field topics." };
+      if (!sameTopic) return { type: "independent", confidence: 0.99, reason: "Different field topics." };
+
+      const scope = reasoningScopeCompatibility(a, b);
+      if (!scope.compatible) return { type: "independent", confidence: 0.99, reason: scope.reason };
+
+      const exceptionMatch = reasoningExceptionCompatibility(a, b);
+      const conditionMatch = reasoningConditionCompatibility(a, b);
+
+      if (sameSubject && !exceptionMatch.compatible) {
+        return {
+          type: "human-review",
+          confidence: 0.98,
+          reason: exceptionMatch.reason,
+          reviewNeeded: true
+        };
       }
 
       const polarities = new Set([a.polarity, b.polarity]);
       const oneProhibits = polarities.has("prohibit");
       const onePermits = polarities.has("permit") || polarities.has("permit-conditional");
       if (sameSubject && oneProhibits && onePermits) {
+        if (!conditionMatch.compatible || scope.specificityMismatch) {
+          return {
+            type: "human-review",
+            confidence: 0.94,
+            reason: "Apparent prohibition/permission conflict has different conditions or scope; automatic suppression is unsafe.",
+            reviewNeeded: true
+          };
+        }
         const governing = a.polarity === "prohibit" ? rowA : rowB;
         const suppressed = governing === rowA ? rowB : rowA;
         return {
           type: "conflicts",
-          confidence: 0.98,
-          reason: "The same operational subject is prohibited by one source and permitted by another; the prohibition governs the field answer.",
+          confidence: 0.99,
+          reason: "The same operational subject and scope is prohibited by one source and permitted by another; the prohibition governs the field answer.",
           governingRowKey: phase2RowKey(governing),
           suppressedRowKey: phase2RowKey(suppressed),
           reviewNeeded: false
@@ -3850,16 +4266,25 @@
       if (sameSubject) {
         const knownSharedSubject = phase2KnownSubject(a.subjectKey);
         if (!knownSharedSubject) {
-          if (a.canonicalText && a.canonicalText === b.canonicalText) {
+          if (a.canonicalText && a.canonicalText === b.canonicalText && exceptionMatch.compatible && conditionMatch.compatible) {
             return { type: "duplicates", confidence: 1, reason: "Exact canonical requirement match inside the same fallback subject." };
           }
-          if (similarity >= 0.94 && a.polarity === b.polarity) {
+          if (similarity >= 0.96 && a.polarity === b.polarity && exceptionMatch.compatible && conditionMatch.compatible) {
             return { type: "duplicates", confidence: similarity, reason: "Near-identical source language inside the same fallback subject." };
           }
           return {
             type: "human-review",
-            confidence: 0.64,
-            reason: "Fallback subject match alone is not strong enough to merge, suppress, or compose distinct source requirements.",
+            confidence: 0.72,
+            reason: "Fallback subject similarity is not strong enough to merge, suppress, or compose distinct source requirements.",
+            reviewNeeded: true
+          };
+        }
+
+        if (scope.specificityMismatch || !conditionMatch.compatible) {
+          return {
+            type: "human-review",
+            confidence: 0.92,
+            reason: scope.specificityMismatch ? "General and context-specific rules share a subject but not equivalent scope." : conditionMatch.reason,
             reviewNeeded: true
           };
         }
@@ -3868,21 +4293,19 @@
         if (numeric) {
           const direction = phase2StrictnessDirection(a, b, numeric);
           const equal = Math.abs(numeric.a.baseValue - numeric.b.baseValue) < 1e-9;
-          if (equal) {
+          if (equal && exceptionMatch.compatible && conditionMatch.compatible) {
             return {
               type: "duplicates",
-              confidence: Math.max(0.90, similarity),
-              reason: `Equivalent ${numeric.a.dimension} threshold on the same operational subject.`
+              confidence: Math.max(0.94, similarity),
+              reason: `Equivalent ${numeric.a.dimension} threshold on the same operational subject, scope, conditions, and exceptions.`
             };
           }
-          if (direction !== "unknown") {
-            const aStricter = direction === "lower"
-              ? numeric.a.baseValue < numeric.b.baseValue
-              : numeric.a.baseValue > numeric.b.baseValue;
+          if (direction !== "unknown" && exceptionMatch.compatible && conditionMatch.compatible) {
+            const aStricter = direction === "lower" ? numeric.a.baseValue < numeric.b.baseValue : numeric.a.baseValue > numeric.b.baseValue;
             return {
               type: "supersedes",
-              confidence: 0.96,
-              reason: `Comparable ${numeric.a.dimension} thresholds; the ${direction} normalized value is more stringent for this subject.`,
+              confidence: 0.99,
+              reason: `Comparable ${numeric.a.dimension} thresholds on the same subject and scope; the ${direction} normalized value is more stringent.`,
               governingRowKey: aStricter ? rowAKey : rowBKey,
               suppressedRowKey: aStricter ? rowBKey : rowAKey,
               reviewNeeded: false
@@ -3890,12 +4313,11 @@
           }
         }
 
-        if (a.canonicalText && a.canonicalText === b.canonicalText) {
+        if (a.canonicalText && a.canonicalText === b.canonicalText && exceptionMatch.compatible && conditionMatch.compatible) {
           return { type: "duplicates", confidence: 1, reason: "Exact canonical requirement match on the same operational subject." };
         }
-
-        if (similarity >= 0.88 && a.polarity === b.polarity) {
-          return { type: "duplicates", confidence: similarity, reason: "Near-identical normalized language on the same operational subject." };
+        if (similarity >= 0.93 && a.polarity === b.polarity && exceptionMatch.compatible && conditionMatch.compatible) {
+          return { type: "duplicates", confidence: similarity, reason: "Near-identical normalized language on the same operational subject and scope." };
         }
 
         const sharedKinds = a.kinds.filter((kind) => b.kinds.includes(kind));
@@ -3904,52 +4326,51 @@
         if (!sharedKinds.length || (uniqueKindsA.length && uniqueKindsB.length)) {
           return {
             type: "supplements",
-            confidence: Math.max(0.86, Math.min(0.95, (a.confidence + b.confidence) / 2)),
-            reason: "Same operational subject with distinct compatible obligation types."
+            confidence: Math.max(0.91, Math.min(0.98, (a.confidence + b.confidence) / 2)),
+            reason: "Same operational subject and compatible scope with distinct obligation types that should both survive."
           };
         }
-
-        if ((uniqueKindsA.length || uniqueKindsB.length) && similarity >= 0.58) {
+        if ((uniqueKindsA.length || uniqueKindsB.length) && similarity >= 0.64) {
           return {
             type: "supplements",
-            confidence: 0.84,
-            reason: "Closely related requirements where one adds a distinct timing, documentation, approval, or implementation obligation."
+            confidence: 0.90,
+            reason: "Closely related requirements where one adds a distinct timing, documentation, approval, staffing, or implementation obligation."
           };
         }
 
         return {
           type: "human-review",
-          confidence: 0.68,
-          reason: "Same operational subject, but automatic consolidation would risk deleting a distinct obligation.",
+          confidence: 0.78,
+          reason: "Same operational subject, but automatic consolidation could delete a distinct obligation.",
           reviewNeeded: true
         };
       }
 
-      if (phase2KnownSupplementPair(a.subjectKey, b.subjectKey)) {
+      if (phase2KnownSupplementPair(a.subjectKey, b.subjectKey) && scope.compatible && exceptionMatch.compatible) {
         return {
           type: "supplements",
-          confidence: 0.95,
-          reason: "Known compatible governing obligations within the same operational subject family."
+          confidence: 0.97,
+          reason: "Known compatible governing obligations within the same operational subject family and compatible scope."
         };
       }
 
       const compatibility = phase2ClusterCompatibility(rowA, rowB);
       if (!compatibility.hardReject && compatibility.score >= PHASE2.clusterMergeThreshold) {
-        if (similarity >= 0.88 && a.polarity === b.polarity) {
+        if (similarity >= 0.93 && a.polarity === b.polarity && exceptionMatch.compatible && conditionMatch.compatible) {
           return { type: "duplicates", confidence: similarity, reason: "High-confidence equivalent language inside the same operational cluster." };
         }
-        if (!a.kinds.some((kind) => b.kinds.includes(kind))) {
-          return { type: "supplements", confidence: 0.86, reason: "Same operational cluster with different compatible obligation types." };
+        if (!a.kinds.some((kind) => b.kinds.includes(kind)) && compatibility.score >= 86) {
+          return { type: "supplements", confidence: 0.91, reason: "Same high-confidence operational cluster with different compatible obligation types." };
         }
         return {
           type: "human-review",
-          confidence: 0.66,
-          reason: "Related operational cluster, but there is not enough evidence to merge or suppress either requirement.",
+          confidence: 0.76,
+          reason: "Related operational cluster, but evidence is insufficient to merge or suppress either requirement.",
           reviewNeeded: true
         };
       }
 
-      return { type: "independent", confidence: 0.94, reason: "No safe shared governing subject." };
+      return { type: "independent", confidence: 0.97, reason: "No safe shared governing subject." };
     }
 
     function phase2DisjointSet(keys) {
@@ -4034,6 +4455,16 @@
       if (!text) return { mode: "direct", text: "this field requirement" };
 
       const rowContext = `${row.category || ""} ${row.trigger || ""}`.toLowerCase();
+      const subjectKey = signatureForRow(row).subjectKey;
+      if (subjectKey === "site:heat-illness" && /medical emergency|immediate medical attention/i.test(text)) {
+        return { mode: "direct", text: "heat stroke to be treated as a medical emergency with immediate medical attention provided, and affected workers to be moved to a cool or shaded area and actively cooled while awaiting medical assistance" };
+      }
+      if (subjectKey === "site:heat-stroke" && /medical emergency|immediate medical attention/i.test(text)) {
+        return { mode: "direct", text: "heat stroke to be treated as a medical emergency, immediate medical attention provided, and the victim cooled while awaiting medical assistance" };
+      }
+      if (subjectKey === "site:heat-exhaustion" && /cool area|fluids?|medical attention/i.test(text)) {
+        return { mode: "direct", text: "workers showing signs of heat exhaustion to be moved to a cool area, given fluids when appropriate, and provided medical attention as required" };
+      }
       if (/working alone|working or traveling alone/.test(rowContext) && /^inspect\b/i.test(text)) {
         return { mode: "direct", text: `crews working alone to ${phase2LowerFirst(text)}` };
       }
@@ -4070,7 +4501,7 @@
     function phase201StatementIsVague(value) {
       const text = cleanSentence(value).toLowerCase();
       return /\b(?:this practice|this requirement|this activity|the applicable activity|this condition|this field requirement)\b/.test(text)
-        || /(?:requires?|prohibits?|allows?)\s*\.$/.test(text);
+        || /^[a-z0-9&.,' -]{1,80}\s+(?:requires?|prohibits?|allows?)\s*\.$/.test(text);
     }
 
     function phase201SourceFaithfulFallback(rows) {
@@ -4699,6 +5130,109 @@
     }
 
 
+
+    function runReasoningRegressionTests() {
+      const makeTestRow = (id, fieldTopic, requirement, extras = {}) => ({
+        sourceType: extras.sourceType || "cooper",
+        organization: extras.organization || "Cooper Steel",
+        state: "",
+        id,
+        category: extras.category || topicDefinition(fieldTopic).label,
+        topic: extras.topic || requirement,
+        requirement,
+        action: extras.action || "",
+        priority: extras.priority || "High",
+        trigger: extras.trigger || "",
+        sourceReference: `Test ${id}`,
+        sourceUrl: "",
+        sourcePdf: "",
+        dashboardGroup: extras.dashboardGroup || topicDefinition(fieldTopic).label,
+        status: "Active",
+        tags: extras.tags || "",
+        fieldTopic
+      });
+
+      const tests = [];
+      const add = (name, pass, detail = "") => tests.push({ name, pass: Boolean(pass), detail });
+      const rel = (a, b) => classifyPhase2Relationship(a, b);
+
+      const fall4 = makeTestRow("T-FALL-4", "fall-protection", "Fall protection is required at 4 feet or greater.", { sourceType: "owner", organization: "Amazon" });
+      const fall6 = makeTestRow("T-FALL-6", "fall-protection", "Fall protection is required at 6 feet or greater.");
+      add("4-foot trigger supersedes 6-foot trigger", rel(fall4, fall6).type === "supersedes" && rel(fall4, fall6).governingRowKey === phase2RowKey(fall4));
+
+      const fall48 = makeTestRow("T-FALL-48IN", "fall-protection", "Fall protection is required at 48 inches or greater.", { sourceType: "owner", organization: "Amazon" });
+      add("48 inches normalizes and supersedes 6 feet", rel(fall48, fall6).type === "supersedes" && rel(fall48, fall6).governingRowKey === phase2RowKey(fall48));
+
+      const scaffold10 = makeTestRow("T-SCAF-10", "fall-protection", "Workers on scaffolds more than 10 feet above a lower level require fall protection.");
+      add("Scaffold trigger remains distinct from general trigger", rel(scaffold10, fall6).type === "independent");
+
+      const ladderInspection = makeTestRow("T-LADDER-I", "inspections-documentation", "Inspect ladders before each use and remove damaged ladders from service.", { category: "Ladders", topic: "Ladder inspection" });
+      const aloneInspection = makeTestRow("T-ALONE-I", "inspections-documentation", "Employees working alone shall inspect the jobsite for real and potential hazards.", { category: "Working Alone", topic: "Working alone hazard inspection" });
+      add("Unrelated inspection subjects remain independent", rel(ladderInspection, aloneInspection).type === "independent");
+
+      const criticalProhibit = makeTestRow("T-CL-PROHIBIT", "cranes-hoisting", "Critical lifts are prohibited.", { sourceType: "gc", organization: "Clayco" });
+      const criticalPermit = makeTestRow("T-CL-PERMIT", "cranes-hoisting", "Critical lifts may be performed with prior written approval.");
+      add("Prohibition governs over equivalent-scope conditional permission", rel(criticalProhibit, criticalPermit).type === "conflicts" && rel(criticalProhibit, criticalPermit).governingRowKey === phase2RowKey(criticalProhibit));
+
+      const exceptionA = makeTestRow("T-EX-A", "fall-protection", "Fall protection is required at 6 feet, except when steel erection connector provisions apply.");
+      const exceptionB = makeTestRow("T-EX-B", "fall-protection", "Fall protection is required at 4 feet.", { sourceType: "owner", organization: "Amazon" });
+      add("Different exception language blocks automatic suppression", rel(exceptionA, exceptionB).type === "human-review");
+
+      const liftPlan = makeTestRow("T-LIFT-PLAN", "cranes-hoisting", "A written lift plan is required before a critical lift.", { sourceType: "gc", organization: "Clayco" });
+      add("Critical lift rule and lift plan supplement each other", rel(criticalProhibit, liftPlan).type === "supplements");
+
+      const power10 = makeTestRow("T-POWER-10", "cranes-hoisting", "Maintain at least 10 feet clearance from energized power lines.");
+      const power20 = makeTestRow("T-POWER-20", "cranes-hoisting", "Maintain at least 20 feet clearance from energized power lines.", { sourceType: "owner", organization: "Amazon" });
+      add("Higher power-line clearance supersedes lower clearance", rel(power10, power20).type === "supersedes" && rel(power10, power20).governingRowKey === phase2RowKey(power20));
+
+      const hotPermit = makeTestRow("T-HOT-PERMIT", "welding-hot-work", "A hot work permit is required before hot work begins.");
+      const fireWatch = makeTestRow("T-FIRE-WATCH", "welding-hot-work", "A fire watch is required during hot work and for 30 minutes after completion.", { sourceType: "gc", organization: "Clayco" });
+      add("Hot work permit and fire watch supplement each other", rel(hotPermit, fireWatch).type === "supplements");
+
+      const dupA = makeTestRow("T-DUP-A", "ppe", "Safety glasses with side shields are required.");
+      const dupB = makeTestRow("T-DUP-B", "ppe", "Safety glasses with side shields are required.", { sourceType: "owner", organization: "Amazon" });
+      add("Exact duplicate requirements collapse safely", rel(dupA, dupB).type === "duplicates");
+
+      const extinguisher10 = makeTestRow("T-EXT-10", "welding-hot-work", "Provide at least one 10 pound fire extinguisher for hot work.");
+      const extinguisher20 = makeTestRow("T-EXT-20", "welding-hot-work", "Provide at least one 20 pound fire extinguisher for hot work.", { sourceType: "gc", organization: "Whiting-Turner" });
+      add("Higher minimum extinguisher capacity supersedes lower minimum", rel(extinguisher10, extinguisher20).type === "supersedes" && rel(extinguisher10, extinguisher20).governingRowKey === phase2RowKey(extinguisher20));
+
+      const report24 = makeTestRow("T-REPORT-24", "emergency-incident", "Report all recordable incidents within 24 hours.");
+      const report1 = makeTestRow("T-REPORT-1", "emergency-incident", "Report all recordable incidents within 1 hour.", { sourceType: "owner", organization: "Amazon" });
+      add("Shorter maximum incident-reporting deadline supersedes longer deadline", rel(report24, report1).type === "supersedes" && rel(report24, report1).governingRowKey === phase2RowKey(report1));
+
+      const liveServices = makeTestRow("T-LIVE-SVC", "electrical-loto", "Document live electrical services on drawings and identify both source and field ends.");
+      const loto = makeTestRow("T-LOTO", "electrical-loto", "Apply lockout/tagout before servicing energized equipment.");
+      add("Live-services documentation remains independent from LOTO", rel(liveServices, loto).type === "independent");
+
+      const brace = makeTestRow("T-BRACE", "steel-erection-stability", "Temporary bracing shall remain in place until the structure is stable.");
+      const column = makeTestRow("T-COLUMN", "steel-erection-stability", "Columns shall be stabilized before releasing the hoisting line.");
+      add("Temporary bracing and column stability supplement each other", rel(brace, column).type === "supplements");
+
+      const deckBundle = makeTestRow("T-DECK-BUNDLE", "decking-joists", "Deck bundles shall be placed only at approved locations.");
+      const joistBridge = makeTestRow("T-JOIST-BRIDGE", "decking-joists", "Required joist bridging shall be installed before releasing the hoisting line.");
+      add("Deck bundle placement remains independent from joist bridging", rel(deckBundle, joistBridge).type === "independent");
+
+      const conditionedA = makeTestRow("T-COND-A", "cranes-hoisting", "Critical lifts may be performed only when approved by the corporate safety director.");
+      const conditionedB = makeTestRow("T-COND-B", "cranes-hoisting", "Critical lifts may be performed only when approved by the project executive.", { sourceType: "gc", organization: "Clayco" });
+      add("Different conditional scopes refuse automatic consolidation", rel(conditionedA, conditionedB).type === "human-review");
+
+      const heatInfo = makeTestRow("T-HEAT", "general-site-rules", "While working in hot conditions, the human body may not be able to maintain a normal temperature just by sweating. Heat-related illnesses may occur.", { category: "Heat / Cold / Severe Weather", topic: "Heat-Related Illnesses - Signs and Treatment" });
+      add("Descriptive 'may not be able' language is not misread as a prohibition", signatureForRow(heatInfo).polarity !== "prohibit");
+      add("Heat-related illness routes to weather/environment logic", highConfidenceComparisonKey(heatInfo) === "site:heat-illness");
+
+      const result = {
+        version: PHASE2.version,
+        passed: tests.filter((test) => test.pass).length,
+        total: tests.length,
+        failures: tests.filter((test) => !test.pass),
+        tests
+      };
+      state.reasoningValidation = result;
+      if (result.failures.length) console.warn("[S-Tier reasoning validation] Regression failures detected", result);
+      else console.info(`[S-Tier reasoning validation] ${result.passed}/${result.total} deterministic regression tests passed.`);
+      return result;
+    }
 
     /* ---------- Phase 3: Saved projects, snapshots, changes, actions, readiness ---------- */
     function phase3NowIso() {
@@ -5763,6 +6297,7 @@
 
     async function init() {
       phase3LoadProjects();
+      runReasoningRegressionTests();
       renderScopeChips();
       bindEvents();
       await Promise.allSettled([
@@ -5776,6 +6311,7 @@
     }
 
     init();
+  
   </script>
 </body>
 </html>
