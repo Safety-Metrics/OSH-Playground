@@ -199,6 +199,54 @@
     }
 
 
+    /* ---------- Cross-dashboard Navigation ---------- */
+    .dashboard-nav{
+      width: min(1680px, calc(100% - 44px));
+      margin: 8px auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 8px;
+      border: 1px solid rgba(93,92,90,.72);
+      border-radius: var(--radius-md);
+      background: rgba(17,17,18,.82);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .dashboard-nav-link{
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border: 1px solid rgba(242,239,235,.18);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--cooper-red), var(--burgundy));
+      color: var(--cream);
+      text-decoration: none;
+      font-family: var(--font-bold);
+      font-size: 14px;
+      font-weight: 950;
+      box-shadow: 0 10px 22px rgba(0,0,0,.18);
+      transition: transform 150ms ease, background 150ms ease;
+    }
+
+    .dashboard-nav-link:hover,
+    .dashboard-nav-link:focus-visible{
+      background: linear-gradient(135deg, #b3262a, #7a1020);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    @media (max-width: 620px){
+      .dashboard-nav{ width: calc(100% - 18px); }
+      .dashboard-nav-link{ width: 100%; }
+    }
+
+    @media print{
+      .dashboard-nav{ display:none !important; }
+    }
+
     /* ---------- Dashboard Tabs ---------- */
     .dashboard-tabs{
       width: min(1680px, calc(100% - 44px));
@@ -972,6 +1020,101 @@
       display: none;
     }
 
+    .field-topic-panel{
+      width: min(1180px, calc(100% - 44px));
+      margin: -6px auto 22px;
+      border: 1px solid rgba(93,92,90,.72);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(720px 220px at 0% 0%, rgba(159,28,31,.18), transparent 68%),
+        rgba(17,17,18,.88);
+      box-shadow: var(--soft-shadow);
+      overflow: hidden;
+    }
+
+    .field-topic-panel.hide{
+      display: none;
+    }
+
+    .field-topic-head{
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 18px;
+      border-bottom: 1px solid rgba(93,92,90,.72);
+      background: rgba(40,40,40,.72);
+    }
+
+    .field-topic-head strong{
+      display: block;
+      color: var(--cream);
+      font-family: var(--font-condensed);
+      font-size: 16px;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .field-topic-head p{
+      margin: 5px 0 0;
+      color: rgba(242,239,235,.68);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .field-topic-index{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 16px;
+    }
+
+    .field-topic-btn{
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      color: var(--cream);
+      border: 1px solid rgba(93,92,90,.9);
+      border-radius: 999px;
+      background: rgba(40,40,40,.9);
+      cursor: pointer;
+      font-family: var(--font-bold);
+      font-size: 13px;
+      font-weight: 950;
+      transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
+    }
+
+    .field-topic-btn:hover{
+      border-color: rgba(159,28,31,.92);
+      background: rgba(93,92,90,.68);
+      transform: translateY(-1px);
+    }
+
+    .field-topic-btn.active{
+      border-color: rgba(242,239,235,.18);
+      background: linear-gradient(135deg, var(--cooper-red), var(--burgundy));
+      box-shadow: 0 10px 22px rgba(0,0,0,.24);
+    }
+
+    .field-topic-btn small{
+      display: inline-flex;
+      min-width: 24px;
+      min-height: 24px;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.28);
+      color: var(--cloud);
+      font-family: var(--font-condensed);
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .04em;
+    }
+
     .gc-group-index{
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1351,6 +1494,7 @@
       .gc-toolbar,
       .gc-index-panel,
       .gc-group-panel,
+      .field-topic-panel,
       .gc-active-contractor,
       .gc-summary,
       .gc-cards,
@@ -1366,11 +1510,13 @@
         grid-template-columns: 1fr;
       }
 
-      .gc-panel-head{
+      .gc-panel-head,
+      .field-topic-head{
         display: block;
       }
 
-      .gc-panel-head p{
+      .gc-panel-head p,
+      .field-topic-head p{
         margin-top: 8px;
       }
 
@@ -1397,6 +1543,238 @@
       }
     }
 
+
+
+    /* ======================================================
+       FIELD-FIRST DISPLAY UPGRADE
+       Presentation only: preserve source rows, simplify UI.
+    ====================================================== */
+    .gc-summary{ display:none !important; }
+
+    .gc-group-index{
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .gc-group-btn{
+      min-height: 84px;
+      padding: 14px 16px;
+    }
+
+    .gc-group-meta{ display:none; }
+
+    .gc-cards,
+    .osh-cards{
+      width: min(1380px, calc(100% - 44px));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: stretch;
+    }
+
+    .gc-requirement-card,
+    .osh-requirement-card{
+      min-height: 0;
+      padding: 22px;
+      border-color: rgba(93,92,90,.78);
+      background:
+        radial-gradient(620px 240px at 6% 0%, rgba(159,28,31,.18), transparent 62%),
+        linear-gradient(145deg, rgba(40,40,40,.97), rgba(17,17,18,.98) 62%, rgba(104,12,25,.42));
+    }
+
+    .field-card-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .field-card-source{
+      min-width:0;
+      display:grid;
+      gap:4px;
+    }
+
+    .field-card-org{
+      color:var(--cloud);
+      font-family:var(--font-condensed);
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      overflow-wrap:anywhere;
+    }
+
+    .field-card-id{
+      color:rgba(242,239,235,.48);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.06em;
+    }
+
+    .field-card-title{
+      margin:0 0 12px;
+      color:var(--cream);
+      font-family:var(--font-bold);
+      font-size:22px;
+      line-height:1.2;
+      overflow-wrap:anywhere;
+    }
+
+    .field-context-chips,
+    .field-keywords{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+    }
+
+    .field-context-chips{ margin-bottom:14px; }
+
+    .field-context-chip{
+      display:inline-flex;
+      min-height:28px;
+      align-items:center;
+      padding:5px 9px;
+      border:1px solid rgba(93,92,90,.72);
+      border-radius:999px;
+      background:rgba(40,40,40,.62);
+      color:rgba(242,239,235,.66);
+      font-size:11px;
+      font-weight:800;
+    }
+
+    .field-answer-box{
+      margin:0 0 14px;
+      padding:16px;
+      border:1px solid rgba(242,239,235,.11);
+      border-radius:var(--radius-md);
+      background:rgba(0,0,0,.22);
+    }
+
+    .field-answer-label,
+    .field-detail-label,
+    .field-proof-label{
+      display:block;
+      color:var(--cloud);
+      font-family:var(--font-condensed);
+      font-size:11px;
+      font-weight:950;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+    }
+
+    .field-answer-label{ margin-bottom:8px; }
+
+    .field-answer-text{
+      margin:0;
+      color:var(--cream);
+      font-size:16px;
+      font-weight:700;
+      line-height:1.56;
+      white-space:normal;
+      overflow-wrap:anywhere;
+    }
+
+    .field-detail{
+      display:grid;
+      gap:7px;
+      margin-top:12px;
+      padding:13px 14px;
+      border:1px solid rgba(93,92,90,.60);
+      border-radius:14px;
+      background:rgba(40,40,40,.42);
+    }
+
+    .field-detail.action{
+      border-color:rgba(159,28,31,.34);
+      background:rgba(104,12,25,.17);
+    }
+
+    .field-detail-text{
+      margin:0;
+      color:rgba(242,239,235,.88);
+      font-size:14px;
+      line-height:1.48;
+      overflow-wrap:anywhere;
+    }
+
+    .field-keywords{
+      margin-top:14px;
+    }
+
+    .field-keyword{
+      min-height:27px;
+      display:inline-flex;
+      align-items:center;
+      padding:5px 9px;
+      border:1px solid rgba(93,92,90,.58);
+      border-radius:999px;
+      background:rgba(40,40,40,.34);
+      color:rgba(242,239,235,.58);
+      cursor:pointer;
+      font-size:10px;
+      font-weight:800;
+    }
+
+    .field-keyword:hover,
+    .field-keyword:focus-visible{
+      border-color:rgba(159,28,31,.88);
+      background:rgba(159,28,31,.14);
+      color:var(--cream);
+      outline:none;
+    }
+
+    .field-card-footer{
+      display:grid;
+      gap:10px;
+      margin-top:auto;
+      padding-top:18px;
+    }
+
+    .field-proof-label{ margin-bottom:2px; }
+
+    .field-card-footer .gc-source-row,
+    .field-card-footer .osh-source-row{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) auto;
+      align-items:center;
+      gap:12px;
+      padding-top:12px;
+      border-top:1px solid rgba(93,92,90,.68);
+    }
+
+    .field-card-footer .gc-source-link,
+    .field-card-footer .osh-source-link{
+      min-height:42px;
+      padding:10px 13px;
+      text-decoration:none;
+    }
+
+    .field-card-footer .gc-source-reference,
+    .field-card-footer .osh-citation-text{
+      color:rgba(242,239,235,.74);
+      font-family:var(--font-body);
+      font-size:12px;
+      font-weight:700;
+      line-height:1.4;
+      overflow-wrap:anywhere;
+    }
+
+    .osh-requirement-card .field-answer-box{ margin-top:2px; }
+
+    @media (max-width: 900px){
+      .gc-group-index{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .gc-cards,
+      .osh-cards{ grid-template-columns:1fr; }
+    }
+
+    @media (max-width: 560px){
+      .gc-group-index{ grid-template-columns:1fr; }
+      .field-card-footer .gc-source-row,
+      .field-card-footer .osh-source-row{ grid-template-columns:1fr; }
+      .field-card-footer .gc-source-link,
+      .field-card-footer .osh-source-link{ width:100%; }
+    }
+
   </style>
 </head>
 
@@ -1406,6 +1784,10 @@
   <header class="brand-header">
     <img src="coopersteel-logo.png" alt="Cooper Steel" class="brand-logo">
   </header>
+
+  <nav class="dashboard-nav" aria-label="Project requirements navigation">
+    <a class="dashboard-nav-link" href="stack-builder.html">Back to Stack Builder</a>
+  </nav>
 
   <nav class="dashboard-tabs" aria-label="Dashboard tabs">
     <button class="tab-btn active" type="button" data-view="cooperView" aria-selected="true">Cooper Steel Requirements</button>
@@ -1472,9 +1854,19 @@
     <section id="cooperGroupPanel" class="gc-group-panel" aria-label="Cooper Steel requirement groups">
       <div class="gc-panel-head">
         <h2>Requirement Groups</h2>
-        <p>Select a classification to load its cards. Search cuts across the full Cooper Steel manual.</p>
+        <p>Pick a field topic to load only those requirement cards. Search still scans the full manual.</p>
       </div>
       <div id="cooperGroupIndex" class="gc-group-index"></div>
+    </section>
+
+    <section id="cooperTopicPanel" class="field-topic-panel hide" aria-label="Refine Cooper Steel requirements by operational topic">
+      <div class="field-topic-head">
+        <div>
+          <strong>Refine Within This Group</strong>
+          <p>Pick the actual field question you are trying to answer.</p>
+        </div>
+      </div>
+      <div id="cooperTopicIndex" class="field-topic-index"></div>
     </section>
 
     <div id="cooperEmpty" class="gc-empty">Select a requirement group above to show cards.</div>
@@ -1526,8 +1918,8 @@
   <section id="gcView" class="dashboard-view" aria-label="General contractor requirements dashboard">
     <section class="gc-hero" aria-label="General contractor requirements summary">
       <div class="gc-eyebrow">Cooper Steel Field Safety</div>
-      <h1 class="gc-title">General Contractor Extra Requirements</h1>
-      <p class="gc-subtitle">A focused list of GC-specific requirements that go beyond Cooper Steel's subcontractor safety baseline.</p>
+      <h1 class="gc-title">General Contractor Requirements</h1>
+      <p class="gc-subtitle">Browse field-relevant requirements extracted from each general contractor safety manual. Pick the contractor, pick the topic, get the requirement, and open the exact source.</p>
       <div class="export-actions hero-export-actions" aria-label="Export general contractor requirements dashboard">
         <button class="export-pdf-btn" type="button" data-export-view="gcView">Export PDF</button>
         <button class="export-excel-btn" type="button" data-export-view="gcView">Export Excel</button>
@@ -1551,7 +1943,7 @@
     <section class="gc-index-panel" aria-label="General contractor index">
       <div class="gc-panel-head">
         <h2>GC Index</h2>
-        <p>Click a contractor to load its extra requirements.</p>
+        <p>Choose a contractor to browse its field requirements.</p>
       </div>
       <div id="gcContractorIndex" class="gc-index"></div>
     </section>
@@ -1586,20 +1978,29 @@
     <section id="gcGroupPanel" class="gc-group-panel" aria-label="General contractor requirement groups">
       <div class="gc-panel-head">
         <h2>Requirement Groups</h2>
-        <p>Select a group to show only those cards. Search still cuts across all groups.</p>
+        <p>Pick a field topic to load only those requirement cards.</p>
       </div>
       <div id="gcGroupIndex" class="gc-group-index"></div>
     </section>
+    <section id="gcTopicPanel" class="field-topic-panel hide" aria-label="Refine general contractor requirements by operational topic">
+      <div class="field-topic-head">
+        <div>
+          <strong>Refine Within This Group</strong>
+          <p>Pick the actual field question you are trying to answer.</p>
+        </div>
+      </div>
+      <div id="gcTopicIndex" class="field-topic-index"></div>
+    </section>
     <div id="gcEmpty" class="gc-empty">No GC requirements match the current filters.</div>
     <section id="gcCards" class="gc-cards" aria-label="General contractor requirement cards"></section>
-    <p class="gc-footer-note">Source links become clickable when the sheet includes a Source URL column or when a hosted PDF base URL is configured in the code.</p>
+    <p class="gc-footer-note">Each source button opens the hosted source document at the cited page when a page reference is available.</p>
   </section>
 
   <section id="ownerView" class="dashboard-view" aria-label="Owner requirements dashboard">
     <section class="gc-hero" aria-label="Owner requirements summary">
       <div class="gc-eyebrow">Cooper Steel Field Safety</div>
-      <h1 class="gc-title">Owner Extra Requirements</h1>
-      <p class="gc-subtitle">A focused list of owner-specific requirements that go beyond Cooper Steel's subcontractor safety baseline.</p>
+      <h1 class="gc-title">Owner Requirements</h1>
+      <p class="gc-subtitle">Browse field-relevant owner requirements in a clean, source-backed format built for quick field use.</p>
       <div class="export-actions hero-export-actions" aria-label="Export owner requirements dashboard">
         <button class="export-pdf-btn" type="button" data-export-view="ownerView">Export PDF</button>
         <button class="export-excel-btn" type="button" data-export-view="ownerView">Export Excel</button>
@@ -1623,7 +2024,7 @@
     <section class="gc-index-panel" aria-label="Owner index">
       <div class="gc-panel-head">
         <h2>Owner Index</h2>
-        <p>Click an owner to load its extra requirements.</p>
+        <p>Choose an owner to browse its field requirements.</p>
       </div>
       <div id="ownerIndex" class="gc-index"></div>
     </section>
@@ -1658,13 +2059,22 @@
     <section id="ownerGroupPanel" class="gc-group-panel" aria-label="Owner requirement groups">
       <div class="gc-panel-head">
         <h2>Requirement Groups</h2>
-        <p>Select a group to show only those cards. Search still cuts across all groups.</p>
+        <p>Pick a field topic to load only those requirement cards.</p>
       </div>
       <div id="ownerGroupIndex" class="gc-group-index"></div>
     </section>
+    <section id="ownerTopicPanel" class="field-topic-panel hide" aria-label="Refine owner requirements by operational topic">
+      <div class="field-topic-head">
+        <div>
+          <strong>Refine Within This Group</strong>
+          <p>Pick the actual field question you are trying to answer.</p>
+        </div>
+      </div>
+      <div id="ownerTopicIndex" class="field-topic-index"></div>
+    </section>
     <div id="ownerEmpty" class="gc-empty">No owner requirements match the current filters.</div>
     <section id="ownerCards" class="gc-cards" aria-label="Owner requirement cards"></section>
-    <p class="gc-footer-note">Source links become clickable when the sheet includes a Source URL column or when a hosted PDF base URL is configured in the code.</p>
+    <p class="gc-footer-note">Each source button opens the hosted source document at the cited page when a page reference is available.</p>
   </section>
 
   </div>
@@ -1686,6 +2096,343 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+    }
+
+
+
+    function cleanFieldText(value){
+      return String(value ?? "")
+        .replace(/\s+/g, " ")
+        .replace(/\s+([,.;:!?])/g, "$1")
+        .trim();
+    }
+
+    function normalizedFieldText(value){
+      return cleanFieldText(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function simpleTextSimilarity(a, b){
+      const aWords = new Set(normalizedFieldText(a).split(" ").filter(Boolean));
+      const bWords = new Set(normalizedFieldText(b).split(" ").filter(Boolean));
+      if (!aWords.size || !bWords.size) return 0;
+      let overlap = 0;
+      aWords.forEach((word) => { if (bWords.has(word)) overlap += 1; });
+      return overlap / Math.max(aWords.size, bWords.size);
+    }
+
+    function bestFieldCardTitle(row, fallbackGroup = ""){
+      let candidate = cleanFieldText(row?.topic || row?.category || fallbackGroup || "Field Requirement");
+      candidate = candidate
+        .replace(/^(?:requirement|general requirement|safety requirement|extra requirement)\s*[-:–—]\s*/i, "")
+        .replace(/^training\s*[-:–—]\s*/i, "Training: ")
+        .trim();
+
+      if (candidate.length > 118 || (/\bshall\b|\bmust\b|\brequires?\b/i.test(candidate) && candidate.length > 86)){
+        const backup = cleanFieldText(row?.category || fallbackGroup || "Field Requirement");
+        if (backup && backup.length <= 90) candidate = backup;
+      }
+
+      return candidate || "Field Requirement";
+    }
+
+    function usefulFieldAction(action, requirement){
+      const value = cleanFieldText(action);
+      if (!value) return "";
+      const lowered = value.toLowerCase();
+      const adminNoise = [
+        "dashboard", "add a field", "add field", "track whether", "document intake",
+        "project setup checklist", "capture in", "add to the dashboard", "create a workflow",
+        "flag this", "flag projects", "verification field", "dashboard action"
+      ];
+      if (adminNoise.some((phrase) => lowered.includes(phrase))) return "";
+      if (simpleTextSimilarity(value, requirement) >= 0.86) return "";
+      return value;
+    }
+
+    function usefulTrigger(trigger, title, requirement){
+      const value = cleanFieldText(trigger);
+      if (!value) return "";
+      if (normalizedFieldText(value) === normalizedFieldText(title)) return "";
+      if (simpleTextSimilarity(value, requirement) >= 0.88) return "";
+      return value;
+    }
+
+    function fieldKeywords(tags){
+      return [...new Set(cleanFieldText(tags)
+        .split(/[,;|]+/)
+        .map((tag) => tag.trim())
+        .filter((tag) => tag && tag.length <= 42))]
+        .slice(0, 6);
+    }
+
+    function renderFieldRequirementCard(row, options = {}){
+      const organization = cleanFieldText(options.organization || row?.organization || row?.gc || row?.owner || "Requirement Source");
+      const group = cleanFieldText(options.group || "");
+      const category = cleanFieldText(row?.category || "");
+      const title = bestFieldCardTitle(row, group);
+      const requirement = cleanFieldText(row?.requirement || "No requirement text listed.");
+      const action = usefulFieldAction(row?.action, requirement);
+      const trigger = usefulTrigger(row?.trigger, title, requirement);
+      const priorityClass = cleanFieldText(options.priorityClass || "low");
+      const priorityText = cleanFieldText(options.priorityText || row?.priority || "Unrated");
+      const sourceHtml = String(options.sourceHtml || "");
+      const keywords = fieldKeywords(row?.tags || "");
+      const context = [...new Set([group, category].filter(Boolean))].slice(0, 2);
+
+      return `
+        <article class="gc-requirement-card field-card">
+          <div class="field-card-head">
+            <div class="field-card-source">
+              <span class="field-card-org">${escapeHtml(organization)}</span>
+              ${row?.id ? `<span class="field-card-id">${escapeHtml(row.id)}</span>` : ""}
+            </div>
+            <span class="gc-priority ${escapeHtml(priorityClass)}">${escapeHtml(priorityText)}</span>
+          </div>
+
+          <h2 class="field-card-title">${escapeHtml(title)}</h2>
+
+          ${context.length ? `
+            <div class="field-context-chips">
+              ${context.map((item) => `<span class="field-context-chip">${escapeHtml(item)}</span>`).join("")}
+            </div>` : ""}
+
+          <div class="field-answer-box">
+            <span class="field-answer-label">Field Requirement</span>
+            <p class="field-answer-text">${escapeHtml(requirement)}</p>
+          </div>
+
+          ${action ? `
+            <div class="field-detail action">
+              <span class="field-detail-label">What To Do</span>
+              <p class="field-detail-text">${escapeHtml(action)}</p>
+            </div>` : ""}
+
+          ${trigger ? `
+            <div class="field-detail">
+              <span class="field-detail-label">When It Applies</span>
+              <p class="field-detail-text">${escapeHtml(trigger)}</p>
+            </div>` : ""}
+
+          ${keywords.length ? `
+            <div class="field-keywords" aria-label="Search keywords">
+              ${keywords.map((tag) => `<button class="field-keyword" type="button" data-field-search="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join("")}
+            </div>` : ""}
+
+          <div class="field-card-footer">
+            <span class="field-proof-label">Show Me The Source</span>
+            ${sourceHtml}
+          </div>
+        </article>`;
+    }
+
+    function wireFieldKeywordSearch(container, searchInput, renderFn){
+      if (!container || !searchInput || typeof renderFn !== "function") return;
+      container.querySelectorAll("[data-field-search]").forEach((button) => {
+        button.addEventListener("click", () => {
+          searchInput.value = button.dataset.fieldSearch || "";
+          renderFn();
+          searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
+          searchInput.focus();
+        });
+      });
+    }
+
+
+    const FIELD_TOPIC_ALL = "__ALL_TOPICS__";
+
+    function fieldTopicText(row){
+      return normalizedFieldText([
+        row?.topic,
+        row?.category,
+        row?.requirement,
+        row?.tags
+      ].filter(Boolean).join(" "));
+    }
+
+    function fieldHasAny(text, terms){
+      return terms.some((term) => text.includes(term));
+    }
+
+    function fieldOperationalTopic(row, group = ""){
+      const text = fieldTopicText(row);
+      const groupText = normalizedFieldText(group);
+      const has = (...terms) => fieldHasAny(text, terms);
+
+      if (groupText.includes("fall protection") || groupText.includes("elevated work")) {
+        if (has("ladder")) return "Ladders";
+        if (has("scaffold")) return "Scaffolds & Work Platforms";
+        if (has("guardrail", "floor opening", "roof opening", "wall opening", "hole", "perimeter cable", "warning line", "controlled access zone")) return "Guardrails, Openings & Warning Lines";
+        if (has("rescue", "fallen worker", "promptly rescued")) return "Rescue & Recovery";
+        if (has("inspect", "inspection", "storage", "maintenance", "defective", "remove from service")) return "Fall Protection Equipment Inspection & Care";
+        if (has("anchor", "anchorage", "lifeline", "harness", "personal fall arrest", "pfas", "self retract", "srl", "lanyard")) return "Harnesses, Lifelines & Anchorages";
+        if (has("trigger", "100 percent fall protection", "6 feet", "6 foot", "4 feet", "4 foot", "10 feet", "10 foot", "height", "threshold", "fall protection plan", "fall protection planning")) return "Trigger Heights & Fall Protection Plans";
+        if (has("training", "responsibilit", "competent person", "qualified person")) return "Training, Competent Persons & Responsibilities";
+        return "General Fall Protection";
+      }
+
+      if (groupText.includes("rigging") || groupText.includes("crane") || groupText.includes("hoisting")) {
+        if (has("critical lift")) return "Critical Lifts";
+        if (has("multiple lift", "multi lift")) return "Multiple Lifts";
+        if (has("assembly disassembly", "assembly and disassembly", "a d director")) return "Crane Assembly & Disassembly";
+        if (has("signal person", "signalperson", "signaling")) return "Signal Persons & Communications";
+        if (has("power line", "overhead line", "electrical clearance")) return "Power-Line Clearances";
+        if (has("crane inspection", "mobile crane inspection", "annual comprehensive", "daily each shift")) return "Crane Inspections";
+        if (has("crane operator", "crane operations", "safety device", "operational aid")) return "Crane Operations & Operators";
+        if (has("lift plan", "lift planning", "pre lift", "pre-lift")) return "Lift Planning & Pre-Lift Meetings";
+        if (has("sling", "rigging inspection", "rigger responsibilities", "inspect lifting equipment")) return "Rigging & Sling Inspections";
+        if (has("rigging", "tag line", "wear pad", "load capacity", "lifting device")) return "Rigging Practices & Load Control";
+        return "General Crane & Hoisting Requirements";
+      }
+
+      if (groupText.includes("steel erection") || groupText.includes("structural stability") || groupText.includes("decking") || groupText.includes("joist")) {
+        if (has("joist", "bridging")) return "Joists, Joist Girders & Bridging";
+        if (has("deck", "decking", "deck bundle")) return "Metal Decking";
+        if (has("column", "anchor bolt", "anchor rod", "shim", "sleeve footing")) return "Columns, Anchorages & Connections";
+        if (has("structural stability", "temporary bracing", "stability", "planked or decked floor", "four floors", "48 feet")) return "Structural Stability & Temporary Bracing";
+        if (has("pre steel erection", "pre erection", "commencement of steel erection", "erection plan", "site specific erection", "jha")) return "Pre-Erection Planning & Site Readiness";
+        if (has("barricad", "controlled decking zone", "cdz", "access zone")) return "Barricades & Controlled Work Areas";
+        return "General Steel Erection Requirements";
+      }
+
+      if (groupText.includes("mobile equipment") || groupText.includes("work platforms") || groupText.includes("mewp")) {
+        if (has("mewp", "mobile elevated work platform", "aerial lift", "scissor lift", "basket")) {
+          if (has("fall protection", "harness", "lanyard", "srl")) return "MEWP Fall Protection";
+          if (has("inspect", "inspection", "manual must be present")) return "MEWP Inspections & Pre-Use Checks";
+          if (has("electrical", "power line", "electric current")) return "MEWP Electrical Hazards";
+          if (has("spotter", "collision", "congested")) return "MEWP Spotters & Collision Control";
+          return "MEWP Operations";
+        }
+        if (has("forklift", "powered industrial truck", "telehandler", "pit")) {
+          if (has("training", "evaluation", "operator")) return "Forklift / PIT Operator Qualification";
+          if (has("inspect", "inspection", "beginning of each shift")) return "Forklift / PIT Inspections";
+          if (has("rigging", "forks")) return "Forklift Rigging Restrictions";
+          return "Forklift / PIT Operations";
+        }
+        if (has("traffic", "right of way", "railroad", "spotter")) return "Traffic, Spotters & Right-of-Way";
+        return "General Mobile Equipment Requirements";
+      }
+
+      if (groupText.includes("electrical") || groupText.includes("energy control") || groupText.includes("loto") || groupText.includes("tools")) {
+        if (has("lockout", "tagout", "loto", "try out", "tryout")) return "Lockout / Tagout / Tryout";
+        if (has("energized electrical work permit", "energized work permit", "arc flash", "qualified worker")) return "Energized Electrical Work";
+        if (has("gfci", "ground fault", "assured grounding", "temporary power")) return "GFCI, Grounding & Temporary Power";
+        if (has("clearance", "live part", "workspace", "electrical installation", "guarding")) return "Electrical Clearances & Guarding";
+        if (has("powder actuated", "powder-actuated")) return "Powder-Actuated Tools";
+        if (has("tool tether", "tether")) return "Tool Tethers & Dropped-Object Control";
+        if (has("hand tool", "power tool", "pneumatic", "electric tool", "fuel powered tool", "guard")) return "Hand & Power Tools";
+        if (has("inspection", "inspect", "damaged tool", "remove from service")) return "Tool Inspection & Removal From Service";
+        return "General Electrical & Tool Requirements";
+      }
+
+      if (groupText.includes("fire") || groupText.includes("hot work") || groupText.includes("weather") || groupText.includes("welding")) {
+        if (has("heat illness", "heat stress", "heat exhaustion", "heat stroke", "hot conditions")) return "Heat Stress & Heat Illness";
+        if (has("cold stress", "hypothermia", "frostbite", "cold related")) return "Cold Stress & Cold Illness";
+        if (has("fire watch")) return "Fire Watch";
+        if (has("welding", "cutting", "brazing", "oxyfuel", "electric arc")) return "Welding & Cutting";
+        if (has("hot work permit", "hot work")) return "Hot Work Permits & Area Preparation";
+        if (has("fire extinguisher", "extinguisher")) return "Fire Extinguishers";
+        if (has("flammable", "fueling", "combustible", "grounded drum")) return "Flammables, Fueling & Combustibles";
+        if (has("lightning", "severe weather", "wind", "weather")) return "Severe Weather & Lightning";
+        return "General Fire Prevention";
+      }
+
+      if (groupText.includes("material handling") || groupText.includes("housekeeping")) {
+        if (has("unloading")) return "Unloading Materials";
+        if (has("loading", "load securement", "binding device", "transporting to the project site", "driver")) return "Loading, Transport & Load Securement";
+        if (has("staging material", "staging")) return "Staging Materials";
+        if (has("storage", "stacking", "tiers", "racked", "blocked", "interlocked")) return "Storage & Stacking";
+        if (has("housekeeping", "aisle", "exit route", "clean and tidy", "electrical panel")) return "Housekeeping & Access Routes";
+        if (has("manual handling", "lifting technique", "back safety", "ergonomic", "mechanical aid")) return "Manual Material Handling & Ergonomics";
+        return "General Material Handling";
+      }
+
+      if (groupText.includes("occupational health") || groupText === "ppe" || groupText.includes("personal protective")) {
+        if (has("respirator", "respiratory")) return "Respiratory Protection";
+        if (has("eye", "face protection", "safety glasses", "z87")) return "Eye & Face Protection";
+        if (has("foot", "safety toe", "metatarsal", "boot")) return "Foot Protection";
+        if (has("helmet", "hard hat", "head protection")) return "Head Protection";
+        if (has("hearing", "noise")) return "Hearing Protection & Noise";
+        if (has("high visibility", "high-vis", "hi vis", "reflective")) return "High-Visibility Apparel";
+        if (has("glove", "hand protection")) return "Hand Protection";
+        if (has("silica")) return "Silica Exposure Control";
+        return "General PPE Requirements";
+      }
+
+      if (groupText.includes("emergency") || groupText.includes("medical") || groupText.includes("incident response")) {
+        if (has("incident", "near miss", "injury report", "reporting")) return "Incident & Near-Miss Reporting";
+        if (has("first aid", "aed", "cpr", "medical facility", "clinic")) return "First Aid, AED & Medical Response";
+        if (has("emergency action", "emergency response", "evacuation", "erp", "drill")) return "Emergency Plans, Drills & Evacuation";
+        if (has("bloodborne", "blood borne")) return "Bloodborne Pathogens";
+        return "General Emergency Response";
+      }
+
+      if ((groupText.includes("training") || groupText.includes("qualification") || groupText.includes("workforce readiness")) && !groupText.includes("fitness") && !groupText.includes("conduct")) {
+        if (has("orientation", "new hire", "site access")) return "Orientation & New-Hire Readiness";
+        if (has("competent person", "qualified person", "certification", "qualification")) return "Competent / Qualified Person Requirements";
+        if (has("toolbox", "meeting", "huddle")) return "Meetings, Huddles & Toolbox Talks";
+        if (has("record", "documentation", "training record")) return "Training Records & Documentation";
+        return "Training & Workforce Qualifications";
+      }
+
+      if (groupText.includes("plans") || groupText.includes("permit") || groupText.includes("submittal") || groupText.includes("pre mobilization")) {
+        if (has("fall protection plan")) return "Fall Protection Plans";
+        if (has("lift plan", "critical lift")) return "Lift Plans & Critical-Lift Submittals";
+        if (has("hot work permit")) return "Hot Work Permits";
+        if (has("confined space", "entry permit")) return "Confined-Space Permits";
+        if (has("jha", "aha", "jha", "pre task", "pre-task", "ptp", "ptsa")) return "JHA / AHA / Pre-Task Planning";
+        if (has("site specific", "sssp", "erection plan", "ssep")) return "Site-Specific Safety & Erection Plans";
+        return "Plans, Permits & Submittals";
+      }
+
+      if (groupText.includes("inspection") || groupText.includes("documentation") || groupText.includes("audit")) {
+        if (has("osha inspection", "compliance officer", "closing conference", "citation", "penalt")) return "OSHA Inspections & Regulatory Response";
+        if (has("follow up inspection", "follow-up inspection", "corrective action")) return "Follow-Up Inspections & Corrective Actions";
+        if (has("audit", "safety audit")) return "Safety Audits";
+        return "Inspections & Documentation";
+      }
+
+      if (groupText.includes("confined space")) {
+        if (has("permit required", "entry permit")) return "Permit-Required Confined Spaces";
+        if (has("atmospheric", "gas test", "air monitoring")) return "Atmospheric Testing & Monitoring";
+        if (has("attendant", "entrant", "entry supervisor")) return "Entrants, Attendants & Entry Supervisors";
+        if (has("rescue")) return "Confined-Space Rescue";
+        return "General Confined Space Requirements";
+      }
+
+      if (groupText.includes("governance") || groupText.includes("safety culture") || groupText.includes("executive")) {
+        if (has("stop work", "stop-work")) return "Stop-Work Authority";
+        if (has("discipline", "violation", "enforcement")) return "Discipline & Enforcement";
+        if (has("responsibilit", "management", "supervisor")) return "Roles & Responsibilities";
+        if (has("variance", "exception", "exemption")) return "Variances & Exceptions";
+        return "Program Governance & Safety Culture";
+      }
+
+      if (groupText.includes("general site rules") || groupText.includes("fitness") || groupText.includes("conduct")) {
+        if (has("working alone", "work alone")) return "Working Alone";
+        if (has("drug", "alcohol", "substance", "testing procedure", "testing criteria")) return "Drug, Alcohol & Testing Rules";
+        if (has("discipline", "progressive discipline", "violation", "enforcement")) return "Discipline & Enforcement";
+        if (has("fatigue", "minimum rest", "breaks", "property carrying drivers", "driving")) return "Fatigue, Rest & Driving";
+        if (has("fit for duty", "fit for work", "fit for-work", "return to work", "medical certification")) return "Fitness for Duty & Return to Work";
+        if (has("jewelry", "earbud", "headphone", "radio", "phone")) return "Personal Conduct & Prohibited Items";
+        return "General Site Conduct & Rules";
+      }
+
+      const fallback = cleanFieldText(row?.category || row?.topic || "General Requirements");
+      return fallback.length > 68 ? fallback.slice(0, 65).trimEnd() + "…" : fallback;
+    }
+
+    function fieldTopicCounts(rows, group){
+      const counts = new Map();
+      rows.forEach((row) => {
+        const topic = fieldOperationalTopic(row, group);
+        if (!counts.has(topic)) counts.set(topic, []);
+        counts.get(topic).push(row);
+      });
+      return [...counts.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
     }
 
     function rowsToSheet(title, rows){
@@ -1942,7 +2689,7 @@
         const link = isUrl(sourceValue) ? sourceValue : isUrl(fallbackValue) ? fallbackValue : "";
 
         if (link) {
-          return `<a class="osh-source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Open Source</a>`;
+          return `<a class="osh-source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Show Source</a>`;
         }
 
         return `<span class="osh-citation-text">${escapeHtml(sourceValue || "No source listed")}</span>`;
@@ -2012,16 +2759,21 @@
         els.empty.classList.toggle("show", rows.length === 0);
 
         els.cards.innerHTML = rows.map((row, index) => `
-          <article class="osh-requirement-card">
-            <div class="osh-card-number">${term ? escapeHtml(row.state) + " / " : ""}Requirement ${String(index + 1).padStart(2, "0")}</div>
-            <p class="osh-requirement-text">${escapeHtml(row.requirement)}</p>
-            <div class="osh-card-footer">
-              <div class="osh-citation-row">
-                <span class="osh-label">Citation</span>
-                <span class="osh-citation-text">${escapeHtml(citationText(row.citation))}</span>
+          <article class="osh-requirement-card field-card">
+            <div class="field-card-head">
+              <div class="field-card-source">
+                <span class="field-card-org">${escapeHtml(row.state || selectedState || "State OSHA")}</span>
+                <span class="field-card-id">Requirement ${String(index + 1).padStart(2, "0")}</span>
               </div>
+            </div>
+            <div class="field-answer-box">
+              <span class="field-answer-label">State Requirement</span>
+              <p class="field-answer-text">${escapeHtml(row.requirement)}</p>
+            </div>
+            <div class="field-card-footer">
+              <span class="field-proof-label">Show Me The Source</span>
               <div class="osh-source-row">
-                <span class="osh-label">Source</span>
+                <span class="osh-citation-text">${escapeHtml(citationText(row.citation))}</span>
                 ${sourceMarkup(row.source, row.citation)}
               </div>
             </div>
@@ -2092,13 +2844,16 @@
         activeSummary: document.getElementById("cooperActiveSummary"),
         activeBadge: document.getElementById("cooperActiveBadge"),
         groupPanel: document.getElementById("cooperGroupPanel"),
-        groupIndex: document.getElementById("cooperGroupIndex")
+        groupIndex: document.getElementById("cooperGroupIndex"),
+        topicPanel: document.getElementById("cooperTopicPanel"),
+        topicIndex: document.getElementById("cooperTopicIndex")
       };
 
       if (!els.cards || !els.groupIndex) return;
 
       let allRows = [];
       let selectedGroup = "";
+      let selectedTopic = "";
       const allGroupsValue = "__ALL_GROUPS__";
 
       const preferredGroupOrder = [
@@ -2284,7 +3039,7 @@
           return `
             <div class="gc-source-row">
               <span class="gc-source-reference">${escapeHtml(reference)}</span>
-              <a class="gc-source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Open Source</a>
+              <a class="gc-source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Show Source</a>
             </div>`;
         }
         return `<span class="gc-source-reference">${escapeHtml(reference)}</span>`;
@@ -2304,7 +3059,7 @@
       }
       function activeFilterCount() {
         const hasSearch = Boolean(els.search.value.trim());
-        return [els.search.value.trim(), els.category.value, els.priority.value, !hasSearch && selectedGroup && selectedGroup !== allGroupsValue ? selectedGroup : ""].filter(Boolean).length;
+        return [els.search.value.trim(), els.category.value, els.priority.value, !hasSearch && selectedGroup && selectedGroup !== allGroupsValue ? selectedGroup : "", !hasSearch && selectedTopic && selectedTopic !== FIELD_TOPIC_ALL ? selectedTopic : ""].filter(Boolean).length;
       }
       function renderSummary(rows) {
         els.total.textContent = rows.length;
@@ -2347,6 +3102,7 @@
         els.groupIndex.querySelectorAll(".gc-group-btn").forEach((button) => {
           button.addEventListener("click", () => {
             selectedGroup = button.dataset.group;
+            selectedTopic = "";
             render();
             els.cards.scrollIntoView({ block: "start", behavior: "smooth" });
           });
@@ -2354,17 +3110,57 @@
         return groups;
       }
 
+      function renderTopicButtons(groupRows, term) {
+        const shouldShow = !term && selectedGroup && selectedGroup !== allGroupsValue && groupRows.length > 0;
+        els.topicPanel.classList.toggle("hide", !shouldShow);
+        if (!shouldShow) {
+          els.topicIndex.innerHTML = "";
+          selectedTopic = "";
+          return [];
+        }
+
+        const topics = fieldTopicCounts(groupRows, selectedGroup);
+        const validTopics = new Set([FIELD_TOPIC_ALL, ...topics.map(([label]) => label)]);
+        if (selectedTopic && !validTopics.has(selectedTopic)) selectedTopic = "";
+
+        const buttons = [[FIELD_TOPIC_ALL, groupRows], ...topics];
+        els.topicIndex.innerHTML = buttons.map(([label, topicRows]) => `
+          <button class="field-topic-btn ${selectedTopic === label ? "active" : ""}" type="button" data-topic="${escapeHtml(label)}">
+            <span>${escapeHtml(label === FIELD_TOPIC_ALL ? "Show All In This Group" : label)}</span>
+            <small>${topicRows.length}</small>
+          </button>
+        `).join("");
+
+        els.topicIndex.querySelectorAll(".field-topic-btn").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectedTopic = button.dataset.topic;
+            render();
+            els.cards.scrollIntoView({ block: "start", behavior: "smooth" });
+          });
+        });
+
+        return topics;
+      }
+
       function render() {
         const term = els.search.value.trim();
         const baseRows = filteredRows({ applyGroup: false });
         const groups = renderGroupButtons(baseRows, term);
-        const rows = term ? filteredRows({ applyGroup: false }) : selectedGroup ? filteredRows() : [];
+        const groupRows = !term && selectedGroup ? filteredRows() : [];
+        const topics = renderTopicButtons(groupRows, term);
+        let rows = [];
+        if (term) rows = filteredRows({ applyGroup: false });
+        else if (selectedGroup === allGroupsValue) rows = groupRows;
+        else if (selectedGroup && selectedTopic === FIELD_TOPIC_ALL) rows = groupRows;
+        else if (selectedGroup && selectedTopic) rows = groupRows.filter((row) => fieldOperationalTopic(row, selectedGroup) === selectedTopic);
         const sortedCardRows = sortedRows(rows);
 
-        renderSummary(term || selectedGroup ? sortedCardRows : baseRows);
+        renderSummary(term || selectedTopic || selectedGroup === allGroupsValue ? sortedCardRows : (selectedGroup ? groupRows : baseRows));
         els.empty.textContent = !term && !selectedGroup && baseRows.length
-          ? "Select a requirement group above to show cards."
-          : "No Cooper Steel requirements match the current filters.";
+          ? "Select a requirement group above to continue."
+          : !term && selectedGroup && selectedGroup !== allGroupsValue && !selectedTopic && groupRows.length
+            ? "Select an operational topic above to show the cards you actually need."
+            : "No Cooper Steel requirements match the current filters.";
         els.empty.classList.toggle("show", sortedCardRows.length === 0);
 
         if (term) {
@@ -2374,8 +3170,14 @@
         } else if (selectedGroup) {
           const groupName = selectedGroup === allGroupsValue ? "All Requirements" : selectedGroup;
           els.activeName.textContent = "Cooper Steel";
-          els.activeSummary.textContent = `${groupName}: ${sortedCardRows.length} visible card${sortedCardRows.length === 1 ? "" : "s"} out of ${allRows.length} total requirements.`;
-          els.activeBadge.textContent = `${sortedCardRows.length} card${sortedCardRows.length === 1 ? "" : "s"}`;
+          if (selectedGroup !== allGroupsValue && !selectedTopic) {
+            els.activeSummary.textContent = `${groupName}: ${groupRows.length} requirement${groupRows.length === 1 ? "" : "s"} organized into ${topics.length} field topic${topics.length === 1 ? "" : "s"}. Pick the actual question you need answered.`;
+            els.activeBadge.textContent = `${topics.length} topic${topics.length === 1 ? "" : "s"}`;
+          } else {
+            const topicName = selectedTopic && selectedTopic !== FIELD_TOPIC_ALL ? selectedTopic : groupName;
+            els.activeSummary.textContent = `${topicName}: ${sortedCardRows.length} visible card${sortedCardRows.length === 1 ? "" : "s"} out of ${allRows.length} total requirements.`;
+            els.activeBadge.textContent = `${sortedCardRows.length} card${sortedCardRows.length === 1 ? "" : "s"}`;
+          }
         } else {
           els.activeName.textContent = "Cooper Steel";
           els.activeSummary.textContent = `${allRows.length} operational requirements organized into ${groups.length} controlled groups. Select a group below to load cards.`;
@@ -2385,35 +3187,16 @@
         els.cards.innerHTML = sortedCardRows.map((row, index) => {
           const priorityClass = normalizedPriority(row.priority) || "low";
           const priorityText = row.priority || "Unrated";
-          return `
-            <article class="gc-requirement-card">
-              <div class="gc-card-top">
-                <div class="gc-card-number">COOPER STEEL ${row.id ? " / " + escapeHtml(row.id) : ""} / ${String(index + 1).padStart(2, "0")}</div>
-                <span class="gc-priority ${escapeHtml(priorityClass)}">${escapeHtml(priorityText)}</span>
-              </div>
-              <h2 class="gc-card-title">${escapeHtml(row.topic || "Requirement")}</h2>
-              <div class="gc-card-meta">
-                ${groupForRow(row) ? `<span class="gc-chip">${escapeHtml(groupForRow(row))}</span>` : ""}
-                ${row.category ? `<span class="gc-chip">${escapeHtml(row.category)}</span>` : ""}
-                ${row.trigger ? `<span class="gc-chip">${escapeHtml(row.trigger)}</span>` : ""}
-              </div>
-              <div class="gc-section">
-                <span class="gc-label">Requirement</span>
-                <p class="gc-text">${escapeHtml(row.requirement || "No requirement text listed.")}</p>
-              </div>
-              <div class="gc-section">
-                <span class="gc-label">Required Field Action</span>
-                <p class="gc-text">${escapeHtml(row.action || "No field action listed.")}</p>
-              </div>
-              <div class="gc-card-footer">
-                <div class="gc-section">
-                  <span class="gc-label">Source Reference</span>
-                  ${sourceMarkup(row)}
-                </div>
-                ${row.tags ? `<div class="gc-section"><span class="gc-label">Tags</span><p class="gc-text">${escapeHtml(row.tags)}</p></div>` : ""}
-              </div>
-            </article>`;
+          return renderFieldRequirementCard(row, {
+            organization: "Cooper Steel",
+            group: groupForRow(row),
+            priorityClass,
+            priorityText,
+            sourceHtml: sourceMarkup(row),
+            index
+          });
         }).join("");
+        wireFieldKeywordSearch(els.cards, els.search, render);
       }
 
       function setStatus(message, isError = false) {
@@ -2447,6 +3230,7 @@
         els.category.value = "";
         els.priority.value = "";
         selectedGroup = "";
+        selectedTopic = "";
         render();
         els.search.focus();
       });
@@ -2461,12 +3245,21 @@
       // PDF Filename, or PDF File column in the sheet without changing code.
       const GC_SOURCE_PDF_URLS = {
         "Whiting-Turner": "Whiting-Turner_Trade_Partner_Safety_Manual_2026.pdf",
-        "Conlan": "Conlan_EHS_Program_Safety_Manual.pdf",
         "Clayco": "Clayco_Safety_Health_Code_Book_2026.pdf",
+        "Conlan": "Conlan_EHS_Program_Safety_Manual.pdf",
         "EE Reed": "EE_Reed _EHS_Manual_2026.pdf",
-        "Gray Construction": "Gray_Construction_Safety_Manual_2024.pdf",
         "Gilbane Mortenson": "Gilbane_Mortenson_EHS_2026.pdf",
-        "Gilbane | Mortenson": "Gilbane_Mortenson_EHS_2026.pdf"
+        "Gilbane | Mortenson": "Gilbane_Mortenson_EHS_2026.pdf",
+        "AECOM": "AECOM_Tishman_SHE_Program_2025.pdf.pdf",
+        "DPR Construction": "DPR Safety Manual.pdf",
+        "JE Dunn": "JE Dunn Safety Manual.pdf",
+        "Pepper Construction": "Pepper Construction EH&S Manual 2025.pdf",
+        "Ryan Companies": "Ryan Companies 2026(3).pdf",
+        "Samet": "Samet Safety Manual.pdf",
+        "Turner Construction Company": "Turner Construction Safety Manual.pdf",
+        "Layton Construction": "2024-Layton-Safety-Manual.pdf",
+        "The Christman Company": "Christman Company Safety Manual.pdf",
+        "Gray Construction": "Gray Construction EH&S 2026.pdf"
       };
 
       const requiredHeaders = [
@@ -2497,13 +3290,16 @@
         activeSummary: document.getElementById("gcActiveSummary"),
         activeBadge: document.getElementById("gcActiveBadge"),
         groupPanel: document.getElementById("gcGroupPanel"),
-        groupIndex: document.getElementById("gcGroupIndex")
+        groupIndex: document.getElementById("gcGroupIndex"),
+        topicPanel: document.getElementById("gcTopicPanel"),
+        topicIndex: document.getElementById("gcTopicIndex")
       };
 
       let allRows = [];
       let contractors = [];
       let selectedGc = "";
       let selectedGroup = "";
+      let selectedTopic = "";
 
       function parseCsv(text) {
         const rows = [];
@@ -2662,6 +3458,7 @@
           button.addEventListener("click", () => {
             selectedGc = button.dataset.gc;
             selectedGroup = "";
+            selectedTopic = "";
             els.search.value = "";
             render();
             document.querySelector(".gc-active-contractor").scrollIntoView({ block: "start", behavior: "smooth" });
@@ -2819,7 +3616,7 @@
         const reference = String(row.sourceReference || "").trim();
         const page = sourcePageNumber(reference);
         const mappedPdf = String(mappedSourcePdf(row.gc) || "").trim();
-        const direct = String(mappedPdf || row.sourceUrl || row.sourcePdf || "").trim();
+        const direct = String(row.sourceUrl || row.sourcePdf || mappedPdf || "").trim();
         if (isSourceLink(direct)) {
           return addPageToPdfLink(direct, page);
         }
@@ -2828,7 +3625,7 @@
           return addPageToPdfLink(reference, page);
         }
 
-        const basePdf = String(mappedPdf || row.sourcePdf || pdfFileNameFromName(row.gc)).trim();
+        const basePdf = String(row.sourcePdf || mappedPdf || pdfFileNameFromName(row.gc)).trim();
         if (isSourceLink(basePdf) && page) {
           return addPageToPdfLink(basePdf, page);
         }
@@ -2844,7 +3641,7 @@
           return `
             <div class="gc-source-row">
               <span class="gc-source-reference">${escapeHtml(reference)}</span>
-              <a class="gc-source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Open Source</a>
+              <a class="gc-source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Show Source</a>
             </div>
           `;
         }
@@ -2892,7 +3689,8 @@
           els.search.value.trim(),
           els.category.value,
           els.priority.value,
-          !hasSearch && selectedGroup && selectedGroup !== allGroupsValue ? selectedGroup : ""
+          !hasSearch && selectedGroup && selectedGroup !== allGroupsValue ? selectedGroup : "",
+          !hasSearch && selectedTopic && selectedTopic !== FIELD_TOPIC_ALL ? selectedTopic : ""
         ].filter(Boolean).length;
       }
 
@@ -2969,6 +3767,7 @@
         els.groupIndex.querySelectorAll(".gc-group-btn").forEach((button) => {
           button.addEventListener("click", () => {
             selectedGroup = button.dataset.group;
+            selectedTopic = "";
             render();
             els.cards.scrollIntoView({ block: "start", behavior: "smooth" });
           });
@@ -2977,20 +3776,59 @@
         return groups;
       }
 
+      function renderTopicButtons(groupRows, term) {
+        const shouldShow = !term && selectedGc && selectedGroup && selectedGroup !== allGroupsValue && groupRows.length > 0;
+        els.topicPanel.classList.toggle("hide", !shouldShow);
+        if (!shouldShow) {
+          els.topicIndex.innerHTML = "";
+          selectedTopic = "";
+          return [];
+        }
+
+        const topics = fieldTopicCounts(groupRows, selectedGroup);
+        const validTopics = new Set([FIELD_TOPIC_ALL, ...topics.map(([label]) => label)]);
+        if (selectedTopic && !validTopics.has(selectedTopic)) selectedTopic = "";
+
+        const buttons = [[FIELD_TOPIC_ALL, groupRows], ...topics];
+        els.topicIndex.innerHTML = buttons.map(([label, topicRows]) => `
+          <button class="field-topic-btn ${selectedTopic === label ? "active" : ""}" type="button" data-topic="${escapeHtml(label)}">
+            <span>${escapeHtml(label === FIELD_TOPIC_ALL ? "Show All In This Group" : label)}</span>
+            <small>${topicRows.length}</small>
+          </button>
+        `).join("");
+
+        els.topicIndex.querySelectorAll(".field-topic-btn").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectedTopic = button.dataset.topic;
+            render();
+            els.cards.scrollIntoView({ block: "start", behavior: "smooth" });
+          });
+        });
+        return topics;
+      }
+
       function render() {
         renderContractorButtons();
         const term = els.search.value.trim();
         const baseRows = filteredRows({ applyGroup: false });
         const groups = renderGroupButtons(baseRows, term);
-        const rows = term ? filteredRows({ applyGroup: false }) : selectedGroup ? filteredRows() : [];
+        const groupRows = !term && selectedGroup ? filteredRows() : [];
+        const topics = renderTopicButtons(groupRows, term);
+        let rows = [];
+        if (term) rows = filteredRows({ applyGroup: false });
+        else if (selectedGroup === allGroupsValue) rows = groupRows;
+        else if (selectedGroup && selectedTopic === FIELD_TOPIC_ALL) rows = groupRows;
+        else if (selectedGroup && selectedTopic) rows = groupRows.filter((row) => fieldOperationalTopic(row, selectedGroup) === selectedTopic);
         const sortedCardRows = sortedRows(rows);
         const totalForGc = countForGc(selectedGc);
         const matchedContractors = uniqueSorted(baseRows.map((row) => row.gc));
 
-        renderSummary(term || selectedGroup ? sortedCardRows : baseRows);
+        renderSummary(term || selectedTopic || selectedGroup === allGroupsValue ? sortedCardRows : (selectedGroup ? groupRows : baseRows));
         els.empty.textContent = !term && selectedGc && !selectedGroup && baseRows.length
-          ? "Select a requirement group above to show cards."
-          : "No GC requirements match the current filters.";
+          ? "Select a requirement group above to continue."
+          : !term && selectedGroup && selectedGroup !== allGroupsValue && !selectedTopic && groupRows.length
+            ? "Select an operational topic above to show the cards you actually need."
+            : "No GC requirements match the current filters.";
         els.empty.classList.toggle("show", sortedCardRows.length === 0);
 
         if (term) {
@@ -3000,8 +3838,14 @@
         } else if (selectedGroup) {
           const groupName = selectedGroup === allGroupsValue ? "All Groups" : selectedGroup;
           els.activeName.textContent = selectedGc || "Select a GC";
-          els.activeSummary.textContent = `${groupName}: ${sortedCardRows.length} visible card${sortedCardRows.length === 1 ? "" : "s"} out of ${totalForGc} total row${totalForGc === 1 ? "" : "s"} for ${selectedGc}.`;
-          els.activeBadge.textContent = `${sortedCardRows.length} card${sortedCardRows.length === 1 ? "" : "s"}`;
+          if (selectedGroup !== allGroupsValue && !selectedTopic) {
+            els.activeSummary.textContent = `${groupName}: ${groupRows.length} requirement${groupRows.length === 1 ? "" : "s"} organized into ${topics.length} field topic${topics.length === 1 ? "" : "s"}. Pick the actual question you need answered.`;
+            els.activeBadge.textContent = `${topics.length} topic${topics.length === 1 ? "" : "s"}`;
+          } else {
+            const topicName = selectedTopic && selectedTopic !== FIELD_TOPIC_ALL ? selectedTopic : groupName;
+            els.activeSummary.textContent = `${topicName}: ${sortedCardRows.length} visible card${sortedCardRows.length === 1 ? "" : "s"} out of ${totalForGc} total requirement${totalForGc === 1 ? "" : "s"} for ${selectedGc}.`;
+            els.activeBadge.textContent = `${sortedCardRows.length} card${sortedCardRows.length === 1 ? "" : "s"}`;
+          }
         } else {
           els.activeName.textContent = selectedGc || "Select a GC";
           els.activeSummary.textContent = selectedGc
@@ -3013,42 +3857,16 @@
         els.cards.innerHTML = sortedCardRows.map((row, index) => {
           const priorityClass = normalizedPriority(row.priority) || "low";
           const priorityText = row.priority || "Unrated";
-
-          return `
-            <article class="gc-requirement-card">
-              <div class="gc-card-top">
-                <div class="gc-card-number">${escapeHtml(row.gc || "GC")} ${row.id ? " / " + escapeHtml(row.id) : ""} / ${String(index + 1).padStart(2, "0")}</div>
-                <span class="gc-priority ${escapeHtml(priorityClass)}">${escapeHtml(priorityText)}</span>
-              </div>
-              <h2 class="gc-card-title">${escapeHtml(row.topic || "Requirement")}</h2>
-              <div class="gc-card-meta">
-                ${groupForRow(row) ? `<span class="gc-chip">${escapeHtml(groupForRow(row))}</span>` : ""}
-                ${row.category ? `<span class="gc-chip">${escapeHtml(row.category)}</span>` : ""}
-                ${row.trigger ? `<span class="gc-chip">${escapeHtml(row.trigger)}</span>` : ""}
-              </div>
-              <div class="gc-section">
-                <span class="gc-label">Extra Requirement</span>
-                <p class="gc-text">${escapeHtml(row.requirement || "No requirement text listed.")}</p>
-              </div>
-              <div class="gc-section">
-                <span class="gc-label">Required Field Action</span>
-                <p class="gc-text">${escapeHtml(row.action || "No field action listed.")}</p>
-              </div>
-              <div class="gc-card-footer">
-                <div class="gc-section">
-                  <span class="gc-label">Source Reference</span>
-                  ${sourceMarkup(row)}
-                </div>
-                ${row.tags ? `
-                  <div class="gc-section">
-                    <span class="gc-label">Tags</span>
-                    <p class="gc-text">${escapeHtml(row.tags)}</p>
-                  </div>
-                ` : ""}
-              </div>
-            </article>
-          `;
+          return renderFieldRequirementCard(row, {
+            organization: row.gc || "General Contractor",
+            group: groupForRow(row),
+            priorityClass,
+            priorityText,
+            sourceHtml: sourceMarkup(row),
+            index
+          });
         }).join("");
+        wireFieldKeywordSearch(els.cards, els.search, render);
       }
 
       async function loadData() {
@@ -3081,6 +3899,7 @@
         els.category.value = "";
         els.priority.value = "";
         selectedGroup = "";
+        selectedTopic = "";
         render();
         els.search.focus();
       });
@@ -3130,7 +3949,9 @@
         activeSummary: document.getElementById("ownerActiveSummary"),
         activeBadge: document.getElementById("ownerActiveBadge"),
         groupPanel: document.getElementById("ownerGroupPanel"),
-        groupIndex: document.getElementById("ownerGroupIndex")
+        groupIndex: document.getElementById("ownerGroupIndex"),
+        topicPanel: document.getElementById("ownerTopicPanel"),
+        topicIndex: document.getElementById("ownerTopicIndex")
       };
 
       if (!els.cards || !els.ownerIndex) {
@@ -3141,6 +3962,7 @@
       let owners = [];
       let selectedOwner = "";
       let selectedGroup = "";
+      let selectedTopic = "";
 
       function parseCsv(text) {
         const rows = [];
@@ -3299,6 +4121,7 @@
           button.addEventListener("click", () => {
             selectedOwner = button.dataset.owner;
             selectedGroup = "";
+            selectedTopic = "";
             els.search.value = "";
             render();
             document.querySelector("#ownerView .gc-active-contractor").scrollIntoView({ block: "start", behavior: "smooth" });
@@ -3470,7 +4293,7 @@
         const reference = String(row.sourceReference || "").trim();
         const page = sourcePageNumber(reference);
         const mappedPdf = String(mappedSourcePdf(row.owner) || "").trim();
-        const direct = String(row.sourceUrl || mappedPdf || row.sourcePdf || "").trim();
+        const direct = String(row.sourceUrl || row.sourcePdf || mappedPdf || "").trim();
         if (isSourceLink(direct)) {
           return addPageToPdfLink(direct, page);
         }
@@ -3479,7 +4302,7 @@
           return addPageToPdfLink(reference, page);
         }
 
-        const basePdf = String(mappedPdf || row.sourcePdf || pdfFileNameFromName(row.owner)).trim();
+        const basePdf = String(row.sourcePdf || mappedPdf || pdfFileNameFromName(row.owner)).trim();
         if (isSourceLink(basePdf) && page) {
           return addPageToPdfLink(basePdf, page);
         }
@@ -3495,7 +4318,7 @@
           return `
             <div class="gc-source-row">
               <span class="gc-source-reference">${escapeHtml(reference)}</span>
-              <a class="gc-source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Open Source</a>
+              <a class="gc-source-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Show Source</a>
             </div>
           `;
         }
@@ -3543,7 +4366,8 @@
           els.search.value.trim(),
           els.category.value,
           els.priority.value,
-          !hasSearch && selectedGroup && selectedGroup !== allGroupsValue ? selectedGroup : ""
+          !hasSearch && selectedGroup && selectedGroup !== allGroupsValue ? selectedGroup : "",
+          !hasSearch && selectedTopic && selectedTopic !== FIELD_TOPIC_ALL ? selectedTopic : ""
         ].filter(Boolean).length;
       }
 
@@ -3620,6 +4444,7 @@
         els.groupIndex.querySelectorAll(".gc-group-btn").forEach((button) => {
           button.addEventListener("click", () => {
             selectedGroup = button.dataset.group;
+            selectedTopic = "";
             render();
             els.cards.scrollIntoView({ block: "start", behavior: "smooth" });
           });
@@ -3628,20 +4453,59 @@
         return groups;
       }
 
+      function renderTopicButtons(groupRows, term) {
+        const shouldShow = !term && selectedOwner && selectedGroup && selectedGroup !== allGroupsValue && groupRows.length > 0;
+        els.topicPanel.classList.toggle("hide", !shouldShow);
+        if (!shouldShow) {
+          els.topicIndex.innerHTML = "";
+          selectedTopic = "";
+          return [];
+        }
+
+        const topics = fieldTopicCounts(groupRows, selectedGroup);
+        const validTopics = new Set([FIELD_TOPIC_ALL, ...topics.map(([label]) => label)]);
+        if (selectedTopic && !validTopics.has(selectedTopic)) selectedTopic = "";
+
+        const buttons = [[FIELD_TOPIC_ALL, groupRows], ...topics];
+        els.topicIndex.innerHTML = buttons.map(([label, topicRows]) => `
+          <button class="field-topic-btn ${selectedTopic === label ? "active" : ""}" type="button" data-topic="${escapeHtml(label)}">
+            <span>${escapeHtml(label === FIELD_TOPIC_ALL ? "Show All In This Group" : label)}</span>
+            <small>${topicRows.length}</small>
+          </button>
+        `).join("");
+
+        els.topicIndex.querySelectorAll(".field-topic-btn").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectedTopic = button.dataset.topic;
+            render();
+            els.cards.scrollIntoView({ block: "start", behavior: "smooth" });
+          });
+        });
+        return topics;
+      }
+
       function render() {
         renderOwnerButtons();
         const term = els.search.value.trim();
         const baseRows = filteredRows({ applyGroup: false });
         const groups = renderGroupButtons(baseRows, term);
-        const rows = term ? filteredRows({ applyGroup: false }) : selectedGroup ? filteredRows() : [];
+        const groupRows = !term && selectedGroup ? filteredRows() : [];
+        const topics = renderTopicButtons(groupRows, term);
+        let rows = [];
+        if (term) rows = filteredRows({ applyGroup: false });
+        else if (selectedGroup === allGroupsValue) rows = groupRows;
+        else if (selectedGroup && selectedTopic === FIELD_TOPIC_ALL) rows = groupRows;
+        else if (selectedGroup && selectedTopic) rows = groupRows.filter((row) => fieldOperationalTopic(row, selectedGroup) === selectedTopic);
         const sortedCardRows = sortedRows(rows);
         const totalForOwner = countForOwner(selectedOwner);
         const matchedOwners = uniqueSorted(baseRows.map((row) => row.owner));
 
-        renderSummary(term || selectedGroup ? sortedCardRows : baseRows);
+        renderSummary(term || selectedTopic || selectedGroup === allGroupsValue ? sortedCardRows : (selectedGroup ? groupRows : baseRows));
         els.empty.textContent = !term && selectedOwner && !selectedGroup && baseRows.length
-          ? "Select a requirement group above to show cards."
-          : "No owner requirements match the current filters.";
+          ? "Select a requirement group above to continue."
+          : !term && selectedGroup && selectedGroup !== allGroupsValue && !selectedTopic && groupRows.length
+            ? "Select an operational topic above to show the cards you actually need."
+            : "No owner requirements match the current filters.";
         els.empty.classList.toggle("show", sortedCardRows.length === 0 && allRows.length > 0);
 
         if (term) {
@@ -3651,8 +4515,14 @@
         } else if (selectedGroup) {
           const groupName = selectedGroup === allGroupsValue ? "All Groups" : selectedGroup;
           els.activeName.textContent = selectedOwner || "Select an Owner";
-          els.activeSummary.textContent = `${groupName}: ${sortedCardRows.length} visible card${sortedCardRows.length === 1 ? "" : "s"} out of ${totalForOwner} total row${totalForOwner === 1 ? "" : "s"} for ${selectedOwner}.`;
-          els.activeBadge.textContent = `${sortedCardRows.length} card${sortedCardRows.length === 1 ? "" : "s"}`;
+          if (selectedGroup !== allGroupsValue && !selectedTopic) {
+            els.activeSummary.textContent = `${groupName}: ${groupRows.length} requirement${groupRows.length === 1 ? "" : "s"} organized into ${topics.length} field topic${topics.length === 1 ? "" : "s"}. Pick the actual question you need answered.`;
+            els.activeBadge.textContent = `${topics.length} topic${topics.length === 1 ? "" : "s"}`;
+          } else {
+            const topicName = selectedTopic && selectedTopic !== FIELD_TOPIC_ALL ? selectedTopic : groupName;
+            els.activeSummary.textContent = `${topicName}: ${sortedCardRows.length} visible card${sortedCardRows.length === 1 ? "" : "s"} out of ${totalForOwner} total requirement${totalForOwner === 1 ? "" : "s"} for ${selectedOwner}.`;
+            els.activeBadge.textContent = `${sortedCardRows.length} card${sortedCardRows.length === 1 ? "" : "s"}`;
+          }
         } else {
           els.activeName.textContent = selectedOwner || "Select an Owner";
           els.activeSummary.textContent = selectedOwner
@@ -3664,42 +4534,16 @@
         els.cards.innerHTML = sortedCardRows.map((row, index) => {
           const priorityClass = normalizedPriority(row.priority) || "low";
           const priorityText = row.priority || "Unrated";
-
-          return `
-            <article class="gc-requirement-card">
-              <div class="gc-card-top">
-                <div class="gc-card-number">${escapeHtml(row.owner || "Owner")} ${row.id ? " / " + escapeHtml(row.id) : ""} / ${String(index + 1).padStart(2, "0")}</div>
-                <span class="gc-priority ${escapeHtml(priorityClass)}">${escapeHtml(priorityText)}</span>
-              </div>
-              <h2 class="gc-card-title">${escapeHtml(row.topic || "Requirement")}</h2>
-              <div class="gc-card-meta">
-                ${groupForRow(row) ? `<span class="gc-chip">${escapeHtml(groupForRow(row))}</span>` : ""}
-                ${row.category ? `<span class="gc-chip">${escapeHtml(row.category)}</span>` : ""}
-                ${row.trigger ? `<span class="gc-chip">${escapeHtml(row.trigger)}</span>` : ""}
-              </div>
-              <div class="gc-section">
-                <span class="gc-label">Extra Requirement</span>
-                <p class="gc-text">${escapeHtml(row.requirement || "No requirement text listed.")}</p>
-              </div>
-              <div class="gc-section">
-                <span class="gc-label">Required Field Action</span>
-                <p class="gc-text">${escapeHtml(row.action || "No field action listed.")}</p>
-              </div>
-              <div class="gc-card-footer">
-                <div class="gc-section">
-                  <span class="gc-label">Source Reference</span>
-                  ${sourceMarkup(row)}
-                </div>
-                ${row.tags ? `
-                  <div class="gc-section">
-                    <span class="gc-label">Tags</span>
-                    <p class="gc-text">${escapeHtml(row.tags)}</p>
-                  </div>
-                ` : ""}
-              </div>
-            </article>
-          `;
+          return renderFieldRequirementCard(row, {
+            organization: row.owner || "Owner",
+            group: groupForRow(row),
+            priorityClass,
+            priorityText,
+            sourceHtml: sourceMarkup(row),
+            index
+          });
         }).join("");
+        wireFieldKeywordSearch(els.cards, els.search, render);
       }
 
       async function loadData() {
@@ -3732,6 +4576,7 @@
         els.category.value = "";
         els.priority.value = "";
         selectedGroup = "";
+        selectedTopic = "";
         render();
         els.search.focus();
       });
