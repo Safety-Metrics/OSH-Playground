@@ -199,60 +199,12 @@
     }
 
 
-    /* ---------- Cross-dashboard Navigation ---------- */
-    .dashboard-nav{
-      width: min(1680px, calc(100% - 44px));
-      margin: 8px auto 12px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 8px;
-      border: 1px solid rgba(93,92,90,.72);
-      border-radius: var(--radius-md);
-      background: rgba(17,17,18,.82);
-      box-shadow: var(--soft-shadow);
-    }
-
-    .dashboard-nav-link{
-      min-height: 46px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 16px;
-      border: 1px solid rgba(242,239,235,.18);
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--cooper-red), var(--burgundy));
-      color: var(--cream);
-      text-decoration: none;
-      font-family: var(--font-bold);
-      font-size: 14px;
-      font-weight: 950;
-      box-shadow: 0 10px 22px rgba(0,0,0,.18);
-      transition: transform 150ms ease, background 150ms ease;
-    }
-
-    .dashboard-nav-link:hover,
-    .dashboard-nav-link:focus-visible{
-      background: linear-gradient(135deg, #b3262a, #7a1020);
-      transform: translateY(-1px);
-      outline: none;
-    }
-
-    @media (max-width: 620px){
-      .dashboard-nav{ width: calc(100% - 18px); }
-      .dashboard-nav-link{ width: 100%; }
-    }
-
-    @media print{
-      .dashboard-nav{ display:none !important; }
-    }
-
-    /* ---------- Dashboard Tabs ---------- */
+    /* ---------- Dashboard Tabs + Stack Builder Navigation ---------- */
     .dashboard-tabs{
       width: min(1680px, calc(100% - 44px));
       margin: 12px auto 26px;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 12px;
       padding: 8px;
       border: 1px solid rgba(93,92,90,.72);
@@ -282,6 +234,32 @@
       background: linear-gradient(135deg, var(--cooper-red), var(--burgundy));
       border-color: rgba(242,239,235,.18);
       box-shadow: inset 0 0 0 1px rgba(242,239,235,.06), 0 14px 28px rgba(0,0,0,.32);
+    }
+
+    .stack-builder-nav-link{
+      min-height: 52px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border: 1px solid rgba(159,28,31,.82);
+      border-radius: 14px;
+      background: rgba(104,12,25,.48);
+      color: var(--cream);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 950;
+      letter-spacing: .05em;
+      text-align: center;
+      transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
+    }
+
+    .stack-builder-nav-link:hover,
+    .stack-builder-nav-link:focus-visible{
+      background: linear-gradient(135deg, var(--cooper-red), var(--burgundy));
+      border-color: rgba(242,239,235,.22);
+      transform: translateY(-1px);
+      outline: none;
     }
 
     .dashboard-view{
@@ -345,8 +323,13 @@
 
     @media (max-width: 560px){
       .dashboard-tabs{
+        width: calc(100% - 18px);
         grid-template-columns: 1fr;
       }
+    }
+
+    @media print{
+      .stack-builder-nav-link{ display:none !important; }
     }
 
     /* ---------- State OSHA Tab ---------- */
@@ -1785,15 +1768,12 @@
     <img src="coopersteel-logo.png" alt="Cooper Steel" class="brand-logo">
   </header>
 
-  <nav class="dashboard-nav" aria-label="Project requirements navigation">
-    <a class="dashboard-nav-link" href="stack-builder.html">Back to Stack Builder</a>
-  </nav>
-
-  <nav class="dashboard-tabs" aria-label="Dashboard tabs">
+  <nav class="dashboard-tabs" aria-label="Dashboard tabs and Stack Builder navigation">
     <button class="tab-btn active" type="button" data-view="cooperView" aria-selected="true">Cooper Steel Requirements</button>
     <button class="tab-btn" type="button" data-view="oshaView" aria-selected="false">State OSHA</button>
     <button class="tab-btn" type="button" data-view="gcView" aria-selected="false">General Contractor Requirements</button>
     <button class="tab-btn" type="button" data-view="ownerView" aria-selected="false">Owner Requirements</button>
+    <a class="stack-builder-nav-link" href="stack-builder.html">Back to Stack Builder</a>
   </nav>
 
 
