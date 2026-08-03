@@ -1697,8 +1697,6 @@
     <nav class="topbar" aria-label="Project requirement stack navigation">
       <div class="topbar-left">
         <a class="nav-link primary" href="index.html">Field Requirements Dashboard</a>
-        <a class="nav-link primary" href="stack-builder.html">Back to Stack Builder</a>
-        
       </div>
       <div class="topbar-right">
         <button id="printStackButton" class="export-btn" type="button" disabled>Export PDF / Print</button>
@@ -1998,17 +1996,17 @@
       },
       scopes: [
         { id: "steel-erection", label: "Structural Steel Erection", topicIds: ["steel-erection-stability", "decking-joists", "fall-protection", "cranes-hoisting", "rigging"], keywords: ["steel erection", "structural steel", "erection", "connector", "column", "beam", "joist", "deck", "bolting", "bolt-up", "bridging", "anchor rod", "stability", "bracing"] },
-        { id: "decking", label: "Decking", topicIds: ["decking-joists", "fall-protection"], keywords: ["decking", "deck", "metal deck", "deck bundle", "deck opening", "controlled decking zone", "cdz"] },
-        { id: "joists", label: "Joists", topicIds: ["decking-joists", "steel-erection-stability"], keywords: ["joist", "bridging", "sji"] },
-        { id: "rigging", label: "Rigging", topicIds: ["rigging", "cranes-hoisting"], keywords: ["rigging", "rigger", "sling", "shackle", "hook", "below-the-hook", "signal person", "tag line"] },
-        { id: "crane", label: "Crane Operations", topicIds: ["cranes-hoisting", "rigging"], keywords: ["crane", "hoist", "lifting", "lift plan", "critical lift", "multiple lift", "operator"] },
-        { id: "bolt-up", label: "Bolt-Up", topicIds: ["steel-erection-stability"], keywords: ["bolt", "bolting", "bolt-up", "connector", "connection"] },
-        { id: "welding", label: "Welding / Hot Work", topicIds: ["welding-hot-work"], keywords: ["weld", "welding", "hot work", "cutting", "burning", "torch", "fire watch"] },
-        { id: "mewp", label: "MEWP", topicIds: ["mewp-mobile-equipment", "fall-protection"], keywords: ["mewp", "mobile elevated work platform", "aerial lift", "boom lift", "scissor lift"] },
-        { id: "telehandler", label: "Telehandler", topicIds: ["mewp-mobile-equipment", "material-housekeeping"], keywords: ["telehandler", "rough terrain forklift", "forklift", "powered industrial truck"] },
-        { id: "misc-metals", label: "Miscellaneous Metals", topicIds: ["steel-erection-stability", "fall-protection", "material-housekeeping"], keywords: ["miscellaneous metals", "misc metals", "stairs", "rail", "guardrail", "grating", "ladder"] },
-        { id: "fall-protection", label: "Fall Protection", topicIds: ["fall-protection"], keywords: ["fall protection", "fall arrest", "harness", "lanyard", "lifeline", "guardrail", "opening", "hole"] },
-        { id: "electrical-loto", label: "Electrical / LOTO", topicIds: ["electrical-loto"], keywords: ["electrical", "loto", "lockout", "tagout", "energized", "energy control"] }
+        { id: "decking", label: "Decking", matchMode: "direct", topicIds: ["decking-joists", "fall-protection"], keywords: ["decking", "deck", "metal deck", "deck bundle", "deck opening", "controlled decking zone", "cdz"] },
+        { id: "joists", label: "Joists", matchMode: "direct", topicIds: ["decking-joists", "steel-erection-stability"], keywords: ["joist", "bridging", "sji"] },
+        { id: "rigging", label: "Rigging", matchMode: "direct", topicIds: ["rigging", "cranes-hoisting"], keywords: ["rigging", "rigger", "sling", "shackle", "hook", "below-the-hook", "signal person", "tag line"] },
+        { id: "crane", label: "Crane Operations", matchMode: "direct", topicIds: ["cranes-hoisting", "rigging"], keywords: ["crane", "hoist", "lifting", "lift plan", "critical lift", "multiple lift", "operator"] },
+        { id: "bolt-up", label: "Bolt-Up", topicIds: ["steel-erection-stability"], matchMode: "direct", keywords: ["bolt-up", "bolt up", "bolting", "connection bolt", "connection bolts", "structural connection", "steel connection", "double connection", "bolted connection", "torque wrench", "wrench-tight", "wrench tight", "tension-control bolt", "tension control bolt", "tc bolt", "turn-of-nut", "turn of nut", "fastener tension"] },
+        { id: "welding", label: "Welding / Hot Work", matchMode: "direct", topicIds: ["welding-hot-work"], keywords: ["weld", "welding", "hot work", "cutting", "burning", "torch", "fire watch"] },
+        { id: "mewp", label: "MEWP", matchMode: "direct", topicIds: ["mewp-mobile-equipment", "fall-protection"], keywords: ["mewp", "mobile elevated work platform", "aerial lift", "boom lift", "scissor lift"] },
+        { id: "telehandler", label: "Telehandler", matchMode: "direct", topicIds: ["mewp-mobile-equipment", "material-housekeeping"], keywords: ["telehandler", "rough terrain forklift", "forklift", "powered industrial truck"] },
+        { id: "misc-metals", label: "Miscellaneous Metals", matchMode: "direct", topicIds: ["steel-erection-stability", "fall-protection", "material-housekeeping"], keywords: ["miscellaneous metals", "misc metals", "stairs", "rail", "guardrail", "grating", "ladder"] },
+        { id: "fall-protection", label: "Fall Protection", matchMode: "direct", topicIds: ["fall-protection"], keywords: ["fall protection", "fall arrest", "harness", "lanyard", "lifeline", "guardrail", "opening", "hole"] },
+        { id: "electrical-loto", label: "Electrical / LOTO", matchMode: "direct", topicIds: ["electrical-loto"], keywords: ["electrical", "loto", "lockout", "tagout", "energized", "energy control"] }
       ],
       fieldTopics: [
         { id: "fall-protection", label: "Fall Protection", operational: true, keywords: ["fall protection", "fall arrest", "fall restraint", "tie off", "tie-off", "harness", "lanyard", "lifeline", "leading edge", "floor opening", "hole cover", "guardrail", "controlled decking zone", "cdz", "safety monitor"] },
@@ -2497,7 +2495,7 @@
     function renderScopeChips() {
       els.scopeGrid.innerHTML = CONFIG.scopes.map((scope) => `
         <label class="scope-chip">
-          <input type="checkbox" value="${escapeHtml(scope.id)}" ${scope.id === "steel-erection" ? "checked" : ""}>
+          <input type="checkbox" value="${escapeHtml(scope.id)}">
           <span>${escapeHtml(scope.label)}</span>
         </label>
       `).join("");
@@ -2564,11 +2562,39 @@
       return [...els.scopeGrid.querySelectorAll('input[type="checkbox"]:checked')].map((input) => input.value);
     }
 
+    function scopeTrustedText(row) {
+      return [
+        row.category,
+        row.topic,
+        row.requirement,
+        row.tags,
+        row.dashboardGroup
+      ].join(" ").toLowerCase();
+    }
+
+    function scopeKeywordMatches(text, keyword) {
+      const source = String(text || "").toLowerCase();
+      const term = String(keyword || "").toLowerCase().trim();
+      if (!source || !term) return false;
+      if (term.includes(" ") || term.includes("-") || term.includes("/")) return source.includes(term);
+      const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return new RegExp(`\\b${escaped}\\b`, "i").test(source);
+    }
+
     function scopeMatches(row, scopeIds) {
       if (!scopeIds.length) return true;
       const selectedScopes = CONFIG.scopes.filter((scope) => scopeIds.includes(scope.id));
-      const haystack = rowSearchText(row);
-      return selectedScopes.some((scope) => scope.keywords.some((keyword) => haystack.includes(keyword)));
+      const trustedText = scopeTrustedText(row);
+      const fieldTopic = row.fieldTopic || classifyFieldTopic(row);
+
+      return selectedScopes.some((scope) => {
+        const directMatch = (scope.keywords || []).some((keyword) => scopeKeywordMatches(trustedText, keyword));
+        if (directMatch) return true;
+
+        // Broad umbrella scopes may intentionally carry their related operational topics.
+        // Narrow task scopes must have direct evidence in the actual source obligation.
+        return scope.matchMode !== "direct" && (scope.topicIds || []).includes(fieldTopic);
+      });
     }
 
     function classifyAction(row) {
@@ -5649,6 +5675,16 @@
       add("Descriptive 'may not be able' language is not misread as a prohibition", signatureForRow(heatInfo).polarity !== "prohibit");
       add("Heat-related illness routes to weather/environment logic", highConfidenceComparisonKey(heatInfo) === "site:heat-illness");
 
+      const boltUpDirectRule = makeTestRow("T-BOLT-DIRECT", "steel-erection-stability", "During erection, structural connections must be secured with the required connection bolts before the hoisting line is released.", {
+        topic: "Structural connection bolt-up"
+      });
+      const broadPreErectionPlan = makeTestRow("T-BOLT-BROAD-PLAN", "steel-erection-stability", "Before steel erection begins, the JHA, Site Specific Erection Plan, and Site Specific Safety Plan must be reviewed by the project workforce.", {
+        topic: "Pre Steel Erection Requirements",
+        trigger: "All steel erection, structural stability, joist/girder, decking, and connecting activities"
+      });
+      add("Bolt-Up scope includes direct structural connection obligations", scopeMatches(boltUpDirectRule, ["bolt-up"]));
+      add("Bolt-Up scope ignores broad applicability boilerplate without a bolt-up obligation", !scopeMatches(broadPreErectionPlan, ["bolt-up"]));
+
       const craneInspectionWithBroadTrigger = makeTestRow("T-CRANE-INSPECT-BROAD", "cranes-hoisting", "Mobile cranes shall be inspected before each shift.", {
         topic: "Mobile Crane Inspections - Daily (Each Shift)",
         trigger: "Use of cranes, hoists, lifting equipment, critical lifts, assembly/disassembly, and signaling"
@@ -6368,16 +6404,20 @@
       const safeguardedRows = applyPhase201IntegritySafeguards(rows, selection);
       const atomicSourceRows = phase22AtomicizeSourceRows(safeguardedRows);
 
-      state.generatedRows = atomicSourceRows.map((row) => {
+      const enrichedRows = atomicSourceRows.map((row) => {
         const enriched = {
           ...row,
-          actionType: classifyAction(row),
-          scopeRelevant: scopeMatches(row, selection.scopes)
+          actionType: classifyAction(row)
         };
         enriched.fieldTopic = classifyFieldTopic(enriched);
+        enriched.scopeRelevant = scopeMatches(enriched, selection.scopes);
         enriched.signature = buildRequirementSignature(enriched);
         return enriched;
       });
+
+      state.generatedRows = selection.scopes.length
+        ? enrichedRows.filter((row) => row.scopeRelevant)
+        : enrichedRows;
 
       state.signatureStats = summarizeSignatures(state.generatedRows);
       state.relationshipDiagnostics = analyzeRequirementRelationships(state.generatedRows);
