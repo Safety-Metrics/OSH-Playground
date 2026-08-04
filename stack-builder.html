@@ -2501,12 +2501,12 @@
       `).join("");
     }
 
-    function populateSelect(select, values, emptyLabel, preferredValue) {
+    function populateSelect(select, values, emptyLabel) {
       const cleanValues = uniqueSorted(values);
       select.innerHTML = `<option value="">${escapeHtml(emptyLabel)}</option>` + cleanValues.map((value) => (
         `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
       )).join("");
-      if (preferredValue && cleanValues.includes(preferredValue)) select.value = preferredValue;
+      select.value = "";
       select.disabled = false;
     }
 
@@ -2552,9 +2552,9 @@
         els.errorBanner.classList.add("show");
       }
 
-      populateSelect(els.stateSelect, state.data.osha.map((row) => row.state), "No state layer", "Virginia");
-      populateSelect(els.gcSelect, state.data.gc.map((row) => row.organization), "No GC layer", "Whiting-Turner");
-      populateSelect(els.ownerSelect, state.data.owner.map((row) => row.organization), "No owner layer", "Amazon");
+      populateSelect(els.stateSelect, state.data.osha.map((row) => row.state), "Select a state (optional)");
+      populateSelect(els.gcSelect, state.data.gc.map((row) => row.organization), "Select a general contractor (optional)");
+      populateSelect(els.ownerSelect, state.data.owner.map((row) => row.organization), "Select an owner (optional)");
       refreshBuildAvailability();
     }
 
