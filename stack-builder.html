@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111112">
   <title>Cooper Steel Project Requirement Stack Builder</title>
-  <!-- Phase 2.2 Atomic Governing Answer Engine + Phase 3 project memory; one visible card answers one operational field question -->
+  <!-- Phase 2.3 Context-Gated Atomic Governing Answer Engine + Phase 3 project memory; one visible card answers one operational field question -->
   <link rel="icon" href="data:;base64,=">
 
   <style>
@@ -1999,7 +1999,7 @@
         { id: "decking", label: "Decking", matchMode: "direct", topicIds: ["decking-joists", "fall-protection"], keywords: ["decking", "deck", "metal deck", "deck bundle", "deck opening", "controlled decking zone", "cdz"] },
         { id: "joists", label: "Joists", matchMode: "direct", topicIds: ["decking-joists", "steel-erection-stability"], keywords: ["joist", "bridging", "sji"] },
         { id: "rigging", label: "Rigging", matchMode: "direct", topicIds: ["rigging", "cranes-hoisting"], keywords: ["rigging", "rigger", "sling", "shackle", "hook", "below-the-hook", "signal person", "tag line"] },
-        { id: "crane", label: "Crane Operations", matchMode: "direct", topicIds: ["cranes-hoisting", "rigging"], keywords: ["crane", "hoist", "lifting", "lift plan", "critical lift", "multiple lift", "operator"] },
+        { id: "crane", label: "Crane Operations", matchMode: "direct", topicIds: ["cranes-hoisting", "rigging"], keywords: ["crane", "derrick", "load chart", "lift plan", "critical lift", "multiple lift", "crane operator", "lift director", "outrigger", "anti-two-block"] },
         { id: "bolt-up", label: "Bolt-Up", topicIds: ["steel-erection-stability"], matchMode: "direct", keywords: ["bolt-up", "bolt up", "bolting", "connection bolt", "connection bolts", "structural connection", "steel connection", "double connection", "bolted connection", "torque wrench", "wrench-tight", "wrench tight", "tension-control bolt", "tension control bolt", "tc bolt", "turn-of-nut", "turn of nut", "fastener tension"] },
         { id: "welding", label: "Welding / Hot Work", matchMode: "direct", topicIds: ["welding-hot-work"], keywords: ["weld", "welding", "hot work", "cutting", "burning", "torch", "fire watch"] },
         { id: "mewp", label: "MEWP", matchMode: "direct", topicIds: ["mewp-mobile-equipment", "fall-protection"], keywords: ["mewp", "mobile elevated work platform", "aerial lift", "boom lift", "scissor lift"] },
@@ -2144,6 +2144,136 @@
       },
       priorityRank: { critical: 0, high: 1, medium: 2, low: 3, "state difference": 4, "": 5 }
     });
+
+
+    /*
+      Phase 2.3 scope intelligence
+      --------------------------------
+      A selected work scope is an operational context, not a bag of loose keywords.
+      Generic role words such as "operator", "training", "inspection", "lifting", or
+      "equipment" are never sufficient by themselves to place a requirement into a
+      narrow work scope. Explicit equipment / task evidence wins, and explicit
+      conflicting equipment evidence blocks cross-contamination.
+    */
+    const SCOPE_INTELLIGENCE = Object.freeze({
+      "steel-erection": {
+        allowTopicFallback: true,
+        include: [
+          /\bstructural steel\b/i, /\bsteel erection\b/i, /\berector\b/i,
+          /\bconnector(?:s)?\b/i, /\bcolumn(?:s)?\b/i, /\bbeam(?:s)?\b/i,
+          /\bjoist(?:s)?\b/i, /\bdeck(?:ing)?\b/i, /\bbolt[- ]?up\b/i,
+          /\bbolting\b/i, /\bbridging\b/i, /\banchor rod(?:s)?\b/i,
+          /\btemporary bracing\b/i, /\bstructural stability\b/i
+        ]
+      },
+      "decking": {
+        include: [
+          /\bmetal deck\b/i, /\bdecking\b/i, /\bdeck bundle(?:s)?\b/i,
+          /\bdeck opening(?:s)?\b/i, /\bcontrolled decking zone\b/i, /\bcdz\b/i
+        ],
+        exclude: [/\bwood deck\b/i]
+      },
+      "joists": {
+        include: [/\bjoist(?:s)?\b/i, /\bbridging\b/i, /\bsji\b/i]
+      },
+      "rigging": {
+        include: [
+          /\brigging\b/i, /\brigger(?:s)?\b/i, /\bsling(?:s)?\b/i,
+          /\bshackle(?:s)?\b/i, /\bbelow[- ]the[- ]hook\b/i,
+          /\blifting (?:device|beam|frame)\b/i, /\bspreader (?:beam|bar)\b/i,
+          /\btag ?line(?:s)?\b/i, /\bqualified signal person\b/i
+        ]
+      },
+      "crane": {
+        include: [
+          /\bcrane(?:s)?\b/i, /\bderrick(?:s)?\b/i, /\bnccco\b/i,
+          /\bcrane operator(?:s)?\b/i, /\blift director\b/i,
+          /\bload chart(?:s)?\b/i, /\boutrigger(?:s)?\b/i,
+          /\banti[- ]?two[- ]?block(?:ing)?\b/i, /\bswing radius\b/i,
+          /\bcrane mat(?:s)?\b/i, /\btower crane(?:s)?\b/i,
+          /\bmobile crane(?:s)?\b/i, /\bcrawler crane(?:s)?\b/i,
+          /\boverhead crane(?:s)?\b/i, /\bbridge crane(?:s)?\b/i,
+          /\bgantry crane(?:s)?\b/i, /\bcritical lift(?:s)?\b/i,
+          /\bmultiple[- ]crane lift(?:s)?\b/i, /\btandem lift(?:s)?\b/i,
+          /\bdual[- ]crane lift(?:s)?\b/i, /\bcrane[- ]suspended personnel platform\b/i
+        ],
+        exclude: [
+          /\bpowered industrial truck(?:s)?\b/i, /\bpit operator(?:s)?\b/i,
+          /\bforklift(?:s)?\b/i, /\btelehandler(?:s)?\b/i,
+          /\brough terrain forklift(?:s)?\b/i, /\bmewp(?:s)?\b/i,
+          /\baerial lift(?:s)?\b/i, /\bboom lift(?:s)?\b/i,
+          /\bscissor lift(?:s)?\b/i
+        ]
+      },
+      "bolt-up": {
+        include: [
+          /\bbolt[- ]?up\b/i, /\bbolting\b/i, /\bconnection bolt(?:s)?\b/i,
+          /\bstructural connection(?:s)?\b/i, /\bbolted connection(?:s)?\b/i,
+          /\bdouble connection(?:s)?\b/i, /\btorque wrench(?:es)?\b/i,
+          /\bwrench[- ]tight\b/i, /\btension[- ]control bolt(?:s)?\b/i,
+          /\btc bolt(?:s)?\b/i, /\bturn[- ]of[- ]nut\b/i,
+          /\bfastener tension\b/i
+        ]
+      },
+      "welding": {
+        include: [
+          /\bweld(?:ing|ed|s)?\b/i, /\bhot work\b/i, /\bcutting\b/i,
+          /\bburning\b/i, /\btorch(?:es)?\b/i, /\bfire watch\b/i
+        ]
+      },
+      "mewp": {
+        include: [
+          /\bmewp(?:s)?\b/i, /\bmobile elevated work platform(?:s)?\b/i,
+          /\baerial lift(?:s)?\b/i, /\bboom lift(?:s)?\b/i,
+          /\bscissor lift(?:s)?\b/i
+        ],
+        exclude: [
+          /\bcrane(?:s)?\b/i, /\bpowered industrial truck(?:s)?\b/i,
+          /\bforklift(?:s)?\b/i, /\btelehandler(?:s)?\b/i
+        ]
+      },
+      "telehandler": {
+        include: [
+          /\btelehandler(?:s)?\b/i, /\brough terrain forklift(?:s)?\b/i,
+          /\bpowered industrial truck(?:s)?\b/i, /\bforklift(?:s)?\b/i,
+          /\bfork truck(?:s)?\b/i, /\bpit operator(?:s)?\b/i
+        ],
+        exclude: [
+          /\bcrane(?:s)?\b/i, /\bmewp(?:s)?\b/i,
+          /\baerial lift(?:s)?\b/i, /\bboom lift(?:s)?\b/i,
+          /\bscissor lift(?:s)?\b/i
+        ]
+      },
+      "misc-metals": {
+        include: [
+          /\bmiscellaneous metals\b/i, /\bmisc metals\b/i, /\bstair(?:s|way)?\b/i,
+          /\bguardrail(?:s)?\b/i, /\bhandrail(?:s)?\b/i, /\bgrating\b/i,
+          /\bpermanent ladder(?:s)?\b/i
+        ]
+      },
+      "fall-protection": {
+        include: [
+          /\bfall protection\b/i, /\bfall arrest\b/i, /\bfall restraint\b/i,
+          /\bharness(?:es)?\b/i, /\blanyard(?:s)?\b/i, /\blifeline(?:s)?\b/i,
+          /\bguardrail(?:s)?\b/i, /\bfloor opening(?:s)?\b/i,
+          /\bdeck opening(?:s)?\b/i, /\bhole cover(?:s)?\b/i
+        ]
+      },
+      "electrical-loto": {
+        include: [
+          /\belectrical\b/i, /\blockout\b/i, /\btagout\b/i, /\bloto\b/i,
+          /\benergized\b/i, /\benergy control\b/i, /\barc flash\b/i,
+          /\bgfci\b/i
+        ]
+      }
+    });
+
+    const GENERIC_SCOPE_TERMS = new Set([
+      "operator", "operators", "equipment", "operation", "operations", "training",
+      "qualification", "qualified", "certification", "certified", "inspection",
+      "inspect", "lifting", "lift", "work", "task", "employee", "employees",
+      "personnel", "authorization", "authorized"
+    ]);
 
 
 
@@ -2563,6 +2693,9 @@
     }
 
     function scopeTrustedText(row) {
+      // Deliberately exclude broad Applies / Trigger boilerplate and generated field-action text.
+      // Scope must be proven by the actual source obligation, its title, source category, tags,
+      // or curated dashboard group.
       return [
         row.category,
         row.topic,
@@ -2576,25 +2709,45 @@
       const source = String(text || "").toLowerCase();
       const term = String(keyword || "").toLowerCase().trim();
       if (!source || !term) return false;
+      if (GENERIC_SCOPE_TERMS.has(term)) return false;
       if (term.includes(" ") || term.includes("-") || term.includes("/")) return source.includes(term);
       const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       return new RegExp(`\\b${escaped}\\b`, "i").test(source);
     }
 
+    function scopeMatchEvidence(row, scope) {
+      const trustedText = scopeTrustedText(row);
+      const fieldTopic = row.fieldTopic || classifyFieldTopic(row);
+      const profile = SCOPE_INTELLIGENCE[scope.id];
+
+      if (profile) {
+        const positive = (profile.include || []).some((pattern) => pattern.test(trustedText));
+        const conflicting = (profile.exclude || []).some((pattern) => pattern.test(trustedText));
+
+        if (positive) return { match: true, strength: 100, reason: "explicit operational evidence" };
+        if (conflicting) return { match: false, strength: 0, reason: "conflicting equipment context" };
+
+        if (profile.allowTopicFallback && (scope.topicIds || []).includes(fieldTopic)) {
+          return { match: true, strength: 35, reason: "approved broad-scope topic fallback" };
+        }
+
+        return { match: false, strength: 0, reason: "no explicit operational evidence" };
+      }
+
+      const directMatch = (scope.keywords || []).some((keyword) => scopeKeywordMatches(trustedText, keyword));
+      if (directMatch) return { match: true, strength: 60, reason: "specific scope keyword" };
+
+      if (scope.matchMode !== "direct" && (scope.topicIds || []).includes(fieldTopic)) {
+        return { match: true, strength: 25, reason: "broad-scope topic fallback" };
+      }
+
+      return { match: false, strength: 0, reason: "no scope evidence" };
+    }
+
     function scopeMatches(row, scopeIds) {
       if (!scopeIds.length) return true;
       const selectedScopes = CONFIG.scopes.filter((scope) => scopeIds.includes(scope.id));
-      const trustedText = scopeTrustedText(row);
-      const fieldTopic = row.fieldTopic || classifyFieldTopic(row);
-
-      return selectedScopes.some((scope) => {
-        const directMatch = (scope.keywords || []).some((keyword) => scopeKeywordMatches(trustedText, keyword));
-        if (directMatch) return true;
-
-        // Broad umbrella scopes may intentionally carry their related operational topics.
-        // Narrow task scopes must have direct evidence in the actual source obligation.
-        return scope.matchMode !== "direct" && (scope.topicIds || []).includes(fieldTopic);
-      });
+      return selectedScopes.some((scope) => scopeMatchEvidence(row, scope).match);
     }
 
     function classifyAction(row) {
@@ -2673,10 +2826,10 @@
       const operationalSignals = [
         ["confined-space", /confined space|permit-required confined space|entry permit/],
         ["electrical-loto", /lockout|tagout|\bloto\b|energized|arc flash|gfci|electrical/],
-        ["cranes-hoisting", /crane|critical lift|multiple lift|dual lift|personnel platform|load chart/],
+        ["cranes-hoisting", /crane|derrick|nccco|crane operator|critical lift|multiple lift|dual lift|personnel platform|load chart|outrigger|anti[- ]?two[- ]?block/],
         ["rigging", /rigging|qualified rigger|sling|shackle|signal person|tag line|tagline/],
         ["welding-hot-work", /welding|hot work|fire watch|torch|cutting|burning/],
-        ["mewp-mobile-equipment", /mewp|aerial lift|boom lift|scissor lift|telehandler|forklift/],
+        ["mewp-mobile-equipment", /mewp|mobile elevated work platform|aerial lift|boom lift|scissor lift|telehandler|forklift|powered industrial truck|rough terrain forklift|\bpit\b/],
         ["decking-joists", /metal deck|decking|deck bundle|joist|bridging|\bsji\b/],
         ["steel-erection-stability", /structural steel|steel erection|anchor rod|temporary bracing|bolt-up|column|beam/],
         ["fall-protection", /fall protection|fall arrest|fall restraint|leading edge|controlled decking zone|\bcdz\b|guardrail|lifeline|harness|lanyard/]
@@ -3366,7 +3519,7 @@
       const authority = sourceAuthorityProfile(row);
 
       return {
-        version: "2.2-atomic-reasoning-core",
+        version: "2.3-context-gated-reasoning-core",
         subjectKey,
         subjectFamily: subjectKey.includes(":") ? subjectKey.split(":")[0] : row.fieldTopic,
         fieldTopic: row.fieldTopic,
@@ -3563,7 +3716,7 @@
     }
 
 
-    /* ---------- Phase 2.2 Atomic Source Cleanup: forms, checklists, and one-question-per-card ---------- */
+    /* ---------- Phase 2.3 Context-Gated Atomic Source Cleanup: forms, checklists, and one-question-per-card ---------- */
 
     function phase22NormalizeOcrText(value) {
       return String(value || "")
@@ -4057,11 +4210,11 @@
 
       console.info("[Phase 1.8] Requirement signatures generated", state.signatureStats);
       console.info("[Phase 1.9] Relationship engine summary", counts);
-      console.info("[Phase 2.2 Atomic] Governing requirement engine", state.phase2Stats);
-      console.info("[Phase 2.2 Atomic] Resolved relationship summary", phase2Counts);
-      if (state.phase2SupportRows.length) console.info("[Phase 2.2 Atomic] Support-only authority rows kept out of field cards", state.phase2SupportRows.map((row) => row.id));
+      console.info("[Phase 2.3 Context-Gated Atomic] Governing requirement engine", state.phase2Stats);
+      console.info("[Phase 2.3 Context-Gated Atomic] Resolved relationship summary", phase2Counts);
+      if (state.phase2SupportRows.length) console.info("[Phase 2.3 Context-Gated Atomic] Support-only authority rows kept out of field cards", state.phase2SupportRows.map((row) => row.id));
       if (state.phase2CoverageDiagnostics.length) console.warn("[Phase 2.1 S-Tier] Coverage integrity safeguards applied", state.phase2CoverageDiagnostics);
-      if (state.phase2AtomicizationDiagnostics.length) console.info("[Phase 2.2 Atomic] Form/checklist rows atomicized or suppressed", state.phase2AtomicizationDiagnostics);
+      if (state.phase2AtomicizationDiagnostics.length) console.info("[Phase 2.3 Context-Gated Atomic] Form/checklist rows atomicized or suppressed", state.phase2AtomicizationDiagnostics);
 
       const reviewItems = state.phase2Diagnostics.filter((item) => ["conflicts", "human-review"].includes(item.type) && item.reviewNeeded);
       if (reviewItems.length) {
@@ -4131,7 +4284,7 @@
     /* ---------- Phase 2.0: operational clustering + governing resolution + clause lineage ---------- */
 
     const PHASE2 = Object.freeze({
-      version: "2.2-atomic-governing-answers",
+      version: "2.3-context-gated-atomic-answers",
       clusterMergeThreshold: 78,
       autoResolveConfidence: 0.90,
       highConfidence: 0.93,
@@ -4206,6 +4359,18 @@
       "rigging:sling-type": "slings-hardware",
       "rigging:capacity": "slings-hardware",
       "rigging:hardware": "slings-hardware",
+
+      "mewp:operator-qualification": "operator-training",
+      "mobile:operator-qualification": "operator-training",
+      "mewp:pre-use-inspection": "inspections",
+      "mobile:pre-use-inspection": "inspections",
+      "mewp:fall-protection": "mewp",
+      "mewp:capacity": "mewp",
+      "mewp:travel": "travel-ground",
+      "mewp:setup-ground": "travel-ground",
+      "mobile:passengers": "telehandlers-forklifts",
+      "mobile:capacity": "telehandlers-forklifts",
+      "mobile:seat-belt": "telehandlers-forklifts",
 
       "steel:column-stability": "bracing-stability",
       "steel:anchor-rods": "columns-anchors",
@@ -5352,7 +5517,7 @@
             });
           });
           pairRelation.set(`${units[i].id}|${units[j].id}`, best);
-          // Phase 2.2 Atomic Governing Answer Model:
+          // Phase 2.3 Context-Gated Atomic Governing Answer Model:
           // Supplemental obligations remain related backstage, but NEVER become one visible card.
           // Only duplicates are collapsed earlier; only same-subject superseding/conflict rules are suppressed.
         }
@@ -5435,7 +5600,7 @@
         }
       });
       if (violations.length) {
-        console.error("[Phase 2.2 Atomic Integrity] Visible-card violations detected.", violations);
+        console.error("[Phase 2.3 Context-Gated Atomic Integrity] Visible-card violations detected.", violations);
       }
       return violations;
     }
@@ -5755,6 +5920,64 @@
       ];
       add("Identical source buttons are deduplicated even when source-reference text differs", uniqueSourceRows(duplicateSourceRows).length === 1);
 
+
+      const craneOperatorSpecific = makeTestRow(
+        "T-CRANE-OP-QUAL",
+        "cranes-hoisting",
+        "Crane operators must be certified by NCCCO or an equivalent accredited organization before operating a crane.",
+        {
+          category: "Mobile Crane Operations",
+          topic: "Crane Operator Certification",
+          tags: "crane;nccco;operator-certification",
+          dashboardGroup: "Rigging, Cranes & Hoisting"
+        }
+      );
+      const pitOperatorTraining = makeTestRow(
+        "T-PIT-OP-TRAIN",
+        "training-qualifications",
+        "All powered industrial truck operators shall receive training based on prior knowledge, truck type, workplace hazards, and demonstrated ability.",
+        {
+          category: "Powered Industrial Trucks",
+          topic: "Powered industrial truck operator training",
+          tags: "pit;forklift;operator-training",
+          dashboardGroup: "Mobile Equipment & Work Platforms"
+        }
+      );
+      const genericEquipmentOperator = makeTestRow(
+        "T-GENERIC-OP-CERT",
+        "training-qualifications",
+        "Equipment operator certification is required for the employee's position.",
+        {
+          category: "Orientation, Training & Competency",
+          topic: "Equipment operator certification",
+          tags: "orientation;operator-certification",
+          dashboardGroup: "Training & Workforce Readiness"
+        }
+      );
+
+      add("Crane scope includes explicit NCCCO crane-operator qualification requirements",
+        scopeMatches(craneOperatorSpecific, ["crane"]));
+      add("Crane scope excludes powered-industrial-truck operator training despite the shared word operator",
+        !scopeMatches(pitOperatorTraining, ["crane"]));
+      add("Crane scope excludes generic equipment-operator language without explicit crane evidence",
+        !scopeMatches(genericEquipmentOperator, ["crane"]));
+      add("Telehandler scope includes powered-industrial-truck operator training",
+        scopeMatches(pitOperatorTraining, ["telehandler"]));
+      add("Powered-industrial-truck training routes to Mobile Equipment instead of generic Training",
+        classifyFieldTopic(pitOperatorTraining) === "mewp-mobile-equipment");
+      add("Explicit crane-operator certification routes to Crane & Hoisting",
+        classifyFieldTopic(craneOperatorSpecific) === "cranes-hoisting");
+      add("Mobile-equipment operator qualification routes deterministically to Operator Training",
+        classifyCardSubtopic({
+          fieldTopic: "mewp-mobile-equipment",
+          primarySubjectKey: "mobile:operator-qualification",
+          subjectKeys: ["mobile:operator-qualification"],
+          signatures: [],
+          title: "Mobile Equipment Operator Qualifications",
+          statement: pitOperatorTraining.requirement,
+          allRows: [pitOperatorTraining]
+        }) === "operator-training");
+
       const result = {
         version: PHASE2.version,
         passed: tests.filter((test) => test.pass).length,
@@ -5763,8 +5986,8 @@
         tests
       };
       state.reasoningValidation = result;
-      if (result.failures.length) console.warn("[Phase 2.2 atomic reasoning validation] Regression failures detected", result);
-      else console.info(`[Phase 2.2 atomic reasoning validation] ${result.passed}/${result.total} deterministic regression tests passed.`);
+      if (result.failures.length) console.warn("[Phase 2.3 context-gated reasoning validation] Regression failures detected", result);
+      else console.info(`[Phase 2.3 context-gated reasoning validation] ${result.passed}/${result.total} deterministic regression tests passed.`);
       return result;
     }
 
