@@ -1995,7 +1995,7 @@
         }
       },
       scopes: [
-        { id: "steel-erection", label: "Structural Steel Erection", topicIds: ["steel-erection-stability", "decking-joists", "fall-protection", "cranes-hoisting", "rigging"], keywords: ["steel erection", "structural steel", "erection", "connector", "column", "beam", "joist", "deck", "bolting", "bolt-up", "bridging", "anchor rod", "stability", "bracing"] },
+        { id: "steel-erection", label: "Structural Steel Erection", topicIds: ["steel-erection-stability", "decking-joists", "fall-protection", "cranes-hoisting", "rigging"], keywords: ["steel erection", "structural steel", "erection", "connector", "column", "beam", "joist", "deck", "bolting", "bolt-up", "bridging", "anchor rod", "shim", "shim pack", "base plate", "leveling plate", "stability", "bracing"] },
         { id: "decking", label: "Decking", matchMode: "direct", topicIds: ["decking-joists", "fall-protection"], keywords: ["decking", "deck", "metal deck", "deck bundle", "deck opening", "controlled decking zone", "cdz"] },
         { id: "joists", label: "Joists", matchMode: "direct", topicIds: ["decking-joists", "steel-erection-stability"], keywords: ["joist", "bridging", "sji"] },
         { id: "rigging", label: "Rigging", matchMode: "direct", topicIds: ["rigging", "cranes-hoisting"], keywords: ["rigging", "rigger", "sling", "shackle", "hook", "below-the-hook", "signal person", "tag line"] },
@@ -2012,7 +2012,7 @@
         { id: "fall-protection", label: "Fall Protection", operational: true, keywords: ["fall protection", "fall arrest", "fall restraint", "tie off", "tie-off", "harness", "lanyard", "lifeline", "leading edge", "floor opening", "hole cover", "guardrail", "controlled decking zone", "cdz", "safety monitor"] },
         { id: "cranes-hoisting", label: "Crane & Hoisting", operational: true, keywords: ["crane", "hoist", "critical lift", "multiple lift", "dual pick", "personnel platform", "power line", "load chart", "crane operator", "lift director"] },
         { id: "rigging", label: "Rigging", operational: true, keywords: ["rigging", "rigger", "sling", "shackle", "hook", "below-the-hook", "signal person", "tag line", "tagline"] },
-        { id: "steel-erection-stability", label: "Steel Erection & Stability", operational: true, keywords: ["structural steel", "steel erection", "column", "beam", "bolt-up", "bolting", "connector", "anchor rod", "temporary bracing", "stability", "plumb", "turnbuckle"] },
+        { id: "steel-erection-stability", label: "Steel Erection & Stability", operational: true, keywords: ["structural steel", "steel erection", "column", "beam", "bolt-up", "bolting", "connector", "anchor rod", "shim", "shim pack", "base plate", "leveling plate", "temporary bracing", "stability", "plumb", "turnbuckle"] },
         { id: "decking-joists", label: "Decking & Joists", operational: true, keywords: ["metal deck", "decking", "deck bundle", "deck opening", "joist", "bridging", "sji"] },
         { id: "welding-hot-work", label: "Welding & Hot Work", operational: true, keywords: ["welding", "weld", "hot work", "cutting", "burning", "torch", "fire watch", "spark containment"] },
         { id: "mewp-mobile-equipment", label: "MEWPs & Mobile Equipment", operational: true, keywords: ["mewp", "mobile elevated work platform", "aerial lift", "boom lift", "scissor lift", "telehandler", "forklift", "powered industrial truck", "mobile equipment"] },
@@ -2056,7 +2056,7 @@
           { id: "other", label: "Other Rigging Requirements", keywords: [] }
         ],
         "steel-erection-stability": [
-          { id: "columns-anchors", label: "Columns, Anchor Rods & Base Connections", keywords: ["column", "anchor rod", "base plate", "anchor bolt"] },
+          { id: "columns-anchors", label: "Columns, Anchor Rods, Shims & Base Connections", keywords: ["column", "anchor rod", "base plate", "anchor bolt", "shim", "shim pack", "leveling plate", "grout"] },
           { id: "beams-connections", label: "Beams, Connections & Bolt-Up", keywords: ["beam", "bolt-up", "bolting", "connection", "connector"] },
           { id: "bracing-stability", label: "Temporary Bracing, Plumbing & Stability", keywords: ["temporary bracing", "bracing", "stability", "plumb", "turnbuckle"] },
           { id: "erection-sequence", label: "Erection Sequence & Structural Controls", keywords: ["erection sequence", "sequence", "structural stability", "erection plan"] },
@@ -2831,7 +2831,7 @@
         ["welding-hot-work", /welding|hot work|fire watch|torch|cutting|burning/],
         ["mewp-mobile-equipment", /mewp|mobile elevated work platform|aerial lift|boom lift|scissor lift|telehandler|forklift|powered industrial truck|rough terrain forklift|\bpit\b/],
         ["decking-joists", /metal deck|decking|deck bundle|joist|bridging|\bsji\b/],
-        ["steel-erection-stability", /structural steel|steel erection|anchor rod|temporary bracing|bolt-up|column|beam/],
+        ["steel-erection-stability", /structural steel|steel erection|anchor rod|column shim|shim pack|leveling plate|base plate|temporary bracing|bolt-up|column|beam/],
         ["fall-protection", /fall protection|fall arrest|fall restraint|leading edge|controlled decking zone|\bcdz\b|guardrail|lifeline|harness|lanyard/]
       ];
 
@@ -3238,6 +3238,26 @@
       }
 
       if (topic === "steel-erection-stability") {
+        // Column-shim requirements are a dedicated operational family. They must be recognized
+        // before generic anchor-rod/column vocabulary can swallow them. Each distinct shim
+        // obligation receives its own atomic subject so separate field rules are never collapsed.
+        if (/shim|shim pack|leveling plate/.test(text)) {
+          if (/anchor rods?.{0,100}support the weight of the column|must be shimmed|criteria.{0,80}shim/.test(text)) return "steel:column-shim-trigger";
+          if (/pre[- ]?detailing|quick ?base|business unit team|project manager.{0,80}confirm/.test(text)) return "steel:column-shim-planning";
+          if (/over 45|multiple levels|1\/?2[- ]?nut|½ nut|anchor rod layout.{0,80}flange/.test(text)) return "steel:column-shim-preconstruction-triggers";
+          if (/not set in place|epoxy anchor|grouted[- ]?in anchor|wedge[- ]?style anchor|welded[- ]?on threaded stud|off center.{0,80}anchor rod/.test(text)) return "steel:column-shim-placement-triggers";
+          if (/preconstruction criteria.{0,80}not followed|pre-construction criteria.{0,80}not followed|excessive grout space|repaired.{0,40}anchor rod|altered.{0,40}anchor rod|relocated.{0,40}anchor rod|temporary bracing.{0,80}column/.test(text)) return "steel:column-shim-field-triggers";
+          if (/only steel shims|steel shims only/.test(text)) return "steel:column-shim-material";
+          if (/firm contact.{0,80}footing.{0,80}base plate|firm contact.{0,80}base plate.{0,80}footing/.test(text)) return "steel:column-shim-contact";
+          if (/before additional members.{0,80}connected|before.{0,80}members are connected/.test(text)) return "steel:column-shim-timing";
+          if (/four shim packs|4 shim packs|typical shim layout/.test(text)) return "steel:column-shim-layout";
+          if (/footing design.{0,120}equal support|contact(?:s)? the foundation.{0,120}equal support/.test(text)) return "steel:column-shim-footing-alternative";
+          if (/grouted leveling plate|75\s*(?:percent|%)|compressive design strength|engineer of record/.test(text)) return "steel:column-shim-leveling-plate-alternative";
+          return "steel:column-shims-general";
+        }
+        // Broad pre-erection readiness rows can mention anchor-rod repairs or concrete strength,
+        // but they are not field answers to the anchor-rod/base-connection question.
+        if (/pre[- ]?steel erection|before authorizing the commencement of steel erection|prior to beginning steel erection|site specific erection plan|\bssep\b|job hazard analysis/.test(text)) return "steel:pre-erection-readiness";
         if (/column.{0,80}(stabil|secure|anchor)|stability.{0,80}column/.test(text)) return "steel:column-stability";
         if (/anchor rod|anchor bolt/.test(text)) return "steel:anchor-rods";
         if (/temporary bracing|guying|guy wire|plumb cable/.test(text)) return "steel:temporary-bracing";
@@ -3519,7 +3539,7 @@
       const authority = sourceAuthorityProfile(row);
 
       return {
-        version: "2.3-context-gated-reasoning-core",
+        version: "2.4-source-aware-reasoning-core",
         subjectKey,
         subjectFamily: subjectKey.includes(":") ? subjectKey.split(":")[0] : row.fieldTopic,
         fieldTopic: row.fieldTopic,
@@ -4210,11 +4230,11 @@
 
       console.info("[Phase 1.8] Requirement signatures generated", state.signatureStats);
       console.info("[Phase 1.9] Relationship engine summary", counts);
-      console.info("[Phase 2.3 Context-Gated Atomic] Governing requirement engine", state.phase2Stats);
-      console.info("[Phase 2.3 Context-Gated Atomic] Resolved relationship summary", phase2Counts);
-      if (state.phase2SupportRows.length) console.info("[Phase 2.3 Context-Gated Atomic] Support-only authority rows kept out of field cards", state.phase2SupportRows.map((row) => row.id));
+      console.info("[Phase 2.4 Source-Aware Atomic] Governing requirement engine", state.phase2Stats);
+      console.info("[Phase 2.4 Source-Aware Atomic] Resolved relationship summary", phase2Counts);
+      if (state.phase2SupportRows.length) console.info("[Phase 2.4 Source-Aware Atomic] Support-only authority rows kept out of field cards", state.phase2SupportRows.map((row) => row.id));
       if (state.phase2CoverageDiagnostics.length) console.warn("[Phase 2.1 S-Tier] Coverage integrity safeguards applied", state.phase2CoverageDiagnostics);
-      if (state.phase2AtomicizationDiagnostics.length) console.info("[Phase 2.3 Context-Gated Atomic] Form/checklist rows atomicized or suppressed", state.phase2AtomicizationDiagnostics);
+      if (state.phase2AtomicizationDiagnostics.length) console.info("[Phase 2.4 Source-Aware Atomic] Form/checklist rows atomicized or suppressed", state.phase2AtomicizationDiagnostics);
 
       const reviewItems = state.phase2Diagnostics.filter((item) => ["conflicts", "human-review"].includes(item.type) && item.reviewNeeded);
       if (reviewItems.length) {
@@ -4284,7 +4304,7 @@
     /* ---------- Phase 2.0: operational clustering + governing resolution + clause lineage ---------- */
 
     const PHASE2 = Object.freeze({
-      version: "2.3-context-gated-atomic-answers",
+      version: "2.4-source-aware-atomic-answers",
       clusterMergeThreshold: 78,
       autoResolveConfidence: 0.90,
       highConfidence: 0.93,
@@ -4373,6 +4393,19 @@
       "mobile:seat-belt": "telehandlers-forklifts",
 
       "steel:column-stability": "bracing-stability",
+      "steel:pre-erection-readiness": "erection-sequence",
+      "steel:column-shim-trigger": "columns-anchors",
+      "steel:column-shim-planning": "columns-anchors",
+      "steel:column-shim-preconstruction-triggers": "columns-anchors",
+      "steel:column-shim-placement-triggers": "columns-anchors",
+      "steel:column-shim-field-triggers": "columns-anchors",
+      "steel:column-shim-material": "columns-anchors",
+      "steel:column-shim-contact": "columns-anchors",
+      "steel:column-shim-timing": "columns-anchors",
+      "steel:column-shim-layout": "columns-anchors",
+      "steel:column-shim-footing-alternative": "columns-anchors",
+      "steel:column-shim-leveling-plate-alternative": "columns-anchors",
+      "steel:column-shims-general": "columns-anchors",
       "steel:anchor-rods": "columns-anchors",
       "steel:temporary-bracing": "bracing-stability",
       "steel:bolting-connections": "beams-connections",
@@ -4480,6 +4513,19 @@
       "rigging:capacity": "Rigging Capacity & WLL",
       "rigging:hardware": "Rigging Hardware",
       "steel:column-stability": "Column Stability",
+      "steel:pre-erection-readiness": "Pre-Erection Readiness",
+      "steel:column-shim-trigger": "Column Shim Requirement",
+      "steel:column-shim-planning": "Column Shim Planning",
+      "steel:column-shim-preconstruction-triggers": "Column Shim Preconstruction Triggers",
+      "steel:column-shim-placement-triggers": "Column Shim Placement Triggers",
+      "steel:column-shim-field-triggers": "Column Shim Field Triggers",
+      "steel:column-shim-material": "Column Shim Material",
+      "steel:column-shim-contact": "Column Shim Bearing Contact",
+      "steel:column-shim-timing": "Column Shim Installation Timing",
+      "steel:column-shim-layout": "Column Shim Layout",
+      "steel:column-shim-footing-alternative": "Column Shim Footing Alternative",
+      "steel:column-shim-leveling-plate-alternative": "Column Shim Leveling-Plate Alternative",
+      "steel:column-shims-general": "Column Shims",
       "steel:anchor-rods": "Anchor Rods",
       "steel:temporary-bracing": "Temporary Bracing",
       "steel:bolting-connections": "Bolting & Connections",
@@ -5978,6 +6024,43 @@
           allRows: [pitOperatorTraining]
         }) === "operator-training");
 
+      const shimTiming = makeTestRow(
+        "T-SHIM-TIMING",
+        "steel-erection-stability",
+        "Shim packs must be in place before additional members are connected to the column.",
+        { topic: "Column Shims - Install before connecting additional members", tags: "section-39;column-shims" }
+      );
+      const preErectionComposite = makeTestRow(
+        "T-PRE-ERECTION",
+        "steel-erection-stability",
+        "Prior to beginning steel erection the Job Hazard Analysis, Site Specific Erection Plan, and Site Specific Safety Plan shall be reviewed; written notification of concrete strength and engineer approval of anchor rod repairs shall also be received.",
+        { topic: "Pre Steel Erection Requirements", tags: "section-39;steel-erection;records" }
+      );
+      add("Column-shim timing is recognized as its own atomic operational subject",
+        highConfidenceComparisonKey(shimTiming) === "steel:column-shim-timing");
+      add("Column-shim subjects route to Columns, Anchor Rods, Shims & Base Connections",
+        classifyCardSubtopic({
+          fieldTopic: "steel-erection-stability",
+          primarySubjectKey: "steel:column-shim-timing",
+          subjectKeys: ["steel:column-shim-timing"],
+          signatures: [],
+          title: "Column Shim Installation Timing",
+          statement: shimTiming.requirement,
+          allRows: [shimTiming]
+        }) === "columns-anchors");
+      add("Broad pre-erection readiness text containing anchor rods does not masquerade as an anchor-rod field answer",
+        highConfidenceComparisonKey(preErectionComposite) === "steel:pre-erection-readiness");
+      add("Pre-erection readiness routes to erection sequence instead of column/anchor/shim results",
+        classifyCardSubtopic({
+          fieldTopic: "steel-erection-stability",
+          primarySubjectKey: "steel:pre-erection-readiness",
+          subjectKeys: ["steel:pre-erection-readiness"],
+          signatures: [],
+          title: "Pre-Erection Readiness",
+          statement: preErectionComposite.requirement,
+          allRows: [preErectionComposite]
+        }) === "erection-sequence");
+
       const result = {
         version: PHASE2.version,
         passed: tests.filter((test) => test.pass).length,
@@ -5986,8 +6069,8 @@
         tests
       };
       state.reasoningValidation = result;
-      if (result.failures.length) console.warn("[Phase 2.3 context-gated reasoning validation] Regression failures detected", result);
-      else console.info(`[Phase 2.3 context-gated reasoning validation] ${result.passed}/${result.total} deterministic regression tests passed.`);
+      if (result.failures.length) console.warn("[Phase 2.4 source-aware reasoning validation] Regression failures detected", result);
+      else console.info(`[Phase 2.4 source-aware reasoning validation] ${result.passed}/${result.total} deterministic regression tests passed.`);
       return result;
     }
 
